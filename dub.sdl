@@ -1,0 +1,10 @@
+name "mupdf"
+description "Bindings for MuPDF"
+homepage "https://mupdf.com/"
+license "AGPL-3.0 or proprietary"
+libs "mupdf" "mupdf-third" platform="posix"
+importPaths "source"
+
+configuration "library" {
+	targetType "sourceLibrary"
+}
