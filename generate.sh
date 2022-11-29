@@ -13,8 +13,13 @@ fi
 
 # Install specific version
 version=$1
-wget https://mupdf.com/downloads/archive/mupdf-$version-source.tar.gz
-tar xfz mupdf-$version-source.tar.gz
-make -C mupdf-$version-source -j$(nproc) HAVE_X11=no HAVE_GLUT=no
-dub run dpp -- source/mupdf.dpp --preprocess-only --no-sys-headers \
+os_type=$(uname -s)
+
+wget --no-clobber https://mupdf.com/downloads/archive/mupdf-$version-source.tar.gz
+tar xfz mupdf-$version-source.tar.gz --skip-old-files
+dub run dpp -- source/mupdf.dpp \
+    --preprocess-only \
+    --hard-fail \
+    --function-macros \
+    --source-output-path="generated/$version/${os_type}" \
     --include-path="$(pwd)/mupdf-$version-source/include"
