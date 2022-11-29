@@ -348,11 +348,15 @@ extern(C)
     alias __ssize_t = c_long;
 
     alias __fsword_t = c_long;
+
+    alias __fsfilcnt64_t = c_ulong;
     /**
 	Implementation details: Subject to change.
 */
     struct fz_archive
     {
+
+        int refs;
 
         fz_stream* file;
 
@@ -404,12 +408,16 @@ extern(C)
 */
     int fz_is_directory(fz_context*, const(char)*) @nogc nothrow;
     /**
-	Drop the reference to an archive.
+	Drop a reference to an archive.
 
-	Closes and releases any memory or filehandles associated
-	with the archive.
+	When the last reference is dropped, this closes and releases
+	any memory or filehandles associated with the archive.
 */
     void fz_drop_archive(fz_context*, fz_archive*) @nogc nothrow;
+    /**
+	Keep a reference to an archive.
+*/
+    fz_archive* fz_keep_archive(fz_context*, fz_archive*) @nogc nothrow;
     /**
 	Return a pointer to a string describing the format of the
 	archive.
@@ -454,6 +462,8 @@ extern(C)
 
 	name: Entry name to look for, this must be an exact match to
 	the entry name in the archive.
+
+	Throws an exception if a matching entry cannot be found.
 */
     fz_stream* fz_open_archive_entry(fz_context*, fz_archive*, const(char)*) @nogc nothrow;
     /**
@@ -462,6 +472,8 @@ extern(C)
 
 	name: Entry name to look for, this must be an exact match to
 	the entry name in the archive.
+
+	Throws an exception if a matching entry cannot be found.
 */
     fz_buffer* fz_read_archive_entry(fz_context*, fz_archive*, const(char)*) @nogc nothrow;
     /**
@@ -553,15 +565,49 @@ extern(C)
 	exception.
 */
     void fz_drop_zip_writer(fz_context*, fz_zip_writer*) @nogc nothrow;
+    /**
+	Create an archive that holds named buffers.
+
+	tree can either be a preformed tree with fz_buffers as values,
+	or it can be NULL for an empty tree.
+*/
+    fz_archive* fz_new_tree_archive(fz_context*, fz_tree*) @nogc nothrow;
+    /**
+	Add a named buffer to an existing tree archive.
+
+	The tree will take a new reference to the buffer. Ownership
+	is not transferred.
+*/
+    void fz_tree_archive_add_buffer(fz_context*, fz_archive*, const(char)*, fz_buffer*) @nogc nothrow;
+    /**
+	Add a named block of data to an existing tree archive.
+
+	The data will be copied into a buffer, and so the caller
+	may free it as soon as this returns.
+*/
+    void fz_tree_archive_add_data(fz_context*, fz_archive*, const(char)*, const(void)*, c_ulong) @nogc nothrow;
+    /**
+	Create a new multi archive (initially empty).
+*/
+    fz_archive* fz_new_multi_archive(fz_context*) @nogc nothrow;
+    /**
+	Add an archive to the set of archives handled by a multi
+	archive.
+
+	If path is NULL, then the archive contents will appear at the
+	top level, otherwise, the archives contents will appear prefixed
+	by path.
+*/
+    void fz_mount_multi_archive(fz_context*, fz_archive*, fz_archive*, const(char)*) @nogc nothrow;
 
     fz_archive* fz_new_archive_of_size(fz_context*, fz_stream*, int) @nogc nothrow;
-
-    alias __fsfilcnt64_t = c_ulong;
 
     struct fz_band_writer
     {
 
         void function(fz_context*, fz_band_writer*) drop;
+
+        void function(fz_context*, fz_band_writer*) close;
 
         void function(fz_context*, fz_band_writer*, fz_colorspace*) header;
 
@@ -624,6 +670,11 @@ extern(C)
 */
     void fz_write_band(fz_context*, fz_band_writer*, int, int, const(ubyte)*) @nogc nothrow;
     /**
+	Finishes up the output and closes the band writer. After this
+	call no more headers or bands may be written.
+*/
+    void fz_close_band_writer(fz_context*, fz_band_writer*) @nogc nothrow;
+    /**
 	Drop the reference to the band writer, causing it to be
 	destroyed.
 
@@ -633,6 +684,7 @@ extern(C)
     alias fz_write_header_fn = void function(fz_context*, fz_band_writer*, fz_colorspace*);
     alias fz_write_band_fn = void function(fz_context*, fz_band_writer*, int, int, int, const(ubyte)*);
     alias fz_write_trailer_fn = void function(fz_context*, fz_band_writer*);
+    alias fz_close_band_writer_fn = void function(fz_context*, fz_band_writer*);
     alias fz_drop_band_writer_fn = void function(fz_context*, fz_band_writer*);
 
     fz_band_writer* fz_new_band_writer_of_size(fz_context*, c_ulong, fz_output*) @nogc nothrow;
@@ -818,6 +870,8 @@ extern(C)
 	Never throws exceptions.
 */
     void fz_drop_halftone(fz_context*, fz_halftone*) @nogc nothrow;
+
+    alias __fsblkcnt64_t = c_ulong;
     /**
 	fz_buffer is a wrapper around a dynamically allocated array of
 	bytes.
@@ -932,6 +986,14 @@ extern(C)
 */
     void fz_append_buffer(fz_context*, fz_buffer*, fz_buffer*) @nogc nothrow;
     /**
+	Write a base64 encoded data block, optionally with periodic newlines.
+*/
+    void fz_append_base64(fz_context*, fz_buffer*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    /**
+	Append a base64 encoded fz_buffer, optionally with periodic newlines.
+*/
+    void fz_append_base64_buffer(fz_context*, fz_buffer*, fz_buffer*, int) @nogc nothrow;
+    /**
 	fz_append_*: Append data to a buffer.
 
 	The buffer will automatically grow as required.
@@ -1008,8 +1070,6 @@ extern(C)
 	Returns length of stream.
 */
     c_ulong fz_buffer_extract(fz_context*, fz_buffer*, ubyte**) @nogc nothrow;
-
-    alias __fsblkcnt64_t = c_ulong;
     struct fz_icc_profile;
 
     struct fz_colorspace
@@ -1573,6 +1633,8 @@ extern(C)
 	K=-1 and the number of columns.
 */
     fz_buffer* fz_compress_ccitt_fax_g4(fz_context*, const(ubyte)*, int, int) @nogc nothrow;
+
+    alias __fsblkcnt_t = c_ulong;
     /**
 	Compression parameters used for buffers of compressed data;
 	typically for the source data for images.
@@ -1766,8 +1828,6 @@ extern(C)
 */
     void fz_drop_compressed_buffer(fz_context*, fz_compressed_buffer*) @nogc nothrow;
 
-    alias __fsblkcnt_t = c_ulong;
-
     alias __blkcnt64_t = c_long;
 
     alias __blkcnt_t = c_long;
@@ -1779,8 +1839,6 @@ extern(C)
     alias __clockid_t = int;
 
     alias __key_t = int;
-
-    alias __daddr_t = int;
     struct fz_font_context;
     struct fz_colorspace_context;
     struct fz_style_context;
@@ -1813,6 +1871,10 @@ extern(C)
         char* wp;
 
         char* ep;
+
+        int buffered;
+
+        int bits;
     }
 
     struct fz_context
@@ -1866,6 +1928,8 @@ extern(C)
 
         void function(void*, void*) free;
     }
+
+    alias __daddr_t = int;
 
     alias __suseconds64_t = c_long;
 
@@ -2059,6 +2123,8 @@ extern(C)
 	overridden.
 */
     void fz_default_warning_callback(void*, const(char)*) @nogc nothrow;
+    alias fz_error_cb = void function(void*, const(char)*);
+    alias fz_warning_cb = void function(void*, const(char)*);
     /**
 	Set the error callback. This will be called as part of the
 	exception handling.
@@ -2067,12 +2133,26 @@ extern(C)
 */
     void fz_set_error_callback(fz_context*, void function(void*, const(char)*), void*) @nogc nothrow;
     /**
+	Retrieve the currently set error callback, or NULL if none
+	has been set. Optionally, if user is non-NULL, the user pointer
+	given when the warning callback was set is also passed back to
+	the caller.
+*/
+    void function(void*, const(char)*) fz_error_callback(fz_context*, void**) @nogc nothrow;
+    /**
 	Set the warning callback. This will be called as part of the
 	exception handling.
 
 	The callback must not throw exceptions!
 */
     void fz_set_warning_callback(fz_context*, void function(void*, const(char)*), void*) @nogc nothrow;
+    /**
+	Retrieve the currently set warning callback, or NULL if none
+	has been set. Optionally, if user is non-NULL, the user pointer
+	given when the warning callback was set is also passed back to
+	the caller.
+*/
+    void function(void*, const(char)*) fz_warning_callback(fz_context*, void**) @nogc nothrow;
     alias fz_tune_image_decode_fn = void function(void*, int, int, int, fz_irect*);
     alias fz_tune_image_scale_fn = int function(void*, int, int, int, int);
     /**
@@ -2247,11 +2327,13 @@ extern(C)
     struct fz_error_stack_slot
     {
 
+        __jmp_buf_tag[1] buffer;
+
         int state;
 
         int code;
 
-        __jmp_buf_tag[1] buffer;
+        char[24] padding;
     }
 
     struct fz_error_context
@@ -2260,6 +2342,10 @@ extern(C)
         fz_error_stack_slot* top;
 
         fz_error_stack_slot[256] stack;
+
+        fz_error_stack_slot padding;
+
+        fz_error_stack_slot* stack_base;
 
         int errcode;
 
@@ -2306,9 +2392,17 @@ extern(C)
     struct fz_md5
     {
 
-        uint[4] state;
+        uint lo;
 
-        uint[2] count;
+        uint hi;
+
+        uint a;
+
+        uint b;
+
+        uint c;
+
+        uint d;
 
         ubyte[64] buffer;
     }
@@ -3073,53 +3167,6 @@ extern(C)
 	Returns true if empty, false otherwise.
 */
     int fz_display_list_is_empty(fz_context*, const(fz_display_list)*) @nogc nothrow;
-    /**
-	Structure definition is public so other classes can
-	derive from it. Callers should not access the members
-	directly, though implementations will need initialize
-	functions directly.
-*/
-    struct fz_document
-    {
-
-        int refs;
-
-        void function(fz_context*, fz_document*) drop_document;
-
-        int function(fz_context*, fz_document*) needs_password;
-
-        int function(fz_context*, fz_document*, const(char)*) authenticate_password;
-
-        int function(fz_context*, fz_document*, fz_permission) has_permission;
-
-        fz_outline* function(fz_context*, fz_document*) load_outline;
-
-        void function(fz_context*, fz_document*, float, float, float) layout;
-
-        c_long function(fz_context*, fz_document*, fz_location) make_bookmark;
-
-        fz_location function(fz_context*, fz_document*, c_long) lookup_bookmark;
-
-        fz_location function(fz_context*, fz_document*, const(char)*, float*, float*) resolve_link;
-
-        int function(fz_context*, fz_document*) count_chapters;
-
-        int function(fz_context*, fz_document*, int) count_pages;
-
-        fz_page* function(fz_context*, fz_document*, int, int) load_page;
-
-        int function(fz_context*, fz_document*, const(char)*, char*, int) lookup_metadata;
-
-        fz_colorspace* function(fz_context*, fz_document*) get_output_intent;
-
-        void function(fz_context*, fz_document*, fz_output*) output_accelerator;
-
-        int did_layout;
-
-        int is_reflowable;
-
-        fz_page* open;
-    }
 
     struct fz_document_handler
     {
@@ -3179,26 +3226,14 @@ extern(C)
 
         fz_link* function(fz_context*, fz_page*, fz_rect, const(char)*) create_link;
 
+        void function(fz_context*, fz_page*, fz_link*) delete_link;
+
         fz_page** prev;
 
         fz_page* next;
     }
 
     alias fz_bookmark = c_long;
-    /**
-	Locations within the document are referred to in terms of
-	chapter and page, rather than just a page number. For some
-	documents (such as epub documents with large numbers of pages
-	broken into many chapters) this can make navigation much faster
-	as only the required chapter needs to be decoded at a time.
-*/
-    struct fz_location
-    {
-
-        int chapter;
-
-        int page;
-    }
 
     enum _Anonymous_29
     {
@@ -3298,12 +3333,15 @@ extern(C)
     alias fz_document_authenticate_password_fn = int function(fz_context*, fz_document*, const(char)*);
     alias fz_document_has_permission_fn = int function(fz_context*, fz_document*, fz_permission);
     alias fz_document_load_outline_fn = fz_outline* function(fz_context*, fz_document*);
+    alias fz_document_outline_iterator_fn = fz_outline_iterator* function(fz_context*, fz_document*);
     alias fz_document_layout_fn = void function(fz_context*, fz_document*, float, float, float);
-    alias fz_document_resolve_link_fn = fz_location function(fz_context*, fz_document*, const(char)*, float*, float*);
+    alias fz_document_resolve_link_dest_fn = fz_link_dest function(fz_context*, fz_document*, const(char)*);
+    alias fz_document_format_link_uri_fn = char* function(fz_context*, fz_document*, fz_link_dest);
     alias fz_document_count_chapters_fn = int function(fz_context*, fz_document*);
     alias fz_document_count_pages_fn = int function(fz_context*, fz_document*, int);
     alias fz_document_load_page_fn = fz_page* function(fz_context*, fz_document*, int, int);
     alias fz_document_lookup_metadata_fn = int function(fz_context*, fz_document*, const(char)*, char*, int);
+    alias fz_document_set_metadata_fn = int function(fz_context*, fz_document*, const(char)*, const(char)*);
     alias fz_document_output_intent_fn = fz_colorspace* function(fz_context*, fz_document*);
     alias fz_document_output_accelerator_fn = void function(fz_context*, fz_document*, fz_output*);
     alias fz_document_make_bookmark_fn = c_long function(fz_context*, fz_document*, fz_location);
@@ -3318,6 +3356,7 @@ extern(C)
     alias fz_page_separations_fn = fz_separations* function(fz_context*, fz_page*);
     alias fz_page_uses_overprint_fn = int function(fz_context*, fz_page*);
     alias fz_page_create_link_fn = fz_link* function(fz_context*, fz_page*, fz_rect, const(char)*);
+    alias fz_page_delete_link_fn = void function(fz_context*, fz_page*, fz_link*);
     alias fz_document_open_fn = fz_document* function(fz_context*, const(char)*);
     alias fz_document_open_with_stream_fn = fz_document* function(fz_context*, fz_stream*);
     alias fz_document_open_accel_fn = fz_document* function(fz_context*, const(char)*, const(char)*);
@@ -3450,6 +3489,12 @@ extern(C)
 */
     fz_outline* fz_load_outline(fz_context*, fz_document*) @nogc nothrow;
     /**
+	Get an iterator for the document outline.
+
+	Should be freed by fz_drop_outline_iterator.
+*/
+    fz_outline_iterator* fz_new_outline_iterator(fz_context*, fz_document*) @nogc nothrow;
+    /**
 	Is the document reflowable.
 
 	Returns 1 to indicate reflowable documents, otherwise 0.
@@ -3478,6 +3523,19 @@ extern(C)
 	May return 0 for documents with no pages.
 */
     int fz_count_pages(fz_context*, fz_document*) @nogc nothrow;
+    /**
+	Resolve an internal link to a page number, location, and possible viewing parameters.
+
+	Returns location (-1,-1) if the URI cannot be resolved.
+*/
+    fz_link_dest fz_resolve_link_dest(fz_context*, fz_document*, const(char)*) @nogc nothrow;
+    /**
+	Format an internal link to a page number, location, and possible viewing parameters,
+	suitable for use with fz_create_link.
+
+	Returns a newly allocated string that the caller must free.
+*/
+    char* fz_format_link_uri(fz_context*, fz_document*, fz_link_dest) @nogc nothrow;
     /**
 	Resolve an internal link to a page number.
 
@@ -3691,6 +3749,14 @@ extern(C)
     alias __rlim_t = c_ulong;
 
     alias __clock_t = c_long;
+
+    struct __fsid_t
+    {
+
+        int[2] __val;
+    }
+
+    void fz_set_metadata(fz_context*, fz_document*, const(char)*, const(char)*) @nogc nothrow;
     /**
 	Find the output intent colorspace if the document has defined
 	one.
@@ -3717,6 +3783,10 @@ extern(C)
 */
     fz_link* fz_create_link(fz_context*, fz_page*, fz_rect, const(char)*) @nogc nothrow;
     /**
+	Delete an existing link on a page.
+*/
+    void fz_delete_link(fz_context*, fz_page*, fz_link*) @nogc nothrow;
+    /**
 	Iterates over all opened pages of the document, calling the
 	provided callback for each page for processing. If the callback
 	returns non-NULL then the iteration stops and that value is returned
@@ -3730,11 +3800,9 @@ extern(C)
 */
     void* fz_process_opened_pages(fz_context*, fz_document*, void* function(fz_context*, fz_page*, void*), void*) @nogc nothrow;
 
-    struct __fsid_t
-    {
+    alias __pid_t = int;
 
-        int[2] __val;
-    }
+    alias __off64_t = c_long;
     struct fz_jbig2_globals;
 
     struct fz_range
@@ -3748,7 +3816,7 @@ extern(C)
 	The null filter reads a specified amount of data from the
 	substream.
 */
-    fz_stream* fz_open_null_filter(fz_context*, fz_stream*, int, c_long) @nogc nothrow;
+    fz_stream* fz_open_null_filter(fz_context*, fz_stream*, c_ulong, c_long) @nogc nothrow;
     /**
 	The range filter copies data from specified ranges of the
 	chained stream.
@@ -3758,7 +3826,7 @@ extern(C)
 	The endstream filter reads a PDF substream, and starts to look
 	for an 'endstream' token after the specified length.
 */
-    fz_stream* fz_open_endstream_filter(fz_context*, fz_stream*, int, c_long) @nogc nothrow;
+    fz_stream* fz_open_endstream_filter(fz_context*, fz_stream*, c_ulong, c_long) @nogc nothrow;
     /**
 	Concat filter concatenates several streams into one.
 */
@@ -4079,7 +4147,9 @@ extern(C)
 
         int glyph_count;
 
-        fz_rect* bbox_table;
+        fz_rect** bbox_table;
+
+        int use_glyph_bbox;
 
         int width_count;
 
@@ -4087,7 +4157,7 @@ extern(C)
 
         short* width_table;
 
-        float* advance_cache;
+        float** advance_cache;
 
         ushort*[256] encoding_cache;
 
@@ -4646,9 +4716,9 @@ extern(C)
 */
     void fz_hb_unlock(fz_context*) @nogc nothrow;
 
-    alias __pid_t = int;
+    alias __off_t = c_long;
 
-    alias __off64_t = c_long;
+    alias __nlink_t = c_ulong;
     /**
 	Range checking atof
 */
@@ -4672,7 +4742,7 @@ extern(C)
         float y;
     }
 
-    alias __off_t = c_long;
+    alias __mode_t = uint;
 
     struct fz_rect
     {
@@ -5141,6 +5211,8 @@ extern(C)
     extern __gshared int fz_optind;
 
     extern __gshared char* fz_optarg;
+
+    alias __ino64_t = c_ulong;
     /**
 	Purge all the glyphs from the cache.
 */
@@ -5199,8 +5271,6 @@ extern(C)
 	should be considered "at risk" of removal from the API.
 */
     float fz_subpixel_adjust(fz_context*, fz_matrix*, fz_matrix*, ubyte*, ubyte*) @nogc nothrow;
-
-    alias __nlink_t = c_ulong;
     struct fz_glyph;
     /**
 	Return the bounding box of the glyph in pixels.
@@ -5239,8 +5309,6 @@ extern(C)
 	ensuring that it eventually gets dropped.
 */
     fz_path* fz_outline_glyph(fz_context*, fz_font*, int, fz_matrix) @nogc nothrow;
-
-    alias __mode_t = uint;
     struct fz_hash_table;
     alias fz_hash_table_drop_fn = void function(fz_context*, void*);
     /**
@@ -5298,6 +5366,8 @@ extern(C)
 	Does NOT free the value of the entry, so the caller is expected to take care of this.
 */
     void fz_hash_filter(fz_context*, fz_hash_table*, void*, int function(fz_context*, void*, void*, int, void*)) @nogc nothrow;
+
+    alias __ino_t = c_ulong;
     /**
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
@@ -5377,7 +5447,7 @@ extern(C)
 	h: If non-NULL, a pointer to an int to be updated on exit to the
 	height (in pixels) that the scaled output will cover.
 
-	Returns a non NULL pixmap pointer. May throw exceptions.
+	Returns a non NULL kept pixmap pointer. May throw exceptions.
 */
     fz_pixmap* fz_get_pixmap_from_image(fz_context*, fz_image*, const(fz_irect)*, fz_matrix*, int*, int*) @nogc nothrow;
     /**
@@ -5539,6 +5609,8 @@ extern(C)
 	subsampling that should be performed by this routine. This will
 	be updated on exit to the amount of subsampling that is still
 	required to be done.
+
+	Returns a kept reference.
 */
     fz_pixmap* fz_decomp_image_from_stream(fz_context*, fz_stream*, fz_compressed_image*, fz_irect*, int, int, int*) @nogc nothrow;
     /**
@@ -5668,16 +5740,81 @@ extern(C)
         fz_rect rect;
 
         char* uri;
+
+        void function(fz_context*, fz_link*, fz_rect) set_rect_fn;
+
+        void function(fz_context*, fz_link*, const(char)*) set_uri_fn;
+
+        void function(fz_context*, fz_link*) drop;
     }
+    alias fz_link_set_rect_fn = void function(fz_context*, fz_link*, fz_rect);
+    alias fz_link_set_uri_fn = void function(fz_context*, fz_link*, const(char)*);
+    alias fz_link_drop_link_fn = void function(fz_context*, fz_link*);
+
+    alias fz_link_dest_type = _Anonymous_32;
+
+    enum _Anonymous_32
+    {
+
+        FZ_LINK_DEST_FIT = 0,
+
+        FZ_LINK_DEST_FIT_B = 1,
+
+        FZ_LINK_DEST_FIT_H = 2,
+
+        FZ_LINK_DEST_FIT_BH = 3,
+
+        FZ_LINK_DEST_FIT_V = 4,
+
+        FZ_LINK_DEST_FIT_BV = 5,
+
+        FZ_LINK_DEST_FIT_R = 6,
+
+        FZ_LINK_DEST_XYZ = 7,
+    }
+    enum FZ_LINK_DEST_FIT = _Anonymous_32.FZ_LINK_DEST_FIT;
+    enum FZ_LINK_DEST_FIT_B = _Anonymous_32.FZ_LINK_DEST_FIT_B;
+    enum FZ_LINK_DEST_FIT_H = _Anonymous_32.FZ_LINK_DEST_FIT_H;
+    enum FZ_LINK_DEST_FIT_BH = _Anonymous_32.FZ_LINK_DEST_FIT_BH;
+    enum FZ_LINK_DEST_FIT_V = _Anonymous_32.FZ_LINK_DEST_FIT_V;
+    enum FZ_LINK_DEST_FIT_BV = _Anonymous_32.FZ_LINK_DEST_FIT_BV;
+    enum FZ_LINK_DEST_FIT_R = _Anonymous_32.FZ_LINK_DEST_FIT_R;
+    enum FZ_LINK_DEST_XYZ = _Anonymous_32.FZ_LINK_DEST_XYZ;
+
+    struct fz_link_dest
+    {
+
+        fz_location loc;
+
+        fz_link_dest_type type;
+
+        float x;
+
+        float y;
+
+        float w;
+
+        float h;
+
+        float zoom;
+    }
+
+    fz_link_dest fz_make_link_dest_none() @nogc nothrow;
+
+    fz_link_dest fz_make_link_dest_xyz(int, int, float, float, float) @nogc nothrow;
     /**
 	Create a new link record.
 
 	next is set to NULL with the expectation that the caller will
-	handle the linked list setup.
+	handle the linked list setup. Internal function.
 
-	Internal function.
+	Different document types will be implemented by deriving from
+	fz_link. This macro allocates such derived structures, and
+	initialises the base sections.
 */
-    fz_link* fz_new_link(fz_context*, fz_rect, const(char)*) @nogc nothrow;
+    fz_link* fz_new_link_of_size(fz_context*, int, fz_rect, const(char)*) @nogc nothrow;
+
+    alias __gid_t = uint;
     /**
 	Increment the reference count for a link. The same pointer is
 	returned.
@@ -5701,7 +5838,9 @@ extern(C)
 */
     int fz_is_external_link(fz_context*, const(char)*) @nogc nothrow;
 
-    alias __ino64_t = c_ulong;
+    void fz_set_link_rect(fz_context*, fz_link*, fz_rect) @nogc nothrow;
+
+    void fz_set_link_uri(fz_context*, fz_link*, const(char)*) @nogc nothrow;
     /**
 	Output a line to the log.
 */
@@ -5716,6 +5855,83 @@ extern(C)
 	Caller should close/drop the output when finished with it.
 */
     fz_output* fz_new_log_for_module(fz_context*, const(char)*) @nogc nothrow;
+
+    struct fz_outline_item
+    {
+
+        char* title;
+
+        char* uri;
+
+        int is_open;
+    }
+
+    struct fz_outline_iterator
+    {
+
+        void function(fz_context*, fz_outline_iterator*) drop;
+
+        fz_outline_item* function(fz_context*, fz_outline_iterator*) item;
+
+        int function(fz_context*, fz_outline_iterator*) next;
+
+        int function(fz_context*, fz_outline_iterator*) prev;
+
+        int function(fz_context*, fz_outline_iterator*) up;
+
+        int function(fz_context*, fz_outline_iterator*) down;
+
+        int function(fz_context*, fz_outline_iterator*, fz_outline_item*) insert;
+
+        void function(fz_context*, fz_outline_iterator*, fz_outline_item*) update;
+
+        int function(fz_context*, fz_outline_iterator*) del;
+
+        fz_document* doc;
+    }
+    /**
+	Call to get the current outline item.
+
+	Can return NULL. The item is only valid until the next call.
+*/
+    fz_outline_item* fz_outline_iterator_item(fz_context*, fz_outline_iterator*) @nogc nothrow;
+    /**
+	Calls to move the iterator position.
+
+	A negative return value means we could not move as requested. Otherwise:
+	0 = the final position has a valid item.
+	1 = not a valid item, but we can insert an item here.
+*/
+    int fz_outline_iterator_next(fz_context*, fz_outline_iterator*) @nogc nothrow;
+
+    int fz_outline_iterator_prev(fz_context*, fz_outline_iterator*) @nogc nothrow;
+
+    int fz_outline_iterator_up(fz_context*, fz_outline_iterator*) @nogc nothrow;
+
+    int fz_outline_iterator_down(fz_context*, fz_outline_iterator*) @nogc nothrow;
+    /**
+	Call to insert a new item BEFORE the current point.
+
+	Ownership of pointers are retained by the caller. The item data will be copied.
+
+	After an insert, we do not change where we are pointing.
+	The return code is the same as for next, it indicates the current iterator position.
+*/
+    int fz_outline_iterator_insert(fz_context*, fz_outline_iterator*, fz_outline_item*) @nogc nothrow;
+    /**
+	Delete the current item.
+
+	This implicitly moves us to the 'next' item, and the return code is as for fz_outline_iterator_next.
+*/
+    int fz_outline_iterator_delete(fz_context*, fz_outline_iterator*) @nogc nothrow;
+    /**
+	Update the current item properties according to the given item.
+*/
+    void fz_outline_iterator_update(fz_context*, fz_outline_iterator*, fz_outline_item*) @nogc nothrow;
+    /**
+	Drop the current iterator.
+*/
+    void fz_drop_outline_iterator(fz_context*, fz_outline_iterator*) @nogc nothrow;
     /**
 	fz_outline is a tree of the outline of a document (also known
 	as table of contents).
@@ -5745,7 +5961,7 @@ extern(C)
 
         char* uri;
 
-        int page;
+        fz_location page;
 
         float x;
 
@@ -5779,18 +5995,35 @@ extern(C)
 	Never throws exceptions.
 */
     void fz_drop_outline(fz_context*, fz_outline*) @nogc nothrow;
+    /**
+	Routine to implement the old Structure based API from an iterator.
+*/
+    fz_outline* fz_load_outline_from_iterator(fz_context*, fz_outline_iterator*) @nogc nothrow;
+    alias fz_outline_iterator_item_fn = fz_outline_item* function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_next_fn = int function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_prev_fn = int function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_up_fn = int function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_down_fn = int function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_insert_fn = int function(fz_context*, fz_outline_iterator*, fz_outline_item*);
+    alias fz_outline_iterator_delete_fn = int function(fz_context*, fz_outline_iterator*);
+    alias fz_outline_iterator_update_fn = void function(fz_context*, fz_outline_iterator*, fz_outline_item*);
+    alias fz_outline_iterator_drop_fn = void function(fz_context*, fz_outline_iterator*);
 
-    alias __ino_t = c_ulong;
+    alias __uid_t = uint;
 
-    enum _Anonymous_32
+    fz_outline_iterator* fz_new_outline_iterator_of_size(fz_context*, c_ulong, fz_document*) @nogc nothrow;
+
+    fz_outline_iterator* fz_outline_iterator_from_outline(fz_context*, fz_outline*) @nogc nothrow;
+
+    enum _Anonymous_33
     {
 
         FZ_SVG_TEXT_AS_PATH = 0,
 
         FZ_SVG_TEXT_AS_TEXT = 1,
     }
-    enum FZ_SVG_TEXT_AS_PATH = _Anonymous_32.FZ_SVG_TEXT_AS_PATH;
-    enum FZ_SVG_TEXT_AS_TEXT = _Anonymous_32.FZ_SVG_TEXT_AS_TEXT;
+    enum FZ_SVG_TEXT_AS_PATH = _Anonymous_33.FZ_SVG_TEXT_AS_PATH;
+    enum FZ_SVG_TEXT_AS_TEXT = _Anonymous_33.FZ_SVG_TEXT_AS_TEXT;
     /**
 	Create a device that outputs (single page) SVG files to
 	the given output stream.
@@ -5817,6 +6050,8 @@ extern(C)
 	id: ID parameter to keep generated IDs unique across SVG files.
 */
     fz_device* fz_new_svg_device_with_id(fz_context*, fz_output*, float, float, int, int, int*) @nogc nothrow;
+
+    alias __dev_t = c_ulong;
     alias fz_output_write_fn = void function(fz_context*, void*, const(void)*, c_ulong);
     alias fz_output_seek_fn = void function(fz_context*, void*, c_long, int);
     alias fz_output_tell_fn = c_long function(fz_context*, void*);
@@ -5939,6 +6174,8 @@ extern(C)
 	size: Size of data to write in bytes.
 */
     void fz_write_data(fz_context*, fz_output*, const(void)*, c_ulong) @nogc nothrow;
+
+    void fz_write_buffer(fz_context*, fz_output*, fz_buffer*) @nogc nothrow;
     /**
 	Write a string. Does not write zero terminator.
 */
@@ -5983,6 +6220,15 @@ extern(C)
 	newlines.
 */
     void fz_write_base64_buffer(fz_context*, fz_output*, fz_buffer*, int) @nogc nothrow;
+    /**
+	Write num_bits of data to the end of the output stream, assumed to be packed
+	most significant bits first.
+*/
+    void fz_write_bits(fz_context*, fz_output*, uint, int) @nogc nothrow;
+    /**
+	Sync to byte boundary after writing bits.
+*/
+    void fz_write_bits_sync(fz_context*, fz_output*) @nogc nothrow;
     /**
 	Our customised 'printf'-like string formatter.
 	Takes %c, %d, %s, %u, %x, as usual.
@@ -6054,9 +6300,9 @@ extern(C)
     fz_output* fz_new_deflate_output(fz_context*, fz_output*, int, int) @nogc nothrow;
     struct fz_path;
 
-    alias fz_linecap = _Anonymous_33;
+    alias fz_linecap = _Anonymous_34;
 
-    enum _Anonymous_33
+    enum _Anonymous_34
     {
 
         FZ_LINECAP_BUTT = 0,
@@ -6067,14 +6313,14 @@ extern(C)
 
         FZ_LINECAP_TRIANGLE = 3,
     }
-    enum FZ_LINECAP_BUTT = _Anonymous_33.FZ_LINECAP_BUTT;
-    enum FZ_LINECAP_ROUND = _Anonymous_33.FZ_LINECAP_ROUND;
-    enum FZ_LINECAP_SQUARE = _Anonymous_33.FZ_LINECAP_SQUARE;
-    enum FZ_LINECAP_TRIANGLE = _Anonymous_33.FZ_LINECAP_TRIANGLE;
+    enum FZ_LINECAP_BUTT = _Anonymous_34.FZ_LINECAP_BUTT;
+    enum FZ_LINECAP_ROUND = _Anonymous_34.FZ_LINECAP_ROUND;
+    enum FZ_LINECAP_SQUARE = _Anonymous_34.FZ_LINECAP_SQUARE;
+    enum FZ_LINECAP_TRIANGLE = _Anonymous_34.FZ_LINECAP_TRIANGLE;
 
-    alias fz_linejoin = _Anonymous_34;
+    alias fz_linejoin = _Anonymous_35;
 
-    enum _Anonymous_34
+    enum _Anonymous_35
     {
 
         FZ_LINEJOIN_MITER = 0,
@@ -6085,10 +6331,10 @@ extern(C)
 
         FZ_LINEJOIN_MITER_XPS = 3,
     }
-    enum FZ_LINEJOIN_MITER = _Anonymous_34.FZ_LINEJOIN_MITER;
-    enum FZ_LINEJOIN_ROUND = _Anonymous_34.FZ_LINEJOIN_ROUND;
-    enum FZ_LINEJOIN_BEVEL = _Anonymous_34.FZ_LINEJOIN_BEVEL;
-    enum FZ_LINEJOIN_MITER_XPS = _Anonymous_34.FZ_LINEJOIN_MITER_XPS;
+    enum FZ_LINEJOIN_MITER = _Anonymous_35.FZ_LINEJOIN_MITER;
+    enum FZ_LINEJOIN_ROUND = _Anonymous_35.FZ_LINEJOIN_ROUND;
+    enum FZ_LINEJOIN_BEVEL = _Anonymous_35.FZ_LINEJOIN_BEVEL;
+    enum FZ_LINEJOIN_MITER_XPS = _Anonymous_35.FZ_LINEJOIN_MITER_XPS;
 
     struct fz_stroke_state
     {
@@ -6477,8 +6723,6 @@ extern(C)
 	allocate.
 */
     fz_stroke_state* fz_clone_stroke_state(fz_context*, fz_stroke_state*) @nogc nothrow;
-
-    alias __gid_t = uint;
     struct fz_overprint;
     /**
 	Return the bounding box for a pixmap.
@@ -6778,15 +7022,15 @@ extern(C)
 
     fz_stream* fz_unpack_stream(fz_context*, fz_stream*, int, int, int, int, int, int, int) @nogc nothrow;
 
-    enum _Anonymous_35
+    enum _Anonymous_36
     {
 
         FZ_PIXMAP_FLAG_INTERPOLATE = 1,
 
         FZ_PIXMAP_FLAG_FREE_SAMPLES = 2,
     }
-    enum FZ_PIXMAP_FLAG_INTERPOLATE = _Anonymous_35.FZ_PIXMAP_FLAG_INTERPOLATE;
-    enum FZ_PIXMAP_FLAG_FREE_SAMPLES = _Anonymous_35.FZ_PIXMAP_FLAG_FREE_SAMPLES;
+    enum FZ_PIXMAP_FLAG_INTERPOLATE = _Anonymous_36.FZ_PIXMAP_FLAG_INTERPOLATE;
+    enum FZ_PIXMAP_FLAG_FREE_SAMPLES = _Anonymous_36.FZ_PIXMAP_FLAG_FREE_SAMPLES;
 
     fz_pixmap* fz_warp_pixmap(fz_context*, fz_pixmap*, const(fz_point)*, int, int) @nogc nothrow;
 
@@ -6830,17 +7074,17 @@ extern(C)
 	The app might control the separations by enabling/disabling them,
 	and subsequent renders would take this into account.
 */
-    enum _Anonymous_36
+    enum _Anonymous_37
     {
 
         FZ_MAX_SEPARATIONS = 64,
     }
-    enum FZ_MAX_SEPARATIONS = _Anonymous_36.FZ_MAX_SEPARATIONS;
+    enum FZ_MAX_SEPARATIONS = _Anonymous_37.FZ_MAX_SEPARATIONS;
     struct fz_separations;
 
-    alias fz_separation_behavior = _Anonymous_37;
+    alias fz_separation_behavior = _Anonymous_38;
 
-    enum _Anonymous_37
+    enum _Anonymous_38
     {
 
         FZ_SEPARATION_COMPOSITE = 0,
@@ -6849,9 +7093,9 @@ extern(C)
 
         FZ_SEPARATION_DISABLED = 2,
     }
-    enum FZ_SEPARATION_COMPOSITE = _Anonymous_37.FZ_SEPARATION_COMPOSITE;
-    enum FZ_SEPARATION_SPOT = _Anonymous_37.FZ_SEPARATION_SPOT;
-    enum FZ_SEPARATION_DISABLED = _Anonymous_37.FZ_SEPARATION_DISABLED;
+    enum FZ_SEPARATION_COMPOSITE = _Anonymous_38.FZ_SEPARATION_COMPOSITE;
+    enum FZ_SEPARATION_SPOT = _Anonymous_38.FZ_SEPARATION_SPOT;
+    enum FZ_SEPARATION_DISABLED = _Anonymous_38.FZ_SEPARATION_DISABLED;
     /**
 	Create a new separations structure (initially empty)
 */
@@ -6915,12 +7159,10 @@ extern(C)
 	Get the equivalent separation color in a given colorspace.
 */
     void fz_separation_equivalent(fz_context*, const(fz_separations)*, int, fz_colorspace*, float*, fz_colorspace*, fz_color_params) @nogc nothrow;
-
-    alias __uid_t = uint;
     /**
  * The shading code uses gouraud shaded triangle meshes.
  */
-    enum _Anonymous_38
+    enum _Anonymous_39
     {
 
         FZ_FUNCTION_BASED = 1,
@@ -6937,13 +7179,13 @@ extern(C)
 
         FZ_MESH_TYPE7 = 7,
     }
-    enum FZ_FUNCTION_BASED = _Anonymous_38.FZ_FUNCTION_BASED;
-    enum FZ_LINEAR = _Anonymous_38.FZ_LINEAR;
-    enum FZ_RADIAL = _Anonymous_38.FZ_RADIAL;
-    enum FZ_MESH_TYPE4 = _Anonymous_38.FZ_MESH_TYPE4;
-    enum FZ_MESH_TYPE5 = _Anonymous_38.FZ_MESH_TYPE5;
-    enum FZ_MESH_TYPE6 = _Anonymous_38.FZ_MESH_TYPE6;
-    enum FZ_MESH_TYPE7 = _Anonymous_38.FZ_MESH_TYPE7;
+    enum FZ_FUNCTION_BASED = _Anonymous_39.FZ_FUNCTION_BASED;
+    enum FZ_LINEAR = _Anonymous_39.FZ_LINEAR;
+    enum FZ_RADIAL = _Anonymous_39.FZ_RADIAL;
+    enum FZ_MESH_TYPE4 = _Anonymous_39.FZ_MESH_TYPE4;
+    enum FZ_MESH_TYPE5 = _Anonymous_39.FZ_MESH_TYPE5;
+    enum FZ_MESH_TYPE6 = _Anonymous_39.FZ_MESH_TYPE6;
+    enum FZ_MESH_TYPE7 = _Anonymous_39.FZ_MESH_TYPE7;
     /**
 	Structure is public to allow derived classes. Do not
 	access the members directly.
@@ -6969,10 +7211,10 @@ extern(C)
 
         int type;
 
-        static union _Anonymous_39
+        static union _Anonymous_40
         {
 
-            static struct _Anonymous_40
+            static struct _Anonymous_41
             {
 
                 int[2] extend;
@@ -6980,9 +7222,9 @@ extern(C)
                 float[3][2] coords;
             }
 
-            _Anonymous_40 l_or_r;
+            _Anonymous_41 l_or_r;
 
-            static struct _Anonymous_41
+            static struct _Anonymous_42
             {
 
                 int vprow;
@@ -7006,9 +7248,9 @@ extern(C)
                 float[32] c1;
             }
 
-            _Anonymous_41 m;
+            _Anonymous_42 m;
 
-            static struct _Anonymous_42
+            static struct _Anonymous_43
             {
 
                 fz_matrix matrix;
@@ -7022,10 +7264,10 @@ extern(C)
                 float* fn_vals;
             }
 
-            _Anonymous_42 f;
+            _Anonymous_43 f;
         }
 
-        _Anonymous_39 u;
+        _Anonymous_40 u;
 
         fz_compressed_buffer* buffer;
     }
@@ -7123,6 +7365,8 @@ extern(C)
 	shade: The reference to destroy.
 */
     void fz_drop_shade_imp(fz_context*, fz_storable*) @nogc nothrow;
+
+    alias __uintmax_t = c_ulong;
     /**
 	Any storable object should include an fz_storable structure
 	at the start (by convention at least) of their structure.
@@ -7149,7 +7393,7 @@ extern(C)
         short store_key_refs;
     }
 
-    alias __dev_t = c_ulong;
+    alias __intmax_t = c_long;
     /**
 	Increment the reference count for a storable object.
 	Returns the same pointer.
@@ -7253,10 +7497,10 @@ extern(C)
 
         void function(fz_context*, fz_storable*) drop;
 
-        static union _Anonymous_43
+        static union _Anonymous_44
         {
 
-            static struct _Anonymous_44
+            static struct _Anonymous_45
             {
 
                 const(void)* ptr;
@@ -7264,9 +7508,9 @@ extern(C)
                 int i;
             }
 
-            _Anonymous_44 pi;
+            _Anonymous_45 pi;
 
-            static struct _Anonymous_45
+            static struct _Anonymous_46
             {
 
                 const(void)* ptr;
@@ -7276,9 +7520,9 @@ extern(C)
                 fz_irect r;
             }
 
-            _Anonymous_45 pir;
+            _Anonymous_46 pir;
 
-            static struct _Anonymous_46
+            static struct _Anonymous_47
             {
 
                 int id;
@@ -7292,9 +7536,9 @@ extern(C)
                 void* ptr;
             }
 
-            _Anonymous_46 im;
+            _Anonymous_47 im;
 
-            static struct _Anonymous_47
+            static struct _Anonymous_48
             {
                 import std.bitmanip: bitfields;
 
@@ -7324,10 +7568,10 @@ extern(C)
                 ));
             }
 
-            _Anonymous_47 link;
+            _Anonymous_48 link;
         }
 
-        _Anonymous_43 u;
+        _Anonymous_44 u;
     }
     /**
 	Every type of object to be placed into the store defines an
@@ -7499,6 +7743,78 @@ extern(C)
 	by a fz_defer_reap_end call.
 */
     void fz_defer_reap_end(fz_context*) @nogc nothrow;
+
+    alias __u_quad_t = c_ulong;
+
+    alias __quad_t = c_long;
+
+    struct fz_write_story_position
+    {
+
+        fz_story_element_position element;
+
+        int page_num;
+    }
+
+    struct fz_write_story_positions
+    {
+
+        fz_write_story_position* positions;
+
+        int num;
+    }
+    alias fz_write_story_rectfn = int function(fz_context*, void*, int, fz_rect, fz_rect*, fz_matrix*, fz_rect*);
+    alias fz_write_story_positionfn = void function(fz_context*, void*, const(fz_write_story_position)*);
+    alias fz_write_story_pagefn = void function(fz_context*, void*, int, fz_rect, fz_device*, int);
+    alias fz_write_story_contentfn = void function(fz_context*, void*, const(fz_write_story_positions)*, fz_buffer*);
+
+    void fz_write_story(fz_context*, fz_document_writer*, fz_story_s*, int function(fz_context*, void*, int, fz_rect, fz_rect*, fz_matrix*, fz_rect*), void*, void function(fz_context*, void*, const(fz_write_story_position)*), void*, void function(fz_context*, void*, int, fz_rect, fz_device*, int), void*) @nogc nothrow;
+
+    void fz_write_stabilized_story(fz_context*, fz_document_writer*, const(char)*, float, void function(fz_context*, void*, const(fz_write_story_positions)*, fz_buffer*), void*, int function(fz_context*, void*, int, fz_rect, fz_rect*, fz_matrix*, fz_rect*), void*, void function(fz_context*, void*, int, fz_rect, fz_device*, int), void*, fz_archive*) @nogc nothrow;
+
+    alias __uint_least64_t = c_ulong;
+
+    alias fz_story = fz_story_s;
+    struct fz_story_s;
+
+    fz_story_s* fz_new_story(fz_context*, fz_buffer*, const(char)*, float, fz_archive*) @nogc nothrow;
+
+    const(char)* fz_story_warnings(fz_context*, fz_story_s*) @nogc nothrow;
+
+    int fz_place_story(fz_context*, fz_story_s*, fz_rect, fz_rect*) @nogc nothrow;
+
+    void fz_draw_story(fz_context*, fz_story_s*, fz_device*, fz_matrix) @nogc nothrow;
+
+    void fz_reset_story(fz_context*, fz_story_s*) @nogc nothrow;
+
+    void fz_drop_story(fz_context*, fz_story_s*) @nogc nothrow;
+
+    fz_xml* fz_story_document(fz_context*, fz_story_s*) @nogc nothrow;
+
+    struct fz_story_element_position
+    {
+
+        int depth;
+
+        int heading;
+
+        const(char)* id;
+
+        const(char)* href;
+
+        fz_rect rect;
+
+        const(char)* text;
+
+        int open_close;
+
+        int rectangle_num;
+    }
+    alias fz_story_position_callback = void function(fz_context*, void*, const(fz_story_element_position)*);
+
+    void fz_story_positions(fz_context*, fz_story_s*, void function(fz_context*, void*, const(fz_story_element_position)*), void*) @nogc nothrow;
+
+    alias __int_least64_t = c_long;
     /**
 	Return true if the named file exists and is readable.
 */
@@ -7720,9 +8036,12 @@ extern(C)
 
 	truncated: Flag to store success/failure indication in.
 
+	worst_case: 0 for unknown, otherwise an upper bound for the
+	size of the stream.
+
 	Returns a buffer created from reading from the stream.
 */
-    fz_buffer* fz_read_best(fz_context*, fz_stream*, c_ulong, int*) @nogc nothrow;
+    fz_buffer* fz_read_best(fz_context*, fz_stream*, c_ulong, int*, c_ulong) @nogc nothrow;
     /**
 	Read a line from stream into the buffer until either a
 	terminating newline or EOF, which it replaces with a null byte
@@ -7747,6 +8066,10 @@ extern(C)
 	when the stream is dropped.
 */
     fz_stream* fz_open_file_ptr_no_close(fz_context*, _IO_FILE*) @nogc nothrow;
+
+    alias __uint_least32_t = uint;
+
+    alias __int_least32_t = int;
     /**
 	Return strlen(s), if that is less than maxlen, or maxlen if
 	there is no null byte ('\0') among the first maxlen bytes.
@@ -7806,6 +8129,10 @@ extern(C)
 */
     void fz_dirname(char*, const(char)*, c_ulong) @nogc nothrow;
     /**
+	Find the filename component in a path.
+*/
+    const(char)* fz_basename(const(char)*) @nogc nothrow;
+    /**
 	decode url escapes.
 */
     char* fz_urldecode(char*) @nogc nothrow;
@@ -7841,12 +8168,12 @@ extern(C)
 	FZ_UTFMAX: Maximum number of bytes in a decoded rune (maximum
 	length returned by fz_chartorune).
 */
-    enum _Anonymous_48
+    enum _Anonymous_49
     {
 
         FZ_UTFMAX = 4,
     }
-    enum FZ_UTFMAX = _Anonymous_48.FZ_UTFMAX;
+    enum FZ_UTFMAX = _Anonymous_49.FZ_UTFMAX;
     /**
 	UTF8 decode a single rune from a sequence of chars.
 
@@ -7918,13 +8245,19 @@ extern(C)
     int fz_grisu(float, char*, int*) @nogc nothrow;
     /**
 	Check and parse string into page ranges:
-		( ','? ([0-9]+|'N') ( '-' ([0-9]+|N) )? )+
+		/,?(-?\d+|N)(-(-?\d+|N))?/
 */
     int fz_is_page_range(fz_context*, const(char)*) @nogc nothrow;
 
     const(char)* fz_parse_page_range(fz_context*, const(char)*, int*, int*, int) @nogc nothrow;
+    /**
+	Unicode aware tolower and toupper functions.
+*/
+    int fz_tolower(int) @nogc nothrow;
 
-    alias __uintmax_t = c_ulong;
+    int fz_toupper(int) @nogc nothrow;
+
+    alias __uint_least16_t = ushort;
     /**
 	Simple text layout (for use with annotation editing primarily).
 */
@@ -8042,10 +8375,10 @@ extern(C)
 
         fz_rect bbox;
 
-        static union _Anonymous_49
+        static union _Anonymous_50
         {
 
-            static struct _Anonymous_50
+            static struct _Anonymous_51
             {
 
                 fz_stext_line* first_line;
@@ -8053,9 +8386,9 @@ extern(C)
                 fz_stext_line* last_line;
             }
 
-            _Anonymous_50 t;
+            _Anonymous_51 t;
 
-            static struct _Anonymous_51
+            static struct _Anonymous_52
             {
 
                 fz_matrix transform;
@@ -8063,10 +8396,10 @@ extern(C)
                 fz_image* image;
             }
 
-            _Anonymous_51 i;
+            _Anonymous_52 i;
         }
 
-        _Anonymous_49 u;
+        _Anonymous_50 u;
 
         fz_stext_block* prev;
 
@@ -8103,7 +8436,7 @@ extern(C)
 	FZ_STEXT_MEDIABOX_CLIP: If this option is set, characters entirely
 	outside each page's mediabox will be ignored.
 */
-    enum _Anonymous_52
+    enum _Anonymous_53
     {
 
         FZ_STEXT_PRESERVE_LIGATURES = 1,
@@ -8120,13 +8453,13 @@ extern(C)
 
         FZ_STEXT_MEDIABOX_CLIP = 64,
     }
-    enum FZ_STEXT_PRESERVE_LIGATURES = _Anonymous_52.FZ_STEXT_PRESERVE_LIGATURES;
-    enum FZ_STEXT_PRESERVE_WHITESPACE = _Anonymous_52.FZ_STEXT_PRESERVE_WHITESPACE;
-    enum FZ_STEXT_PRESERVE_IMAGES = _Anonymous_52.FZ_STEXT_PRESERVE_IMAGES;
-    enum FZ_STEXT_INHIBIT_SPACES = _Anonymous_52.FZ_STEXT_INHIBIT_SPACES;
-    enum FZ_STEXT_DEHYPHENATE = _Anonymous_52.FZ_STEXT_DEHYPHENATE;
-    enum FZ_STEXT_PRESERVE_SPANS = _Anonymous_52.FZ_STEXT_PRESERVE_SPANS;
-    enum FZ_STEXT_MEDIABOX_CLIP = _Anonymous_52.FZ_STEXT_MEDIABOX_CLIP;
+    enum FZ_STEXT_PRESERVE_LIGATURES = _Anonymous_53.FZ_STEXT_PRESERVE_LIGATURES;
+    enum FZ_STEXT_PRESERVE_WHITESPACE = _Anonymous_53.FZ_STEXT_PRESERVE_WHITESPACE;
+    enum FZ_STEXT_PRESERVE_IMAGES = _Anonymous_53.FZ_STEXT_PRESERVE_IMAGES;
+    enum FZ_STEXT_INHIBIT_SPACES = _Anonymous_53.FZ_STEXT_INHIBIT_SPACES;
+    enum FZ_STEXT_DEHYPHENATE = _Anonymous_53.FZ_STEXT_DEHYPHENATE;
+    enum FZ_STEXT_PRESERVE_SPANS = _Anonymous_53.FZ_STEXT_PRESERVE_SPANS;
+    enum FZ_STEXT_MEDIABOX_CLIP = _Anonymous_53.FZ_STEXT_MEDIABOX_CLIP;
     /**
 	A text page is a list of blocks, together with an overall
 	bounding box.
@@ -8143,15 +8476,15 @@ extern(C)
         fz_stext_block* last_block;
     }
 
-    enum _Anonymous_53
+    enum _Anonymous_54
     {
 
         FZ_STEXT_BLOCK_TEXT = 0,
 
         FZ_STEXT_BLOCK_IMAGE = 1,
     }
-    enum FZ_STEXT_BLOCK_TEXT = _Anonymous_53.FZ_STEXT_BLOCK_TEXT;
-    enum FZ_STEXT_BLOCK_IMAGE = _Anonymous_53.FZ_STEXT_BLOCK_IMAGE;
+    enum FZ_STEXT_BLOCK_TEXT = _Anonymous_54.FZ_STEXT_BLOCK_TEXT;
+    enum FZ_STEXT_BLOCK_IMAGE = _Anonymous_54.FZ_STEXT_BLOCK_IMAGE;
 
     extern __gshared const(char)* fz_stext_options_usage;
     /**
@@ -8202,14 +8535,14 @@ extern(C)
 	NOTE: This is an experimental interface and subject to change
 	without notice.
 */
-    int fz_search_stext_page(fz_context*, fz_stext_page*, const(char)*, fz_quad*, int) @nogc nothrow;
+    int fz_search_stext_page(fz_context*, fz_stext_page*, const(char)*, int*, fz_quad*, int) @nogc nothrow;
     /**
 	Return a list of quads to highlight lines inside the selection
 	points.
 */
     int fz_highlight_selection(fz_context*, fz_stext_page*, fz_point, fz_point, fz_quad*, int) @nogc nothrow;
 
-    enum _Anonymous_54
+    enum _Anonymous_55
     {
 
         FZ_SELECT_CHARS = 0,
@@ -8218,9 +8551,9 @@ extern(C)
 
         FZ_SELECT_LINES = 2,
     }
-    enum FZ_SELECT_CHARS = _Anonymous_54.FZ_SELECT_CHARS;
-    enum FZ_SELECT_WORDS = _Anonymous_54.FZ_SELECT_WORDS;
-    enum FZ_SELECT_LINES = _Anonymous_54.FZ_SELECT_LINES;
+    enum FZ_SELECT_CHARS = _Anonymous_55.FZ_SELECT_CHARS;
+    enum FZ_SELECT_WORDS = _Anonymous_55.FZ_SELECT_WORDS;
+    enum FZ_SELECT_LINES = _Anonymous_55.FZ_SELECT_LINES;
 
     fz_quad fz_snap_selection(fz_context*, fz_stext_page*, fz_point*, fz_point*, int) @nogc nothrow;
     /**
@@ -8246,6 +8579,8 @@ extern(C)
     {
 
         int flags;
+
+        float scale;
     }
     /**
 	Parse stext device options from a comma separated key-value
@@ -8299,6 +8634,9 @@ extern(C)
 	the languages/scripts that should be used for OCR (e.g.
 	"eng,ara").
 
+	datadir: NULL (for ""), or a pointer to a path string otherwise
+	provided to Tesseract in the TESSDATA_PREFIX environment variable.
+
 	progress: NULL, or function to be called periodically to indicate
 	progress. Return 0 to continue, or 1 to cancel. progress_arg is
 	returned as the void *. The int is a value between 0 and 100 to
@@ -8307,29 +8645,11 @@ extern(C)
 	progress_arg: A void * value to be parrotted back to the progress
 	function.
 */
-    fz_device* fz_new_ocr_device(fz_context*, fz_device*, fz_matrix, fz_rect, int, const(char)*, int function(fz_context*, void*, int), void*) @nogc nothrow;
+    fz_device* fz_new_ocr_device(fz_context*, fz_device*, fz_matrix, fz_rect, int, const(char)*, const(char)*, int function(fz_context*, void*, int), void*) @nogc nothrow;
 
     fz_document* fz_open_reflowed_document(fz_context*, fz_document*, const(fz_stext_options)*) @nogc nothrow;
 
-    alias __intmax_t = c_long;
-
-    alias __u_quad_t = c_ulong;
-
-    alias __quad_t = c_long;
-
-    alias __uint_least64_t = c_ulong;
-
-    alias __int_least64_t = c_long;
-
-    alias __uint_least32_t = uint;
-
-    alias __int_least32_t = int;
-
-    alias __uint_least16_t = ushort;
-
     alias __int_least16_t = short;
-
-    alias fz_jmp_buf = __jmp_buf_tag[1];
 
     alias __uint_least8_t = ubyte;
 
@@ -8346,6 +8666,24 @@ extern(C)
     alias __uint16_t = ushort;
 
     alias __int16_t = short;
+
+    alias __uint8_t = ubyte;
+
+    alias fz_jmp_buf = __jmp_buf_tag[1];
+
+    alias __int8_t = byte;
+
+    c_long fz_stat_ctime(const(char)*) @nogc nothrow;
+
+    c_long fz_stat_mtime(const(char)*) @nogc nothrow;
+
+    alias __u_long = c_ulong;
+
+    alias __u_int = uint;
+
+    alias __u_short = ushort;
+
+    alias __u_char = ubyte;
     /**
 	Text buffer.
 
@@ -8369,13 +8707,9 @@ extern(C)
         int ucs;
     }
 
-    alias __uint8_t = ubyte;
+    alias fz_text_language = _Anonymous_56;
 
-    alias __int8_t = byte;
-
-    alias fz_text_language = _Anonymous_55;
-
-    enum _Anonymous_55
+    enum _Anonymous_56
     {
 
         FZ_LANG_UNSET = 0,
@@ -8394,14 +8728,14 @@ extern(C)
 
         FZ_LANG_zh_Hant = 14822,
     }
-    enum FZ_LANG_UNSET = _Anonymous_55.FZ_LANG_UNSET;
-    enum FZ_LANG_ur = _Anonymous_55.FZ_LANG_ur;
-    enum FZ_LANG_urd = _Anonymous_55.FZ_LANG_urd;
-    enum FZ_LANG_ko = _Anonymous_55.FZ_LANG_ko;
-    enum FZ_LANG_ja = _Anonymous_55.FZ_LANG_ja;
-    enum FZ_LANG_zh = _Anonymous_55.FZ_LANG_zh;
-    enum FZ_LANG_zh_Hans = _Anonymous_55.FZ_LANG_zh_Hans;
-    enum FZ_LANG_zh_Hant = _Anonymous_55.FZ_LANG_zh_Hant;
+    enum FZ_LANG_UNSET = _Anonymous_56.FZ_LANG_UNSET;
+    enum FZ_LANG_ur = _Anonymous_56.FZ_LANG_ur;
+    enum FZ_LANG_urd = _Anonymous_56.FZ_LANG_urd;
+    enum FZ_LANG_ko = _Anonymous_56.FZ_LANG_ko;
+    enum FZ_LANG_ja = _Anonymous_56.FZ_LANG_ja;
+    enum FZ_LANG_zh = _Anonymous_56.FZ_LANG_zh;
+    enum FZ_LANG_zh_Hans = _Anonymous_56.FZ_LANG_zh_Hans;
+    enum FZ_LANG_zh_Hant = _Anonymous_56.FZ_LANG_zh_Hant;
 
     struct fz_text_span
     {
@@ -8553,15 +8887,7 @@ extern(C)
 */
     char* fz_string_from_text_language(char*, fz_text_language) @nogc nothrow;
 
-    alias __u_long = c_ulong;
-
-    alias __u_int = uint;
-
-    alias __u_short = ushort;
-
-    alias __u_char = ubyte;
-
-    enum _Anonymous_56
+    enum _Anonymous_57
     {
 
         FZ_TRANSITION_NONE = 0,
@@ -8588,18 +8914,18 @@ extern(C)
 
         FZ_TRANSITION_FADE = 11,
     }
-    enum FZ_TRANSITION_NONE = _Anonymous_56.FZ_TRANSITION_NONE;
-    enum FZ_TRANSITION_SPLIT = _Anonymous_56.FZ_TRANSITION_SPLIT;
-    enum FZ_TRANSITION_BLINDS = _Anonymous_56.FZ_TRANSITION_BLINDS;
-    enum FZ_TRANSITION_BOX = _Anonymous_56.FZ_TRANSITION_BOX;
-    enum FZ_TRANSITION_WIPE = _Anonymous_56.FZ_TRANSITION_WIPE;
-    enum FZ_TRANSITION_DISSOLVE = _Anonymous_56.FZ_TRANSITION_DISSOLVE;
-    enum FZ_TRANSITION_GLITTER = _Anonymous_56.FZ_TRANSITION_GLITTER;
-    enum FZ_TRANSITION_FLY = _Anonymous_56.FZ_TRANSITION_FLY;
-    enum FZ_TRANSITION_PUSH = _Anonymous_56.FZ_TRANSITION_PUSH;
-    enum FZ_TRANSITION_COVER = _Anonymous_56.FZ_TRANSITION_COVER;
-    enum FZ_TRANSITION_UNCOVER = _Anonymous_56.FZ_TRANSITION_UNCOVER;
-    enum FZ_TRANSITION_FADE = _Anonymous_56.FZ_TRANSITION_FADE;
+    enum FZ_TRANSITION_NONE = _Anonymous_57.FZ_TRANSITION_NONE;
+    enum FZ_TRANSITION_SPLIT = _Anonymous_57.FZ_TRANSITION_SPLIT;
+    enum FZ_TRANSITION_BLINDS = _Anonymous_57.FZ_TRANSITION_BLINDS;
+    enum FZ_TRANSITION_BOX = _Anonymous_57.FZ_TRANSITION_BOX;
+    enum FZ_TRANSITION_WIPE = _Anonymous_57.FZ_TRANSITION_WIPE;
+    enum FZ_TRANSITION_DISSOLVE = _Anonymous_57.FZ_TRANSITION_DISSOLVE;
+    enum FZ_TRANSITION_GLITTER = _Anonymous_57.FZ_TRANSITION_GLITTER;
+    enum FZ_TRANSITION_FLY = _Anonymous_57.FZ_TRANSITION_FLY;
+    enum FZ_TRANSITION_PUSH = _Anonymous_57.FZ_TRANSITION_PUSH;
+    enum FZ_TRANSITION_COVER = _Anonymous_57.FZ_TRANSITION_COVER;
+    enum FZ_TRANSITION_UNCOVER = _Anonymous_57.FZ_TRANSITION_UNCOVER;
+    enum FZ_TRANSITION_FADE = _Anonymous_57.FZ_TRANSITION_FADE;
 
     struct fz_transition
     {
@@ -8632,6 +8958,12 @@ extern(C)
 	Note: Pixmaps must include alpha.
 */
     int fz_generate_transition(fz_context*, fz_pixmap*, fz_pixmap*, fz_pixmap*, int, fz_transition*) @nogc nothrow;
+
+    struct __once_flag
+    {
+
+        int __data;
+    }
     struct fz_tree;
     /**
 	Look for the value of a node in the tree with the given key.
@@ -8657,6 +8989,77 @@ extern(C)
 	dropfunc called on it.
 */
     void fz_drop_tree(fz_context*, fz_tree*, void function(fz_context*, void*)) @nogc nothrow;
+
+    alias __thrd_t = c_ulong;
+    /**
+	Structure definition is public so other classes can
+	derive from it. Callers should not access the members
+	directly, though implementations will need initialize
+	functions directly.
+*/
+    struct fz_document
+    {
+
+        int refs;
+
+        void function(fz_context*, fz_document*) drop_document;
+
+        int function(fz_context*, fz_document*) needs_password;
+
+        int function(fz_context*, fz_document*, const(char)*) authenticate_password;
+
+        int function(fz_context*, fz_document*, fz_permission) has_permission;
+
+        fz_outline* function(fz_context*, fz_document*) load_outline;
+
+        fz_outline_iterator* function(fz_context*, fz_document*) outline_iterator;
+
+        void function(fz_context*, fz_document*, float, float, float) layout;
+
+        c_long function(fz_context*, fz_document*, fz_location) make_bookmark;
+
+        fz_location function(fz_context*, fz_document*, c_long) lookup_bookmark;
+
+        fz_link_dest function(fz_context*, fz_document*, const(char)*) resolve_link_dest;
+
+        char* function(fz_context*, fz_document*, fz_link_dest) format_link_uri;
+
+        int function(fz_context*, fz_document*) count_chapters;
+
+        int function(fz_context*, fz_document*, int) count_pages;
+
+        fz_page* function(fz_context*, fz_document*, int, int) load_page;
+
+        int function(fz_context*, fz_document*, const(char)*, char*, int) lookup_metadata;
+
+        int function(fz_context*, fz_document*, const(char)*, const(char)*) set_metadata;
+
+        fz_colorspace* function(fz_context*, fz_document*) get_output_intent;
+
+        void function(fz_context*, fz_document*, fz_output*) output_accelerator;
+
+        int did_layout;
+
+        int is_reflowable;
+
+        fz_page* open;
+    }
+    /**
+	Locations within the document are referred to in terms of
+	chapter and page, rather than just a page number. For some
+	documents (such as epub documents with large numbers of pages
+	broken into many chapters) this can make navigation much faster
+	as only the required chapter needs to be decoded at a time.
+*/
+    struct fz_location
+    {
+
+        int chapter;
+
+        int page;
+    }
+
+    alias __tss_t = uint;
     /**
 	Create a display list.
 
@@ -8726,13 +9129,13 @@ extern(C)
 	Record the hits in the hit_bbox array and return the number of
 	hits. Will stop looking once it has filled hit_max rectangles.
 */
-    int fz_search_page(fz_context*, fz_page*, const(char)*, fz_quad*, int) @nogc nothrow;
+    int fz_search_page(fz_context*, fz_page*, const(char)*, int*, fz_quad*, int) @nogc nothrow;
 
-    int fz_search_page_number(fz_context*, fz_document*, int, const(char)*, fz_quad*, int) @nogc nothrow;
+    int fz_search_page_number(fz_context*, fz_document*, int, const(char)*, int*, fz_quad*, int) @nogc nothrow;
 
-    int fz_search_chapter_page_number(fz_context*, fz_document*, int, int, const(char)*, fz_quad*, int) @nogc nothrow;
+    int fz_search_chapter_page_number(fz_context*, fz_document*, int, int, const(char)*, int*, fz_quad*, int) @nogc nothrow;
 
-    int fz_search_display_list(fz_context*, fz_display_list*, const(char)*, fz_quad*, int) @nogc nothrow;
+    int fz_search_display_list(fz_context*, fz_display_list*, const(char)*, int*, fz_quad*, int) @nogc nothrow;
     /**
 	Parse an SVG document into a display-list.
 */
@@ -8744,17 +9147,21 @@ extern(C)
     /**
 	Parse an SVG document into a display-list.
 */
-    fz_display_list* fz_new_display_list_from_svg_xml(fz_context*, fz_xml_doc*, fz_xml*, const(char)*, fz_archive*, float*, float*) @nogc nothrow;
+    fz_display_list* fz_new_display_list_from_svg_xml(fz_context*, fz_xml*, fz_xml*, const(char)*, fz_archive*, float*, float*) @nogc nothrow;
     /**
 	Create a scalable image from an SVG document.
 */
-    fz_image* fz_new_image_from_svg_xml(fz_context*, fz_xml_doc*, fz_xml*, const(char)*, fz_archive*) @nogc nothrow;
+    fz_image* fz_new_image_from_svg_xml(fz_context*, fz_xml*, fz_xml*, const(char)*, fz_archive*) @nogc nothrow;
     /**
 	Write image as a data URI (for HTML and SVG output).
 */
     void fz_write_image_as_data_uri(fz_context*, fz_output*, fz_image*) @nogc nothrow;
 
     void fz_write_pixmap_as_data_uri(fz_context*, fz_output*, fz_pixmap*) @nogc nothrow;
+
+    void fz_append_image_as_data_uri(fz_context*, fz_buffer*, fz_image*) @nogc nothrow;
+
+    void fz_append_pixmap_as_data_uri(fz_context*, fz_buffer*, fz_pixmap*) @nogc nothrow;
     /**
 	Use text extraction to convert the input document into XHTML,
 	then open the result as a new document that can be reflowed.
@@ -8768,6 +9175,32 @@ extern(C)
 	transform, cookie: Passed to fz_run_page() internally.
 */
     fz_buffer* fz_new_buffer_from_page_with_format(fz_context*, fz_page*, const(char)*, const(char)*, fz_matrix, fz_cookie*) @nogc nothrow;
+
+    struct __pthread_cond_s
+    {
+
+        __atomic_wide_counter __wseq;
+
+        __atomic_wide_counter __g1_start;
+
+        uint[2] __g_refs;
+
+        uint[2] __g_size;
+
+        uint __g1_orig_size;
+
+        uint __wrefs;
+
+        uint[2] __g_signals;
+    }
+
+    struct __pthread_internal_slist
+    {
+
+        __pthread_internal_slist* __next;
+    }
+
+    alias __pthread_slist_t = __pthread_internal_slist;
     /**
 	PCL output
 */
@@ -8910,6 +9343,8 @@ extern(C)
 
         char[256] language;
 
+        char[1024] datadir;
+
         int page_count;
     }
     /**
@@ -8921,6 +9356,7 @@ extern(C)
 		compression=flate: Flate compression
 		strip-height=n: Strip height (default 16)
 		ocr-language=<lang>: OCR Language (default eng)
+		ocr-datadir=<datadir>: OCR data path (default rely on TESSDATA_PREFIX)
 */
     fz_pdfocr_options* fz_parse_pdfocr_options(fz_context*, fz_pdfocr_options*, const(char)*) @nogc nothrow;
     /**
@@ -8935,7 +9371,7 @@ extern(C)
     /**
 	Set the progress callback for a pdfocr bandwriter.
 */
-    void fz_pdfocr_band_writer_set_progress(fz_context*, fz_band_writer*, int function(fz_context*, void*, int), void*) @nogc nothrow;
+    void fz_pdfocr_band_writer_set_progress(fz_context*, fz_band_writer*, int function(fz_context*, void*, int, int), void*) @nogc nothrow;
     /**
 	Write a (Greyscale or RGB) pixmap as pdfocr.
 */
@@ -9172,6 +9608,14 @@ extern(C)
 	Output the file header to a pwg stream, ready for pages to follow it.
 */
     void fz_write_pwg_file_header(fz_context*, fz_output*) @nogc nothrow;
+
+    struct __pthread_internal_list
+    {
+
+        __pthread_internal_list* __prev;
+
+        __pthread_internal_list* __next;
+    }
     /**
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
@@ -9193,6 +9637,8 @@ extern(C)
     alias fz_document_writer_end_page_fn = void function(fz_context*, fz_document_writer*, fz_device*);
     alias fz_document_writer_close_writer_fn = void function(fz_context*, fz_document_writer*);
     alias fz_document_writer_drop_writer_fn = void function(fz_context*, fz_document_writer*);
+
+    alias __pthread_list_t = __pthread_internal_list;
     /**
 	Look for a given option (key) in the opts string. Return 1 if
 	it has it, and update *val to point to the value within opts.
@@ -9278,12 +9724,13 @@ extern(C)
     fz_document_writer* fz_new_cbz_writer(fz_context*, const(char)*, const(char)*) @nogc nothrow;
 
     fz_document_writer* fz_new_cbz_writer_with_output(fz_context*, fz_output*, const(char)*) @nogc nothrow;
+    alias fz_pdfocr_progress_fn = int function(fz_context*, void*, int, int);
 
     fz_document_writer* fz_new_pdfocr_writer(fz_context*, const(char)*, const(char)*) @nogc nothrow;
 
     fz_document_writer* fz_new_pdfocr_writer_with_output(fz_context*, fz_output*, const(char)*) @nogc nothrow;
 
-    void fz_pdfocr_writer_set_progress(fz_context*, fz_document_writer*, int function(fz_context*, void*, int), void*) @nogc nothrow;
+    void fz_pdfocr_writer_set_progress(fz_context*, fz_document_writer*, int function(fz_context*, void*, int, int), void*) @nogc nothrow;
 
     fz_document_writer* fz_new_png_pixmap_writer(fz_context*, const(char)*, const(char)*) @nogc nothrow;
 
@@ -9356,32 +9803,39 @@ extern(C)
 	space zero initialised.
 */
     fz_document_writer* fz_new_document_writer_of_size(fz_context*, c_ulong, fz_device* function(fz_context*, fz_document_writer*, fz_rect), void function(fz_context*, fz_document_writer*, fz_device*), void function(fz_context*, fz_document_writer*), void function(fz_context*, fz_document_writer*)) @nogc nothrow;
-    struct fz_xml_doc;
     struct fz_xml;
+
+    alias fz_xml_doc = fz_xml;
     /**
 	Parse the contents of buffer into a tree of xml nodes.
 
 	preserve_white: whether to keep or delete all-whitespace nodes.
 */
-    fz_xml_doc* fz_parse_xml(fz_context*, fz_buffer*, int) @nogc nothrow;
+    fz_xml* fz_parse_xml(fz_context*, fz_buffer*, int) @nogc nothrow;
     /**
 	Parse the contents of a buffer into a tree of XML nodes,
 	using the HTML5 parsing algorithm.
 */
-    fz_xml_doc* fz_parse_xml_from_html5(fz_context*, fz_buffer*) @nogc nothrow;
+    fz_xml* fz_parse_xml_from_html5(fz_context*, fz_buffer*) @nogc nothrow;
     /**
-	Free the XML node and all its children and siblings.
+	Add a reference to the XML.
 */
-    void fz_drop_xml(fz_context*, fz_xml_doc*) @nogc nothrow;
+    fz_xml* fz_keep_xml(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Drop a reference to the XML. When the last reference is
+	dropped, the node and all its children and siblings will
+	be freed.
+*/
+    void fz_drop_xml(fz_context*, fz_xml*) @nogc nothrow;
     /**
 	Detach a node from the tree, unlinking it from its parent,
 	and setting the document root to the node.
 */
-    void fz_detach_xml(fz_context*, fz_xml_doc*, fz_xml*) @nogc nothrow;
+    void fz_detach_xml(fz_context*, fz_xml*) @nogc nothrow;
     /**
 	Return the topmost XML node of a document.
 */
-    fz_xml* fz_xml_root(fz_xml_doc*) @nogc nothrow;
+    fz_xml* fz_xml_root(fz_xml*) @nogc nothrow;
     /**
 	Return previous sibling of XML node.
 */
@@ -9425,6 +9879,10 @@ extern(C)
 */
     int fz_xml_att_eq(fz_xml*, const(char)*, const(char)*) @nogc nothrow;
     /**
+	Add an attribute to an XML node.
+*/
+    void fz_xml_add_att(fz_context*, fz_pool*, fz_xml*, const(char)*, const(char)*) @nogc nothrow;
+    /**
 	Return the text content of an XML node.
 	Return NULL if the node is a tag.
 */
@@ -9456,73 +9914,205 @@ extern(C)
     fz_xml* fz_xml_find_down(fz_xml*, const(char)*) @nogc nothrow;
     /**
 	Search the siblings of XML nodes starting with item looking for
-	the first with the given tag, and with a matching attribute.
+	the first with the given tag (or any tag if tag is NULL), and
+	with a matching attribute.
 
 	Return NULL if none found.
 */
     fz_xml* fz_xml_find_match(fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
     /**
 	Search the siblings of XML nodes starting with the first sibling
-	of item looking for the first with the given tag, and with a
-	matching attribute.
+	of item looking for the first with the given tag (or any tag if tag
+	is NULL), and with a matching attribute.
 
 	Return NULL if none found.
 */
     fz_xml* fz_xml_find_next_match(fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
     /**
 	Search the siblings of XML nodes starting with the first child
-	of item looking for the first with the given tag, and with a
-	matching attribute.
+	of item looking for the first with the given tag (or any tag if
+	tag is NULL), and with a matching attribute.
 
 	Return NULL if none found.
 */
     fz_xml* fz_xml_find_down_match(fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Perform a depth first search from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL).
+*/
+    fz_xml* fz_xml_find_dfs(fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Perform a depth first search onwards from item, returning the first
+	child that matches the given tag (or any tag if tag is NULL),
+	with the given attribute (if att is non NULL), that matches
+	match (if match is non NULL).
+*/
+    fz_xml* fz_xml_find_next_dfs(fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Return a borrowed reference for the 'body' element of
+	the given DOM.
+*/
+    fz_xml* fz_dom_body(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Return a borrowed reference for the document (the top
+	level element) of the DOM.
+*/
+    fz_xml* fz_dom_document_element(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Create an element of a given tag type for the given DOM.
 
-    struct __once_flag
+	The element is not linked into the DOM yet.
+*/
+    fz_xml* fz_dom_create_element(fz_context*, fz_xml*, const(char)*) @nogc nothrow;
+    /**
+	Create a text node for the given DOM.
+
+	The element is not linked into the DOM yet.
+*/
+    fz_xml* fz_dom_create_text_node(fz_context*, fz_xml*, const(char)*) @nogc nothrow;
+    /**
+	Find the first element matching the requirements in a depth first traversal from elt.
+
+	The tagname must match tag, unless tag is NULL, when all tag names are considered to match.
+
+	If att is NULL, then all tags match.
+	Otherwise:
+		If match is NULL, then only nodes that have an att attribute match.
+		If match is non-NULL, then only nodes that have an att attribute that matches match match.
+
+	Returns NULL (if no match found), or a borrowed reference to the first matching element.
+*/
+    fz_xml* fz_dom_find(fz_context*, fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Find the next element matching the requirements.
+*/
+    fz_xml* fz_dom_find_next(fz_context*, fz_xml*, const(char)*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Insert an element as the last child of a parent, unlinking the
+	child from its current position if required.
+*/
+    void fz_dom_append_child(fz_context*, fz_xml*, fz_xml*) @nogc nothrow;
+    /**
+	Insert an element (new_elt), before another element (node),
+	unlinking the new_elt from its current position if required.
+*/
+    void fz_dom_insert_before(fz_context*, fz_xml*, fz_xml*) @nogc nothrow;
+    /**
+	Insert an element (new_elt), after another element (node),
+	unlinking the new_elt from its current position if required.
+*/
+    void fz_dom_insert_after(fz_context*, fz_xml*, fz_xml*) @nogc nothrow;
+    /**
+	Remove an element from the DOM. The element can be added back elsewhere
+	if required.
+
+	No reference counting changes for the element.
+*/
+    void fz_dom_remove(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Clone an element (and its children).
+
+	A borrowed reference to the clone is returned. The clone is not
+	yet linked into the DOM.
+*/
+    fz_xml* fz_dom_clone(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Return a borrowed reference to the first child of a node,
+	or NULL if there isn't one.
+*/
+    fz_xml* fz_dom_first_child(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Return a borrowed reference to the parent of a node,
+	or NULL if there isn't one.
+*/
+    fz_xml* fz_dom_parent(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Return a borrowed reference to the next sibling of a node,
+	or NULL if there isn't one.
+*/
+    fz_xml* fz_dom_next(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Return a borrowed reference to the previous sibling of a node,
+	or NULL if there isn't one.
+*/
+    fz_xml* fz_dom_previous(fz_context*, fz_xml*) @nogc nothrow;
+    /**
+	Add an attribute to an element.
+
+	Ownership of att and value remain with the caller.
+*/
+    void fz_dom_add_attribute(fz_context*, fz_xml*, const(char)*, const(char)*) @nogc nothrow;
+    /**
+	Remove an attribute from an element.
+*/
+    void fz_dom_remove_attribute(fz_context*, fz_xml*, const(char)*) @nogc nothrow;
+    /**
+	Retrieve the value of a given attribute from a given element.
+
+	Returns a borrowed pointer to the value or NULL if not found.
+*/
+    const(char)* fz_dom_attribute(fz_context*, fz_xml*, const(char)*) @nogc nothrow;
+    /**
+	Enumerate through the attributes of an element.
+
+	Call with i=0,1,2,3... to enumerate attributes.
+
+	On return *att and the return value will be NULL if there are not
+	that many attributes to read. Otherwise, *att will be filled in
+	with a borrowed pointer to the attribute name, and the return
+	value will be a borrowed pointer to the value.
+*/
+    const(char)* fz_dom_get_attribute(fz_context*, fz_xml*, int, const(char)**) @nogc nothrow;
+
+    struct __pthread_rwlock_arch_t
     {
 
-        int __data;
+        uint __readers;
+
+        uint __writers;
+
+        uint __wrphase_futex;
+
+        uint __writers_futex;
+
+        uint __pad3;
+
+        uint __pad4;
+
+        int __cur_writer;
+
+        int __shared;
+
+        byte __rwelision;
+
+        ubyte[7] __pad1;
+
+        c_ulong __pad2;
+
+        uint __flags;
     }
 
-    alias __thrd_t = c_ulong;
-
-    alias __tss_t = uint;
-
-    struct __pthread_cond_s
+    struct __pthread_mutex_s
     {
 
-        __atomic_wide_counter __wseq;
+        int __lock;
 
-        __atomic_wide_counter __g1_start;
+        uint __count;
 
-        uint[2] __g_refs;
+        int __owner;
 
-        uint[2] __g_size;
+        uint __nusers;
 
-        uint __g1_orig_size;
+        int __kind;
 
-        uint __wrefs;
+        short __spins;
 
-        uint[2] __g_signals;
+        short __elision;
+
+        __pthread_internal_list __list;
     }
-
-    struct __pthread_internal_slist
-    {
-
-        __pthread_internal_slist* __next;
-    }
-
-    alias __pthread_slist_t = __pthread_internal_slist;
-
-    struct __pthread_internal_list
-    {
-
-        __pthread_internal_list* __prev;
-
-        __pthread_internal_list* __next;
-    }
-
-    alias __pthread_list_t = __pthread_internal_list;
     pragma(mangle, "Memento_checkBlock")
     int Memento_checkBlock_(void*) @nogc nothrow;
     pragma(mangle, "Memento_checkAllMemory")
@@ -9561,6 +10151,10 @@ extern(C)
     void* Memento_label_(void*, const(char)*) @nogc nothrow;
     pragma(mangle, "Memento_tick")
     void Memento_tick_() @nogc nothrow;
+    pragma(mangle, "Memento_setVerbose")
+    int Memento_setVerbose_(int) @nogc nothrow;
+    pragma(mangle, "Memento_setIgnoreNewDelete")
+    int Memento_setIgnoreNewDelete_(int) @nogc nothrow;
 
     void* Memento_malloc(c_ulong) @nogc nothrow;
 
@@ -9622,53 +10216,13 @@ extern(C)
     pragma(mangle, "Memento_bt")
     void Memento_bt_() @nogc nothrow;
 
-    struct __pthread_rwlock_arch_t
-    {
+    void* Memento_cpp_new(c_ulong) @nogc nothrow;
 
-        uint __readers;
+    void Memento_cpp_delete(void*) @nogc nothrow;
 
-        uint __writers;
+    void* Memento_cpp_new_array(c_ulong) @nogc nothrow;
 
-        uint __wrphase_futex;
-
-        uint __writers_futex;
-
-        uint __pad3;
-
-        uint __pad4;
-
-        int __cur_writer;
-
-        int __shared;
-
-        byte __rwelision;
-
-        ubyte[7] __pad1;
-
-        c_ulong __pad2;
-
-        uint __flags;
-    }
-
-    struct __pthread_mutex_s
-    {
-
-        int __lock;
-
-        uint __count;
-
-        int __owner;
-
-        uint __nusers;
-
-        int __kind;
-
-        short __spins;
-
-        short __elision;
-
-        __pthread_internal_list __list;
-    }
+    void Memento_cpp_delete_array(void*) @nogc nothrow;
 
     alias uint64_t = ulong;
 
@@ -9743,6 +10297,36 @@ extern(C)
 
         c_long __align;
     }
+
+    union pthread_attr_t
+    {
+
+        char[56] __size;
+
+        c_long __align;
+    }
+
+    alias pthread_once_t = int;
+
+    alias pthread_key_t = uint;
+
+    union pthread_condattr_t
+    {
+
+        char[4] __size;
+
+        int __align;
+    }
+
+    union pthread_mutexattr_t
+    {
+
+        char[4] __size;
+
+        int __align;
+    }
+
+    alias pthread_t = c_ulong;
 
     enum pdf_annot_type
     {
@@ -9839,7 +10423,7 @@ extern(C)
 
     pdf_annot_type pdf_annot_type_from_string(fz_context*, const(char)*) @nogc nothrow;
 
-    enum _Anonymous_57
+    enum _Anonymous_58
     {
 
         PDF_ANNOT_IS_INVISIBLE = 1,
@@ -9862,16 +10446,16 @@ extern(C)
 
         PDF_ANNOT_IS_LOCKED_CONTENTS = 512,
     }
-    enum PDF_ANNOT_IS_INVISIBLE = _Anonymous_57.PDF_ANNOT_IS_INVISIBLE;
-    enum PDF_ANNOT_IS_HIDDEN = _Anonymous_57.PDF_ANNOT_IS_HIDDEN;
-    enum PDF_ANNOT_IS_PRINT = _Anonymous_57.PDF_ANNOT_IS_PRINT;
-    enum PDF_ANNOT_IS_NO_ZOOM = _Anonymous_57.PDF_ANNOT_IS_NO_ZOOM;
-    enum PDF_ANNOT_IS_NO_ROTATE = _Anonymous_57.PDF_ANNOT_IS_NO_ROTATE;
-    enum PDF_ANNOT_IS_NO_VIEW = _Anonymous_57.PDF_ANNOT_IS_NO_VIEW;
-    enum PDF_ANNOT_IS_READ_ONLY = _Anonymous_57.PDF_ANNOT_IS_READ_ONLY;
-    enum PDF_ANNOT_IS_LOCKED = _Anonymous_57.PDF_ANNOT_IS_LOCKED;
-    enum PDF_ANNOT_IS_TOGGLE_NO_VIEW = _Anonymous_57.PDF_ANNOT_IS_TOGGLE_NO_VIEW;
-    enum PDF_ANNOT_IS_LOCKED_CONTENTS = _Anonymous_57.PDF_ANNOT_IS_LOCKED_CONTENTS;
+    enum PDF_ANNOT_IS_INVISIBLE = _Anonymous_58.PDF_ANNOT_IS_INVISIBLE;
+    enum PDF_ANNOT_IS_HIDDEN = _Anonymous_58.PDF_ANNOT_IS_HIDDEN;
+    enum PDF_ANNOT_IS_PRINT = _Anonymous_58.PDF_ANNOT_IS_PRINT;
+    enum PDF_ANNOT_IS_NO_ZOOM = _Anonymous_58.PDF_ANNOT_IS_NO_ZOOM;
+    enum PDF_ANNOT_IS_NO_ROTATE = _Anonymous_58.PDF_ANNOT_IS_NO_ROTATE;
+    enum PDF_ANNOT_IS_NO_VIEW = _Anonymous_58.PDF_ANNOT_IS_NO_VIEW;
+    enum PDF_ANNOT_IS_READ_ONLY = _Anonymous_58.PDF_ANNOT_IS_READ_ONLY;
+    enum PDF_ANNOT_IS_LOCKED = _Anonymous_58.PDF_ANNOT_IS_LOCKED;
+    enum PDF_ANNOT_IS_TOGGLE_NO_VIEW = _Anonymous_58.PDF_ANNOT_IS_TOGGLE_NO_VIEW;
+    enum PDF_ANNOT_IS_LOCKED_CONTENTS = _Anonymous_58.PDF_ANNOT_IS_LOCKED_CONTENTS;
 
     enum pdf_line_ending
     {
@@ -9907,7 +10491,7 @@ extern(C)
     enum PDF_ANNOT_LE_R_CLOSED_ARROW = pdf_line_ending.PDF_ANNOT_LE_R_CLOSED_ARROW;
     enum PDF_ANNOT_LE_SLASH = pdf_line_ending.PDF_ANNOT_LE_SLASH;
 
-    enum _Anonymous_58
+    enum _Anonymous_59
     {
 
         PDF_ANNOT_Q_LEFT = 0,
@@ -9916,9 +10500,9 @@ extern(C)
 
         PDF_ANNOT_Q_RIGHT = 2,
     }
-    enum PDF_ANNOT_Q_LEFT = _Anonymous_58.PDF_ANNOT_Q_LEFT;
-    enum PDF_ANNOT_Q_CENTER = _Anonymous_58.PDF_ANNOT_Q_CENTER;
-    enum PDF_ANNOT_Q_RIGHT = _Anonymous_58.PDF_ANNOT_Q_RIGHT;
+    enum PDF_ANNOT_Q_LEFT = _Anonymous_59.PDF_ANNOT_Q_LEFT;
+    enum PDF_ANNOT_Q_CENTER = _Anonymous_59.PDF_ANNOT_Q_CENTER;
+    enum PDF_ANNOT_Q_RIGHT = _Anonymous_59.PDF_ANNOT_Q_RIGHT;
 
     pdf_line_ending pdf_line_ending_from_name(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -9956,11 +10540,25 @@ extern(C)
 
     int pdf_resolve_link(fz_context*, pdf_document*, const(char)*, float*, float*) @nogc nothrow;
 
+    fz_link_dest pdf_resolve_link_dest(fz_context*, pdf_document*, const(char)*) @nogc nothrow;
+
+    pdf_obj* pdf_new_destination_from_link(fz_context*, pdf_document*, const(char)*) @nogc nothrow;
+
+    pdf_obj* pdf_new_action_from_link(fz_context*, pdf_document*, const(char)*) @nogc nothrow;
+
+    char* pdf_format_link_uri(fz_context*, fz_link_dest) @nogc nothrow;
+
+    fz_link_dest pdf_parse_link_uri(fz_context*, const(char)*) @nogc nothrow;
+
     fz_matrix pdf_annot_transform(fz_context*, pdf_annot*) @nogc nothrow;
+
+    fz_link* pdf_new_link(fz_context*, pdf_page*, fz_rect, const(char)*, pdf_obj*) @nogc nothrow;
 
     pdf_annot* pdf_create_annot_raw(fz_context*, pdf_page*, pdf_annot_type) @nogc nothrow;
 
     fz_link* pdf_create_link(fz_context*, pdf_page*, fz_rect, const(char)*) @nogc nothrow;
+
+    void pdf_delete_link(fz_context*, pdf_page*, fz_link*) @nogc nothrow;
 
     pdf_annot* pdf_create_annot(fz_context*, pdf_page*, pdf_annot_type) @nogc nothrow;
 
@@ -10016,6 +10614,8 @@ extern(C)
 
     void pdf_set_annot_flags(fz_context*, pdf_annot*, int) @nogc nothrow;
 
+    void pdf_set_annot_stamp_image(fz_context*, pdf_annot*, fz_image*) @nogc nothrow;
+
     void pdf_set_annot_rect(fz_context*, pdf_annot*, fz_rect) @nogc nothrow;
 
     void pdf_set_annot_border(fz_context*, pdf_annot*, float) @nogc nothrow;
@@ -10065,6 +10665,8 @@ extern(C)
     const(char)* pdf_annot_icon_name(fz_context*, pdf_annot*) @nogc nothrow;
 
     int pdf_annot_is_open(fz_context*, pdf_annot*) @nogc nothrow;
+
+    int pdf_annot_is_standard_stamp(fz_context*, pdf_annot*) @nogc nothrow;
 
     void pdf_annot_line(fz_context*, pdf_annot*, fz_point*, fz_point*) @nogc nothrow;
 
@@ -10150,19 +10752,29 @@ extern(C)
 
     fz_layout_block* pdf_layout_text_widget(fz_context*, pdf_annot*) @nogc nothrow;
 
-    const(char)* pdf_guess_mime_type_from_file_name(fz_context*, const(char)*) @nogc nothrow;
+    struct pdf_embedded_file_params
+    {
 
-    pdf_obj* pdf_embedded_file_stream(fz_context*, pdf_obj*) @nogc nothrow;
+        const(char)* filename;
 
-    const(char)* pdf_embedded_file_name(fz_context*, pdf_obj*) @nogc nothrow;
+        const(char)* mimetype;
 
-    const(char)* pdf_embedded_file_type(fz_context*, pdf_obj*) @nogc nothrow;
+        int size;
+
+        c_long created;
+
+        c_long modified;
+    }
 
     int pdf_is_embedded_file(fz_context*, pdf_obj*) @nogc nothrow;
 
-    fz_buffer* pdf_load_embedded_file(fz_context*, pdf_obj*) @nogc nothrow;
+    pdf_obj* pdf_add_embedded_file(fz_context*, pdf_document*, const(char)*, const(char)*, fz_buffer*, c_long, c_long, int) @nogc nothrow;
 
-    pdf_obj* pdf_add_embedded_file(fz_context*, pdf_document*, const(char)*, const(char)*, fz_buffer*) @nogc nothrow;
+    void pdf_get_embedded_file_params(fz_context*, pdf_obj*, pdf_embedded_file_params*) @nogc nothrow;
+
+    fz_buffer* pdf_load_embedded_file_contents(fz_context*, pdf_obj*) @nogc nothrow;
+
+    int pdf_verify_embedded_file_checksum(fz_context*, pdf_obj*) @nogc nothrow;
 
     char* pdf_parse_link_dest(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
@@ -10170,7 +10782,7 @@ extern(C)
 
     pdf_obj* pdf_lookup_dest(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
-    fz_link* pdf_load_link_annots(fz_context*, pdf_document*, pdf_obj*, int, fz_matrix) @nogc nothrow;
+    fz_link* pdf_load_link_annots(fz_context*, pdf_document*, pdf_page*, pdf_obj*, int, fz_matrix) @nogc nothrow;
 
     void pdf_annot_MK_BG(fz_context*, pdf_annot*, int*, float*) @nogc nothrow;
 
@@ -10194,17 +10806,13 @@ extern(C)
 
     void pdf_set_annot_appearance_from_display_list(fz_context*, pdf_annot*, const(char)*, const(char)*, fz_matrix, fz_display_list*) @nogc nothrow;
 
-    union pthread_attr_t
-    {
+    int pdf_annot_has_filespec(fz_context*, pdf_annot*) @nogc nothrow;
 
-        char[56] __size;
+    pdf_obj* pdf_annot_filespec(fz_context*, pdf_annot*) @nogc nothrow;
 
-        c_long __align;
-    }
+    void pdf_set_annot_filespec(fz_context*, pdf_annot*, pdf_obj*) @nogc nothrow;
 
     void pdf_clean_file(fz_context*, char*, char*, char*, pdf_write_options*, int, char**) @nogc nothrow;
-
-    alias pthread_once_t = int;
 
     struct pdf_range
     {
@@ -10250,7 +10858,7 @@ extern(C)
 
         int codespace_len;
 
-        static struct _Anonymous_59
+        static struct _Anonymous_60
         {
 
             int n;
@@ -10260,7 +10868,7 @@ extern(C)
             uint high;
         }
 
-        _Anonymous_59[40] codespace;
+        _Anonymous_60[40] codespace;
 
         int rlen;
 
@@ -10335,9 +10943,7 @@ extern(C)
 
     pdf_cmap* pdf_load_embedded_cmap(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
-    alias pthread_key_t = uint;
-
-    enum _Anonymous_60
+    enum _Anonymous_61
     {
 
         PDF_ENCRYPT_KEEP = 0,
@@ -10354,13 +10960,13 @@ extern(C)
 
         PDF_ENCRYPT_UNKNOWN = 6,
     }
-    enum PDF_ENCRYPT_KEEP = _Anonymous_60.PDF_ENCRYPT_KEEP;
-    enum PDF_ENCRYPT_NONE = _Anonymous_60.PDF_ENCRYPT_NONE;
-    enum PDF_ENCRYPT_RC4_40 = _Anonymous_60.PDF_ENCRYPT_RC4_40;
-    enum PDF_ENCRYPT_RC4_128 = _Anonymous_60.PDF_ENCRYPT_RC4_128;
-    enum PDF_ENCRYPT_AES_128 = _Anonymous_60.PDF_ENCRYPT_AES_128;
-    enum PDF_ENCRYPT_AES_256 = _Anonymous_60.PDF_ENCRYPT_AES_256;
-    enum PDF_ENCRYPT_UNKNOWN = _Anonymous_60.PDF_ENCRYPT_UNKNOWN;
+    enum PDF_ENCRYPT_KEEP = _Anonymous_61.PDF_ENCRYPT_KEEP;
+    enum PDF_ENCRYPT_NONE = _Anonymous_61.PDF_ENCRYPT_NONE;
+    enum PDF_ENCRYPT_RC4_40 = _Anonymous_61.PDF_ENCRYPT_RC4_40;
+    enum PDF_ENCRYPT_RC4_128 = _Anonymous_61.PDF_ENCRYPT_RC4_128;
+    enum PDF_ENCRYPT_AES_128 = _Anonymous_61.PDF_ENCRYPT_AES_128;
+    enum PDF_ENCRYPT_AES_256 = _Anonymous_61.PDF_ENCRYPT_AES_256;
+    enum PDF_ENCRYPT_UNKNOWN = _Anonymous_61.PDF_ENCRYPT_UNKNOWN;
 
     pdf_crypt* pdf_new_crypt(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
@@ -10402,7 +11008,7 @@ extern(C)
 
     void pdf_write_digest(fz_context*, fz_output*, pdf_obj*, pdf_obj*, c_ulong, c_ulong, pdf_pkcs7_signer*) @nogc nothrow;
 
-    enum _Anonymous_61
+    enum _Anonymous_62
     {
 
         PDF_PERM_PRINT = 4,
@@ -10421,14 +11027,14 @@ extern(C)
 
         PDF_PERM_PRINT_HQ = 2048,
     }
-    enum PDF_PERM_PRINT = _Anonymous_61.PDF_PERM_PRINT;
-    enum PDF_PERM_MODIFY = _Anonymous_61.PDF_PERM_MODIFY;
-    enum PDF_PERM_COPY = _Anonymous_61.PDF_PERM_COPY;
-    enum PDF_PERM_ANNOTATE = _Anonymous_61.PDF_PERM_ANNOTATE;
-    enum PDF_PERM_FORM = _Anonymous_61.PDF_PERM_FORM;
-    enum PDF_PERM_ACCESSIBILITY = _Anonymous_61.PDF_PERM_ACCESSIBILITY;
-    enum PDF_PERM_ASSEMBLE = _Anonymous_61.PDF_PERM_ASSEMBLE;
-    enum PDF_PERM_PRINT_HQ = _Anonymous_61.PDF_PERM_PRINT_HQ;
+    enum PDF_PERM_PRINT = _Anonymous_62.PDF_PERM_PRINT;
+    enum PDF_PERM_MODIFY = _Anonymous_62.PDF_PERM_MODIFY;
+    enum PDF_PERM_COPY = _Anonymous_62.PDF_PERM_COPY;
+    enum PDF_PERM_ANNOTATE = _Anonymous_62.PDF_PERM_ANNOTATE;
+    enum PDF_PERM_FORM = _Anonymous_62.PDF_PERM_FORM;
+    enum PDF_PERM_ACCESSIBILITY = _Anonymous_62.PDF_PERM_ACCESSIBILITY;
+    enum PDF_PERM_ASSEMBLE = _Anonymous_62.PDF_PERM_ASSEMBLE;
+    enum PDF_PERM_PRINT_HQ = _Anonymous_62.PDF_PERM_PRINT_HQ;
 
     int pdf_document_permissions(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -10489,15 +11095,15 @@ extern(C)
     struct pdf_annot;
     struct pdf_js;
 
-    enum _Anonymous_62
+    enum _Anonymous_63
     {
 
         PDF_LEXBUF_SMALL = 256,
 
         PDF_LEXBUF_LARGE = 65536,
     }
-    enum PDF_LEXBUF_SMALL = _Anonymous_62.PDF_LEXBUF_SMALL;
-    enum PDF_LEXBUF_LARGE = _Anonymous_62.PDF_LEXBUF_LARGE;
+    enum PDF_LEXBUF_SMALL = _Anonymous_63.PDF_LEXBUF_SMALL;
+    enum PDF_LEXBUF_LARGE = _Anonymous_63.PDF_LEXBUF_LARGE;
 
     struct pdf_lexbuf
     {
@@ -10533,6 +11139,29 @@ extern(C)
     alias pdf_doc_event_cb = void function(fz_context*, pdf_document*, pdf_doc_event*, void*);
     alias pdf_free_doc_event_data_cb = void function(fz_context*, void*);
 
+    struct pdf_js_console
+    {
+
+        void function(pdf_js_console*, void*) drop;
+
+        void function(void*) show;
+
+        void function(void*) hide;
+
+        void function(void*) clear;
+
+        void function(void*, const(char)*) write;
+    }
+    alias pdf_js_console_drop_cb = void function(pdf_js_console*, void*);
+    alias pdf_js_console_show_cb = void function(void*);
+    alias pdf_js_console_hide_cb = void function(void*);
+    alias pdf_js_console_clear_cb = void function(void*);
+    alias pdf_js_console_write_cb = void function(void*, const(char)*);
+
+    pdf_js_console* pdf_js_get_console(fz_context*, pdf_document*) @nogc nothrow;
+
+    void pdf_js_set_console(fz_context*, pdf_document*, pdf_js_console*, void*) @nogc nothrow;
+
     pdf_document* pdf_open_document(fz_context*, const(char)*) @nogc nothrow;
 
     pdf_document* pdf_open_document_with_stream(fz_context*, fz_stream*) @nogc nothrow;
@@ -10557,9 +11186,19 @@ extern(C)
 
     fz_outline* pdf_load_outline(fz_context*, pdf_document*) @nogc nothrow;
 
-    int pdf_count_layer_configs(fz_context*, pdf_document*) @nogc nothrow;
+    fz_outline_iterator* pdf_new_outline_iterator(fz_context*, pdf_document*) @nogc nothrow;
 
     void pdf_invalidate_xfa(fz_context*, pdf_document*) @nogc nothrow;
+
+    int pdf_count_layer_configs(fz_context*, pdf_document*) @nogc nothrow;
+
+    int pdf_count_layers(fz_context*, pdf_document*) @nogc nothrow;
+
+    const(char)* pdf_layer_name(fz_context*, pdf_document*, int) @nogc nothrow;
+
+    int pdf_layer_is_enabled(fz_context*, pdf_document*, int) @nogc nothrow;
+
+    void pdf_enable_layer(fz_context*, pdf_document*, int, int) @nogc nothrow;
 
     struct pdf_layer_config
     {
@@ -10581,9 +11220,9 @@ extern(C)
 
     void pdf_toggle_layer_config_ui(fz_context*, pdf_document*, int) @nogc nothrow;
 
-    alias pdf_layer_config_ui_type = _Anonymous_63;
+    alias pdf_layer_config_ui_type = _Anonymous_64;
 
-    enum _Anonymous_63
+    enum _Anonymous_64
     {
 
         PDF_LAYER_UI_LABEL = 0,
@@ -10592,9 +11231,9 @@ extern(C)
 
         PDF_LAYER_UI_RADIOBOX = 2,
     }
-    enum PDF_LAYER_UI_LABEL = _Anonymous_63.PDF_LAYER_UI_LABEL;
-    enum PDF_LAYER_UI_CHECKBOX = _Anonymous_63.PDF_LAYER_UI_CHECKBOX;
-    enum PDF_LAYER_UI_RADIOBOX = _Anonymous_63.PDF_LAYER_UI_RADIOBOX;
+    enum PDF_LAYER_UI_LABEL = _Anonymous_64.PDF_LAYER_UI_LABEL;
+    enum PDF_LAYER_UI_CHECKBOX = _Anonymous_64.PDF_LAYER_UI_CHECKBOX;
+    enum PDF_LAYER_UI_RADIOBOX = _Anonymous_64.PDF_LAYER_UI_RADIOBOX;
 
     struct pdf_layer_config_ui
     {
@@ -10747,6 +11386,8 @@ extern(C)
         char[128] upwd_utf8;
 
         int do_snapshot;
+
+        int do_preserve_metadata;
     }
 
     extern __gshared const(pdf_write_options) pdf_default_write_options;
@@ -10775,7 +11416,7 @@ extern(C)
 
     void pdf_read_journal(fz_context*, pdf_document*, fz_stream*) @nogc nothrow;
 
-    enum _Anonymous_64
+    enum _Anonymous_65
     {
 
         PDF_DOCUMENT_EVENT_ALERT = 0,
@@ -10790,12 +11431,12 @@ extern(C)
 
         PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = 5,
     }
-    enum PDF_DOCUMENT_EVENT_ALERT = _Anonymous_64.PDF_DOCUMENT_EVENT_ALERT;
-    enum PDF_DOCUMENT_EVENT_PRINT = _Anonymous_64.PDF_DOCUMENT_EVENT_PRINT;
-    enum PDF_DOCUMENT_EVENT_LAUNCH_URL = _Anonymous_64.PDF_DOCUMENT_EVENT_LAUNCH_URL;
-    enum PDF_DOCUMENT_EVENT_MAIL_DOC = _Anonymous_64.PDF_DOCUMENT_EVENT_MAIL_DOC;
-    enum PDF_DOCUMENT_EVENT_SUBMIT = _Anonymous_64.PDF_DOCUMENT_EVENT_SUBMIT;
-    enum PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = _Anonymous_64.PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM;
+    enum PDF_DOCUMENT_EVENT_ALERT = _Anonymous_65.PDF_DOCUMENT_EVENT_ALERT;
+    enum PDF_DOCUMENT_EVENT_PRINT = _Anonymous_65.PDF_DOCUMENT_EVENT_PRINT;
+    enum PDF_DOCUMENT_EVENT_LAUNCH_URL = _Anonymous_65.PDF_DOCUMENT_EVENT_LAUNCH_URL;
+    enum PDF_DOCUMENT_EVENT_MAIL_DOC = _Anonymous_65.PDF_DOCUMENT_EVENT_MAIL_DOC;
+    enum PDF_DOCUMENT_EVENT_SUBMIT = _Anonymous_65.PDF_DOCUMENT_EVENT_SUBMIT;
+    enum PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = _Anonymous_65.PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM;
 
     void pdf_set_doc_event_callback(fz_context*, pdf_document*, void function(fz_context*, pdf_document*, pdf_doc_event*, void*), void function(fz_context*, void*), void*) @nogc nothrow;
 
@@ -10804,6 +11445,8 @@ extern(C)
     struct pdf_alert_event
     {
 
+        pdf_document* doc;
+
         const(char)* message;
 
         int icon_type;
@@ -10811,6 +11454,8 @@ extern(C)
         int button_group_type;
 
         const(char)* title;
+
+        int has_check_box;
 
         const(char)* check_box_message;
 
@@ -10821,7 +11466,7 @@ extern(C)
         int button_pressed;
     }
 
-    enum _Anonymous_65
+    enum _Anonymous_66
     {
 
         PDF_ALERT_ICON_ERROR = 0,
@@ -10832,12 +11477,12 @@ extern(C)
 
         PDF_ALERT_ICON_STATUS = 3,
     }
-    enum PDF_ALERT_ICON_ERROR = _Anonymous_65.PDF_ALERT_ICON_ERROR;
-    enum PDF_ALERT_ICON_WARNING = _Anonymous_65.PDF_ALERT_ICON_WARNING;
-    enum PDF_ALERT_ICON_QUESTION = _Anonymous_65.PDF_ALERT_ICON_QUESTION;
-    enum PDF_ALERT_ICON_STATUS = _Anonymous_65.PDF_ALERT_ICON_STATUS;
+    enum PDF_ALERT_ICON_ERROR = _Anonymous_66.PDF_ALERT_ICON_ERROR;
+    enum PDF_ALERT_ICON_WARNING = _Anonymous_66.PDF_ALERT_ICON_WARNING;
+    enum PDF_ALERT_ICON_QUESTION = _Anonymous_66.PDF_ALERT_ICON_QUESTION;
+    enum PDF_ALERT_ICON_STATUS = _Anonymous_66.PDF_ALERT_ICON_STATUS;
 
-    enum _Anonymous_66
+    enum _Anonymous_67
     {
 
         PDF_ALERT_BUTTON_GROUP_OK = 0,
@@ -10848,12 +11493,12 @@ extern(C)
 
         PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = 3,
     }
-    enum PDF_ALERT_BUTTON_GROUP_OK = _Anonymous_66.PDF_ALERT_BUTTON_GROUP_OK;
-    enum PDF_ALERT_BUTTON_GROUP_OK_CANCEL = _Anonymous_66.PDF_ALERT_BUTTON_GROUP_OK_CANCEL;
-    enum PDF_ALERT_BUTTON_GROUP_YES_NO = _Anonymous_66.PDF_ALERT_BUTTON_GROUP_YES_NO;
-    enum PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = _Anonymous_66.PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL;
+    enum PDF_ALERT_BUTTON_GROUP_OK = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_OK;
+    enum PDF_ALERT_BUTTON_GROUP_OK_CANCEL = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_OK_CANCEL;
+    enum PDF_ALERT_BUTTON_GROUP_YES_NO = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_YES_NO;
+    enum PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL;
 
-    enum _Anonymous_67
+    enum _Anonymous_68
     {
 
         PDF_ALERT_BUTTON_NONE = 0,
@@ -10866,11 +11511,11 @@ extern(C)
 
         PDF_ALERT_BUTTON_YES = 4,
     }
-    enum PDF_ALERT_BUTTON_NONE = _Anonymous_67.PDF_ALERT_BUTTON_NONE;
-    enum PDF_ALERT_BUTTON_OK = _Anonymous_67.PDF_ALERT_BUTTON_OK;
-    enum PDF_ALERT_BUTTON_CANCEL = _Anonymous_67.PDF_ALERT_BUTTON_CANCEL;
-    enum PDF_ALERT_BUTTON_NO = _Anonymous_67.PDF_ALERT_BUTTON_NO;
-    enum PDF_ALERT_BUTTON_YES = _Anonymous_67.PDF_ALERT_BUTTON_YES;
+    enum PDF_ALERT_BUTTON_NONE = _Anonymous_68.PDF_ALERT_BUTTON_NONE;
+    enum PDF_ALERT_BUTTON_OK = _Anonymous_68.PDF_ALERT_BUTTON_OK;
+    enum PDF_ALERT_BUTTON_CANCEL = _Anonymous_68.PDF_ALERT_BUTTON_CANCEL;
+    enum PDF_ALERT_BUTTON_NO = _Anonymous_68.PDF_ALERT_BUTTON_NO;
+    enum PDF_ALERT_BUTTON_YES = _Anonymous_68.PDF_ALERT_BUTTON_YES;
 
     pdf_alert_event* pdf_access_alert_event(fz_context*, pdf_doc_event*) @nogc nothrow;
 
@@ -10914,15 +11559,7 @@ extern(C)
 
     void pdf_event_issue_mail_doc(fz_context*, pdf_document*, pdf_mail_doc_event*) @nogc nothrow;
 
-    union pthread_condattr_t
-    {
-
-        char[4] __size;
-
-        int __align;
-    }
-
-    enum _Anonymous_68
+    enum _Anonymous_69
     {
 
         PDF_FD_FIXED_PITCH = 1,
@@ -10943,15 +11580,15 @@ extern(C)
 
         PDF_FD_FORCE_BOLD = 262144,
     }
-    enum PDF_FD_FIXED_PITCH = _Anonymous_68.PDF_FD_FIXED_PITCH;
-    enum PDF_FD_SERIF = _Anonymous_68.PDF_FD_SERIF;
-    enum PDF_FD_SYMBOLIC = _Anonymous_68.PDF_FD_SYMBOLIC;
-    enum PDF_FD_SCRIPT = _Anonymous_68.PDF_FD_SCRIPT;
-    enum PDF_FD_NONSYMBOLIC = _Anonymous_68.PDF_FD_NONSYMBOLIC;
-    enum PDF_FD_ITALIC = _Anonymous_68.PDF_FD_ITALIC;
-    enum PDF_FD_ALL_CAP = _Anonymous_68.PDF_FD_ALL_CAP;
-    enum PDF_FD_SMALL_CAP = _Anonymous_68.PDF_FD_SMALL_CAP;
-    enum PDF_FD_FORCE_BOLD = _Anonymous_68.PDF_FD_FORCE_BOLD;
+    enum PDF_FD_FIXED_PITCH = _Anonymous_69.PDF_FD_FIXED_PITCH;
+    enum PDF_FD_SERIF = _Anonymous_69.PDF_FD_SERIF;
+    enum PDF_FD_SYMBOLIC = _Anonymous_69.PDF_FD_SYMBOLIC;
+    enum PDF_FD_SCRIPT = _Anonymous_69.PDF_FD_SCRIPT;
+    enum PDF_FD_NONSYMBOLIC = _Anonymous_69.PDF_FD_NONSYMBOLIC;
+    enum PDF_FD_ITALIC = _Anonymous_69.PDF_FD_ITALIC;
+    enum PDF_FD_ALL_CAP = _Anonymous_69.PDF_FD_ALL_CAP;
+    enum PDF_FD_SMALL_CAP = _Anonymous_69.PDF_FD_SMALL_CAP;
+    enum PDF_FD_FORCE_BOLD = _Anonymous_69.PDF_FD_FORCE_BOLD;
 
     void pdf_load_encoding(const(char)**, const(char)*) @nogc nothrow;
 
@@ -11174,7 +11811,7 @@ extern(C)
 
     int pdf_widget_is_readonly(fz_context*, pdf_annot*) @nogc nothrow;
 
-    enum _Anonymous_69
+    enum _Anonymous_70
     {
 
         PDF_FIELD_IS_READ_ONLY = 1,
@@ -11217,32 +11854,34 @@ extern(C)
 
         PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 33554432,
     }
-    enum PDF_FIELD_IS_READ_ONLY = _Anonymous_69.PDF_FIELD_IS_READ_ONLY;
-    enum PDF_FIELD_IS_REQUIRED = _Anonymous_69.PDF_FIELD_IS_REQUIRED;
-    enum PDF_FIELD_IS_NO_EXPORT = _Anonymous_69.PDF_FIELD_IS_NO_EXPORT;
-    enum PDF_TX_FIELD_IS_MULTILINE = _Anonymous_69.PDF_TX_FIELD_IS_MULTILINE;
-    enum PDF_TX_FIELD_IS_PASSWORD = _Anonymous_69.PDF_TX_FIELD_IS_PASSWORD;
-    enum PDF_TX_FIELD_IS_FILE_SELECT = _Anonymous_69.PDF_TX_FIELD_IS_FILE_SELECT;
-    enum PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_69.PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK;
-    enum PDF_TX_FIELD_IS_DO_NOT_SCROLL = _Anonymous_69.PDF_TX_FIELD_IS_DO_NOT_SCROLL;
-    enum PDF_TX_FIELD_IS_COMB = _Anonymous_69.PDF_TX_FIELD_IS_COMB;
-    enum PDF_TX_FIELD_IS_RICH_TEXT = _Anonymous_69.PDF_TX_FIELD_IS_RICH_TEXT;
-    enum PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF = _Anonymous_69.PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF;
-    enum PDF_BTN_FIELD_IS_RADIO = _Anonymous_69.PDF_BTN_FIELD_IS_RADIO;
-    enum PDF_BTN_FIELD_IS_PUSHBUTTON = _Anonymous_69.PDF_BTN_FIELD_IS_PUSHBUTTON;
-    enum PDF_BTN_FIELD_IS_RADIOS_IN_UNISON = _Anonymous_69.PDF_BTN_FIELD_IS_RADIOS_IN_UNISON;
-    enum PDF_CH_FIELD_IS_COMBO = _Anonymous_69.PDF_CH_FIELD_IS_COMBO;
-    enum PDF_CH_FIELD_IS_EDIT = _Anonymous_69.PDF_CH_FIELD_IS_EDIT;
-    enum PDF_CH_FIELD_IS_SORT = _Anonymous_69.PDF_CH_FIELD_IS_SORT;
-    enum PDF_CH_FIELD_IS_MULTI_SELECT = _Anonymous_69.PDF_CH_FIELD_IS_MULTI_SELECT;
-    enum PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_69.PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK;
-    enum PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = _Anonymous_69.PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE;
+    enum PDF_FIELD_IS_READ_ONLY = _Anonymous_70.PDF_FIELD_IS_READ_ONLY;
+    enum PDF_FIELD_IS_REQUIRED = _Anonymous_70.PDF_FIELD_IS_REQUIRED;
+    enum PDF_FIELD_IS_NO_EXPORT = _Anonymous_70.PDF_FIELD_IS_NO_EXPORT;
+    enum PDF_TX_FIELD_IS_MULTILINE = _Anonymous_70.PDF_TX_FIELD_IS_MULTILINE;
+    enum PDF_TX_FIELD_IS_PASSWORD = _Anonymous_70.PDF_TX_FIELD_IS_PASSWORD;
+    enum PDF_TX_FIELD_IS_FILE_SELECT = _Anonymous_70.PDF_TX_FIELD_IS_FILE_SELECT;
+    enum PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_70.PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK;
+    enum PDF_TX_FIELD_IS_DO_NOT_SCROLL = _Anonymous_70.PDF_TX_FIELD_IS_DO_NOT_SCROLL;
+    enum PDF_TX_FIELD_IS_COMB = _Anonymous_70.PDF_TX_FIELD_IS_COMB;
+    enum PDF_TX_FIELD_IS_RICH_TEXT = _Anonymous_70.PDF_TX_FIELD_IS_RICH_TEXT;
+    enum PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF = _Anonymous_70.PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF;
+    enum PDF_BTN_FIELD_IS_RADIO = _Anonymous_70.PDF_BTN_FIELD_IS_RADIO;
+    enum PDF_BTN_FIELD_IS_PUSHBUTTON = _Anonymous_70.PDF_BTN_FIELD_IS_PUSHBUTTON;
+    enum PDF_BTN_FIELD_IS_RADIOS_IN_UNISON = _Anonymous_70.PDF_BTN_FIELD_IS_RADIOS_IN_UNISON;
+    enum PDF_CH_FIELD_IS_COMBO = _Anonymous_70.PDF_CH_FIELD_IS_COMBO;
+    enum PDF_CH_FIELD_IS_EDIT = _Anonymous_70.PDF_CH_FIELD_IS_EDIT;
+    enum PDF_CH_FIELD_IS_SORT = _Anonymous_70.PDF_CH_FIELD_IS_SORT;
+    enum PDF_CH_FIELD_IS_MULTI_SELECT = _Anonymous_70.PDF_CH_FIELD_IS_MULTI_SELECT;
+    enum PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_70.PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK;
+    enum PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = _Anonymous_70.PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE;
 
     void pdf_calculate_form(fz_context*, pdf_document*) @nogc nothrow;
 
     void pdf_reset_form(fz_context*, pdf_document*, pdf_obj*, int) @nogc nothrow;
 
     int pdf_field_type(fz_context*, pdf_obj*) @nogc nothrow;
+
+    const(char)* pdf_field_type_string(fz_context*, pdf_obj*) @nogc nothrow;
 
     int pdf_field_flags(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -11292,9 +11931,9 @@ extern(C)
         char* c;
     }
 
-    alias pdf_signature_error = _Anonymous_70;
+    alias pdf_signature_error = _Anonymous_71;
 
-    enum _Anonymous_70
+    enum _Anonymous_71
     {
 
         PDF_SIGNATURE_ERROR_OKAY = 0,
@@ -11313,14 +11952,14 @@ extern(C)
 
         PDF_SIGNATURE_ERROR_UNKNOWN = 7,
     }
-    enum PDF_SIGNATURE_ERROR_OKAY = _Anonymous_70.PDF_SIGNATURE_ERROR_OKAY;
-    enum PDF_SIGNATURE_ERROR_NO_SIGNATURES = _Anonymous_70.PDF_SIGNATURE_ERROR_NO_SIGNATURES;
-    enum PDF_SIGNATURE_ERROR_NO_CERTIFICATE = _Anonymous_70.PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
-    enum PDF_SIGNATURE_ERROR_DIGEST_FAILURE = _Anonymous_70.PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
-    enum PDF_SIGNATURE_ERROR_SELF_SIGNED = _Anonymous_70.PDF_SIGNATURE_ERROR_SELF_SIGNED;
-    enum PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN = _Anonymous_70.PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
-    enum PDF_SIGNATURE_ERROR_NOT_TRUSTED = _Anonymous_70.PDF_SIGNATURE_ERROR_NOT_TRUSTED;
-    enum PDF_SIGNATURE_ERROR_UNKNOWN = _Anonymous_70.PDF_SIGNATURE_ERROR_UNKNOWN;
+    enum PDF_SIGNATURE_ERROR_OKAY = _Anonymous_71.PDF_SIGNATURE_ERROR_OKAY;
+    enum PDF_SIGNATURE_ERROR_NO_SIGNATURES = _Anonymous_71.PDF_SIGNATURE_ERROR_NO_SIGNATURES;
+    enum PDF_SIGNATURE_ERROR_NO_CERTIFICATE = _Anonymous_71.PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
+    enum PDF_SIGNATURE_ERROR_DIGEST_FAILURE = _Anonymous_71.PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
+    enum PDF_SIGNATURE_ERROR_SELF_SIGNED = _Anonymous_71.PDF_SIGNATURE_ERROR_SELF_SIGNED;
+    enum PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN = _Anonymous_71.PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
+    enum PDF_SIGNATURE_ERROR_NOT_TRUSTED = _Anonymous_71.PDF_SIGNATURE_ERROR_NOT_TRUSTED;
+    enum PDF_SIGNATURE_ERROR_UNKNOWN = _Anonymous_71.PDF_SIGNATURE_ERROR_UNKNOWN;
     alias pdf_pkcs7_keep_signer_fn = pdf_pkcs7_signer* function(fz_context*, pdf_pkcs7_signer*);
     alias pdf_pkcs7_drop_signer_fn = void function(fz_context*, pdf_pkcs7_signer*);
     alias pdf_pkcs7_get_signing_name_fn = pdf_pkcs7_distinguished_name* function(fz_context*, pdf_pkcs7_signer*);
@@ -11377,7 +12016,7 @@ extern(C)
 
     void pdf_sign_signature_with_appearance(fz_context*, pdf_annot*, pdf_pkcs7_signer*, c_long, fz_display_list*) @nogc nothrow;
 
-    enum _Anonymous_71
+    enum _Anonymous_72
     {
 
         PDF_SIGNATURE_SHOW_LABELS = 1,
@@ -11392,12 +12031,12 @@ extern(C)
 
         PDF_SIGNATURE_SHOW_LOGO = 32,
     }
-    enum PDF_SIGNATURE_SHOW_LABELS = _Anonymous_71.PDF_SIGNATURE_SHOW_LABELS;
-    enum PDF_SIGNATURE_SHOW_DN = _Anonymous_71.PDF_SIGNATURE_SHOW_DN;
-    enum PDF_SIGNATURE_SHOW_DATE = _Anonymous_71.PDF_SIGNATURE_SHOW_DATE;
-    enum PDF_SIGNATURE_SHOW_TEXT_NAME = _Anonymous_71.PDF_SIGNATURE_SHOW_TEXT_NAME;
-    enum PDF_SIGNATURE_SHOW_GRAPHIC_NAME = _Anonymous_71.PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
-    enum PDF_SIGNATURE_SHOW_LOGO = _Anonymous_71.PDF_SIGNATURE_SHOW_LOGO;
+    enum PDF_SIGNATURE_SHOW_LABELS = _Anonymous_72.PDF_SIGNATURE_SHOW_LABELS;
+    enum PDF_SIGNATURE_SHOW_DN = _Anonymous_72.PDF_SIGNATURE_SHOW_DN;
+    enum PDF_SIGNATURE_SHOW_DATE = _Anonymous_72.PDF_SIGNATURE_SHOW_DATE;
+    enum PDF_SIGNATURE_SHOW_TEXT_NAME = _Anonymous_72.PDF_SIGNATURE_SHOW_TEXT_NAME;
+    enum PDF_SIGNATURE_SHOW_GRAPHIC_NAME = _Anonymous_72.PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+    enum PDF_SIGNATURE_SHOW_LOGO = _Anonymous_72.PDF_SIGNATURE_SHOW_LOGO;
 
     void pdf_sign_signature(fz_context*, pdf_annot*, pdf_pkcs7_signer*, int, fz_image*, const(char)*, const(char)*) @nogc nothrow;
 
@@ -11476,18 +12115,12 @@ extern(C)
     void pdf_annot_event_page_visible(fz_context*, pdf_annot*) @nogc nothrow;
 
     void pdf_annot_event_page_invisible(fz_context*, pdf_annot*) @nogc nothrow;
-
-    union pthread_mutexattr_t
-    {
-
-        char[4] __size;
-
-        int __align;
-    }
     struct pdf_gstate;
 
     struct pdf_processor
     {
+
+        int refs;
 
         void function(fz_context*, pdf_processor*) close_processor;
 
@@ -11668,6 +12301,8 @@ extern(C)
 
     void* pdf_new_processor(fz_context*, int) @nogc nothrow;
 
+    pdf_processor* pdf_keep_processor(fz_context*, pdf_processor*) @nogc nothrow;
+
     void pdf_close_processor(fz_context*, pdf_processor*) @nogc nothrow;
 
     void pdf_drop_processor(fz_context*, pdf_processor*) @nogc nothrow;
@@ -11734,7 +12369,7 @@ extern(C)
 
     pdf_processor* pdf_new_filter_processor(fz_context*, pdf_document*, pdf_processor*, pdf_obj*, pdf_obj*, int, fz_matrix, pdf_filter_options*) @nogc nothrow;
 
-    pdf_obj* pdf_filter_xobject_instance(fz_context*, pdf_obj*, pdf_obj*, fz_matrix, pdf_filter_options*) @nogc nothrow;
+    pdf_obj* pdf_filter_xobject_instance(fz_context*, pdf_obj*, pdf_obj*, fz_matrix, pdf_filter_options*, pdf_cycle_list*) @nogc nothrow;
 
     void pdf_process_contents(fz_context*, pdf_processor*, pdf_document*, pdf_obj*, pdf_obj*, fz_cookie*) @nogc nothrow;
 
@@ -11806,8 +12441,6 @@ extern(C)
 
     void pdf_tos_newline(pdf_text_object_state*, float) @nogc nothrow;
 
-    alias pthread_t = c_ulong;
-
     void pdf_enable_js(fz_context*, pdf_document*) @nogc nothrow;
 
     void pdf_disable_js(fz_context*, pdf_document*) @nogc nothrow;
@@ -11828,7 +12461,7 @@ extern(C)
 
     int pdf_js_event_result_keystroke(pdf_js*, pdf_keystroke_event*) @nogc nothrow;
 
-    void pdf_js_execute(pdf_js*, const(char)*, const(char)*) @nogc nothrow;
+    void pdf_js_execute(pdf_js*, const(char)*, const(char)*, char**) @nogc nothrow;
 
     struct pdf_document
     {
@@ -11879,11 +12512,17 @@ extern(C)
 
         int has_linearization_object;
 
-        int rev_page_count;
+        int page_map_nesting;
+
+        int map_page_count;
 
         pdf_rev_page_map* rev_page_map;
 
+        int* fwd_page_map;
+
         int repair_attempted;
+
+        int repair_in_progress;
 
         int file_reading_linearly;
 
@@ -11941,13 +12580,15 @@ extern(C)
 
         fz_font** type3_fonts;
 
-        static struct _Anonymous_72
+        int type3_lock;
+
+        static struct _Anonymous_73
         {
 
             fz_hash_table* fonts;
         }
 
-        _Anonymous_72 resources;
+        _Anonymous_73 resources;
 
         int orphans_max;
 
@@ -11955,7 +12596,7 @@ extern(C)
 
         pdf_obj** orphans;
 
-        fz_xml_doc* xfa;
+        fz_xml* xfa;
 
         pdf_journal* journal;
     }
@@ -12030,6 +12671,52 @@ extern(C)
     int pdf_mark_obj(fz_context*, pdf_obj*) @nogc nothrow;
 
     void pdf_unmark_obj(fz_context*, pdf_obj*) @nogc nothrow;
+
+    struct pdf_cycle_list
+    {
+
+        pdf_cycle_list* up;
+
+        int num;
+    }
+
+    int pdf_cycle(fz_context*, pdf_cycle_list*, pdf_cycle_list*, pdf_obj*) @nogc nothrow;
+
+    struct pdf_mark_bits
+    {
+
+        int len;
+
+        ubyte[1] bits;
+    }
+
+    pdf_mark_bits* pdf_new_mark_bits(fz_context*, pdf_document*) @nogc nothrow;
+
+    void pdf_drop_mark_bits(fz_context*, pdf_mark_bits*) @nogc nothrow;
+
+    void pdf_mark_bits_reset(fz_context*, pdf_mark_bits*) @nogc nothrow;
+
+    int pdf_mark_bits_set(fz_context*, pdf_mark_bits*, pdf_obj*) @nogc nothrow;
+
+    struct pdf_mark_list
+    {
+
+        int len;
+
+        int max;
+
+        int* list;
+
+        int[8] local_list;
+    }
+
+    int pdf_mark_list_push(fz_context*, pdf_mark_list*, pdf_obj*) @nogc nothrow;
+
+    void pdf_mark_list_pop(fz_context*, pdf_mark_list*) @nogc nothrow;
+
+    void pdf_mark_list_init(fz_context*, pdf_mark_list*) @nogc nothrow;
+
+    void pdf_mark_list_free(fz_context*, pdf_mark_list*) @nogc nothrow;
 
     void pdf_set_obj_memo(fz_context*, pdf_obj*, int, int) @nogc nothrow;
 
@@ -12245,7 +12932,7 @@ extern(C)
 
     void pdf_set_int(fz_context*, pdf_obj*, c_long) @nogc nothrow;
 
-    enum _Anonymous_73
+    enum _Anonymous_74
     {
 
         PDF_ENUM_NULL = 0,
@@ -12318,1430 +13005,1454 @@ extern(C)
 
         PDF_ENUM_NAME_AuthEvent = 34,
 
-        PDF_ENUM_NAME_B = 35,
+        PDF_ENUM_NAME_Author = 35,
 
-        PDF_ENUM_NAME_BBox = 36,
+        PDF_ENUM_NAME_B = 36,
 
-        PDF_ENUM_NAME_BC = 37,
+        PDF_ENUM_NAME_BBox = 37,
 
-        PDF_ENUM_NAME_BE = 38,
+        PDF_ENUM_NAME_BC = 38,
 
-        PDF_ENUM_NAME_BG = 39,
+        PDF_ENUM_NAME_BE = 39,
 
-        PDF_ENUM_NAME_BM = 40,
+        PDF_ENUM_NAME_BG = 40,
 
-        PDF_ENUM_NAME_BPC = 41,
+        PDF_ENUM_NAME_BM = 41,
 
-        PDF_ENUM_NAME_BS = 42,
+        PDF_ENUM_NAME_BPC = 42,
 
-        PDF_ENUM_NAME_Background = 43,
+        PDF_ENUM_NAME_BS = 43,
 
-        PDF_ENUM_NAME_BaseEncoding = 44,
+        PDF_ENUM_NAME_Background = 44,
 
-        PDF_ENUM_NAME_BaseFont = 45,
+        PDF_ENUM_NAME_BaseEncoding = 45,
 
-        PDF_ENUM_NAME_BaseState = 46,
+        PDF_ENUM_NAME_BaseFont = 46,
 
-        PDF_ENUM_NAME_BitsPerComponent = 47,
+        PDF_ENUM_NAME_BaseState = 47,
 
-        PDF_ENUM_NAME_BitsPerCoordinate = 48,
+        PDF_ENUM_NAME_BitsPerComponent = 48,
 
-        PDF_ENUM_NAME_BitsPerFlag = 49,
+        PDF_ENUM_NAME_BitsPerCoordinate = 49,
 
-        PDF_ENUM_NAME_BitsPerSample = 50,
+        PDF_ENUM_NAME_BitsPerFlag = 50,
 
-        PDF_ENUM_NAME_BlackIs1 = 51,
+        PDF_ENUM_NAME_BitsPerSample = 51,
 
-        PDF_ENUM_NAME_BlackPoint = 52,
+        PDF_ENUM_NAME_BlackIs1 = 52,
 
-        PDF_ENUM_NAME_BleedBox = 53,
+        PDF_ENUM_NAME_BlackPoint = 53,
 
-        PDF_ENUM_NAME_Blinds = 54,
+        PDF_ENUM_NAME_BleedBox = 54,
 
-        PDF_ENUM_NAME_Border = 55,
+        PDF_ENUM_NAME_Blinds = 55,
 
-        PDF_ENUM_NAME_Bounds = 56,
+        PDF_ENUM_NAME_Border = 56,
 
-        PDF_ENUM_NAME_Box = 57,
+        PDF_ENUM_NAME_Bounds = 57,
 
-        PDF_ENUM_NAME_Bt = 58,
+        PDF_ENUM_NAME_Box = 58,
 
-        PDF_ENUM_NAME_Btn = 59,
+        PDF_ENUM_NAME_Bt = 59,
 
-        PDF_ENUM_NAME_Butt = 60,
+        PDF_ENUM_NAME_Btn = 60,
 
-        PDF_ENUM_NAME_ByteRange = 61,
+        PDF_ENUM_NAME_Butt = 61,
 
-        PDF_ENUM_NAME_C = 62,
+        PDF_ENUM_NAME_ByteRange = 62,
 
-        PDF_ENUM_NAME_C0 = 63,
+        PDF_ENUM_NAME_C = 63,
 
-        PDF_ENUM_NAME_C1 = 64,
+        PDF_ENUM_NAME_C0 = 64,
 
-        PDF_ENUM_NAME_CA = 65,
+        PDF_ENUM_NAME_C1 = 65,
 
-        PDF_ENUM_NAME_CCF = 66,
+        PDF_ENUM_NAME_CA = 66,
 
-        PDF_ENUM_NAME_CCITTFaxDecode = 67,
+        PDF_ENUM_NAME_CCF = 67,
 
-        PDF_ENUM_NAME_CF = 68,
+        PDF_ENUM_NAME_CCITTFaxDecode = 68,
 
-        PDF_ENUM_NAME_CFM = 69,
+        PDF_ENUM_NAME_CF = 69,
 
-        PDF_ENUM_NAME_CI = 70,
+        PDF_ENUM_NAME_CFM = 70,
 
-        PDF_ENUM_NAME_CIDFontType0 = 71,
+        PDF_ENUM_NAME_CI = 71,
 
-        PDF_ENUM_NAME_CIDFontType0C = 72,
+        PDF_ENUM_NAME_CIDFontType0 = 72,
 
-        PDF_ENUM_NAME_CIDFontType2 = 73,
+        PDF_ENUM_NAME_CIDFontType0C = 73,
 
-        PDF_ENUM_NAME_CIDSystemInfo = 74,
+        PDF_ENUM_NAME_CIDFontType2 = 74,
 
-        PDF_ENUM_NAME_CIDToGIDMap = 75,
+        PDF_ENUM_NAME_CIDSystemInfo = 75,
 
-        PDF_ENUM_NAME_CMYK = 76,
+        PDF_ENUM_NAME_CIDToGIDMap = 76,
 
-        PDF_ENUM_NAME_CS = 77,
+        PDF_ENUM_NAME_CMYK = 77,
 
-        PDF_ENUM_NAME_CalCMYK = 78,
+        PDF_ENUM_NAME_CS = 78,
 
-        PDF_ENUM_NAME_CalGray = 79,
+        PDF_ENUM_NAME_CalCMYK = 79,
 
-        PDF_ENUM_NAME_CalRGB = 80,
+        PDF_ENUM_NAME_CalGray = 80,
 
-        PDF_ENUM_NAME_CapHeight = 81,
+        PDF_ENUM_NAME_CalRGB = 81,
 
-        PDF_ENUM_NAME_Caret = 82,
+        PDF_ENUM_NAME_CapHeight = 82,
 
-        PDF_ENUM_NAME_Catalog = 83,
+        PDF_ENUM_NAME_Caret = 83,
 
-        PDF_ENUM_NAME_Cert = 84,
+        PDF_ENUM_NAME_Catalog = 84,
 
-        PDF_ENUM_NAME_Ch = 85,
+        PDF_ENUM_NAME_Cert = 85,
 
-        PDF_ENUM_NAME_Changes = 86,
+        PDF_ENUM_NAME_Ch = 86,
 
-        PDF_ENUM_NAME_CharProcs = 87,
+        PDF_ENUM_NAME_Changes = 87,
 
-        PDF_ENUM_NAME_Circle = 88,
+        PDF_ENUM_NAME_CharProcs = 88,
 
-        PDF_ENUM_NAME_ClosedArrow = 89,
+        PDF_ENUM_NAME_CheckSum = 89,
 
-        PDF_ENUM_NAME_Collection = 90,
+        PDF_ENUM_NAME_Circle = 90,
 
-        PDF_ENUM_NAME_ColorSpace = 91,
+        PDF_ENUM_NAME_ClosedArrow = 91,
 
-        PDF_ENUM_NAME_ColorTransform = 92,
+        PDF_ENUM_NAME_Collection = 92,
 
-        PDF_ENUM_NAME_Colorants = 93,
+        PDF_ENUM_NAME_ColorSpace = 93,
 
-        PDF_ENUM_NAME_Colors = 94,
+        PDF_ENUM_NAME_ColorTransform = 94,
 
-        PDF_ENUM_NAME_Columns = 95,
+        PDF_ENUM_NAME_Colorants = 95,
 
-        PDF_ENUM_NAME_Confidential = 96,
+        PDF_ENUM_NAME_Colors = 96,
 
-        PDF_ENUM_NAME_Configs = 97,
+        PDF_ENUM_NAME_Columns = 97,
 
-        PDF_ENUM_NAME_ContactInfo = 98,
+        PDF_ENUM_NAME_Confidential = 98,
 
-        PDF_ENUM_NAME_Contents = 99,
+        PDF_ENUM_NAME_Configs = 99,
 
-        PDF_ENUM_NAME_Coords = 100,
+        PDF_ENUM_NAME_ContactInfo = 100,
 
-        PDF_ENUM_NAME_Count = 101,
+        PDF_ENUM_NAME_Contents = 101,
 
-        PDF_ENUM_NAME_Cover = 102,
+        PDF_ENUM_NAME_Coords = 102,
 
-        PDF_ENUM_NAME_CreationDate = 103,
+        PDF_ENUM_NAME_Count = 103,
 
-        PDF_ENUM_NAME_Creator = 104,
+        PDF_ENUM_NAME_Cover = 104,
 
-        PDF_ENUM_NAME_CropBox = 105,
+        PDF_ENUM_NAME_CreationDate = 105,
 
-        PDF_ENUM_NAME_Crypt = 106,
+        PDF_ENUM_NAME_Creator = 106,
 
-        PDF_ENUM_NAME_D = 107,
+        PDF_ENUM_NAME_CropBox = 107,
 
-        PDF_ENUM_NAME_DA = 108,
+        PDF_ENUM_NAME_Crypt = 108,
 
-        PDF_ENUM_NAME_DC = 109,
+        PDF_ENUM_NAME_D = 109,
 
-        PDF_ENUM_NAME_DCT = 110,
+        PDF_ENUM_NAME_DA = 110,
 
-        PDF_ENUM_NAME_DCTDecode = 111,
+        PDF_ENUM_NAME_DC = 111,
 
-        PDF_ENUM_NAME_DL = 112,
+        PDF_ENUM_NAME_DCT = 112,
 
-        PDF_ENUM_NAME_DOS = 113,
+        PDF_ENUM_NAME_DCTDecode = 113,
 
-        PDF_ENUM_NAME_DP = 114,
+        PDF_ENUM_NAME_DL = 114,
 
-        PDF_ENUM_NAME_DR = 115,
+        PDF_ENUM_NAME_DOS = 115,
 
-        PDF_ENUM_NAME_DS = 116,
+        PDF_ENUM_NAME_DP = 116,
 
-        PDF_ENUM_NAME_DV = 117,
+        PDF_ENUM_NAME_DR = 117,
 
-        PDF_ENUM_NAME_DW = 118,
+        PDF_ENUM_NAME_DS = 118,
 
-        PDF_ENUM_NAME_DW2 = 119,
+        PDF_ENUM_NAME_DV = 119,
 
-        PDF_ENUM_NAME_DamagedRowsBeforeError = 120,
+        PDF_ENUM_NAME_DW = 120,
 
-        PDF_ENUM_NAME_Data = 121,
+        PDF_ENUM_NAME_DW2 = 121,
 
-        PDF_ENUM_NAME_Date = 122,
+        PDF_ENUM_NAME_DamagedRowsBeforeError = 122,
 
-        PDF_ENUM_NAME_Decode = 123,
+        PDF_ENUM_NAME_Data = 123,
 
-        PDF_ENUM_NAME_DecodeParms = 124,
+        PDF_ENUM_NAME_Date = 124,
 
-        PDF_ENUM_NAME_Default = 125,
+        PDF_ENUM_NAME_Decode = 125,
 
-        PDF_ENUM_NAME_DefaultCMYK = 126,
+        PDF_ENUM_NAME_DecodeParms = 126,
 
-        PDF_ENUM_NAME_DefaultGray = 127,
+        PDF_ENUM_NAME_Default = 127,
 
-        PDF_ENUM_NAME_DefaultRGB = 128,
+        PDF_ENUM_NAME_DefaultCMYK = 128,
 
-        PDF_ENUM_NAME_Departmental = 129,
+        PDF_ENUM_NAME_DefaultGray = 129,
 
-        PDF_ENUM_NAME_Desc = 130,
+        PDF_ENUM_NAME_DefaultRGB = 130,
 
-        PDF_ENUM_NAME_DescendantFonts = 131,
+        PDF_ENUM_NAME_Departmental = 131,
 
-        PDF_ENUM_NAME_Descent = 132,
+        PDF_ENUM_NAME_Desc = 132,
 
-        PDF_ENUM_NAME_Design = 133,
+        PDF_ENUM_NAME_DescendantFonts = 133,
 
-        PDF_ENUM_NAME_Dest = 134,
+        PDF_ENUM_NAME_Descent = 134,
 
-        PDF_ENUM_NAME_DestOutputProfile = 135,
+        PDF_ENUM_NAME_Design = 135,
 
-        PDF_ENUM_NAME_Dests = 136,
+        PDF_ENUM_NAME_Dest = 136,
 
-        PDF_ENUM_NAME_DeviceCMYK = 137,
+        PDF_ENUM_NAME_DestOutputProfile = 137,
 
-        PDF_ENUM_NAME_DeviceGray = 138,
+        PDF_ENUM_NAME_Dests = 138,
 
-        PDF_ENUM_NAME_DeviceN = 139,
+        PDF_ENUM_NAME_DeviceCMYK = 139,
 
-        PDF_ENUM_NAME_DeviceRGB = 140,
+        PDF_ENUM_NAME_DeviceGray = 140,
 
-        PDF_ENUM_NAME_Di = 141,
+        PDF_ENUM_NAME_DeviceN = 141,
 
-        PDF_ENUM_NAME_Diamond = 142,
+        PDF_ENUM_NAME_DeviceRGB = 142,
 
-        PDF_ENUM_NAME_Differences = 143,
+        PDF_ENUM_NAME_Di = 143,
 
-        PDF_ENUM_NAME_DigestLocation = 144,
+        PDF_ENUM_NAME_Diamond = 144,
 
-        PDF_ENUM_NAME_DigestMethod = 145,
+        PDF_ENUM_NAME_Differences = 145,
 
-        PDF_ENUM_NAME_DigestValue = 146,
+        PDF_ENUM_NAME_DigestLocation = 146,
 
-        PDF_ENUM_NAME_Dissolve = 147,
+        PDF_ENUM_NAME_DigestMethod = 147,
 
-        PDF_ENUM_NAME_Dm = 148,
+        PDF_ENUM_NAME_DigestValue = 148,
 
-        PDF_ENUM_NAME_DocMDP = 149,
+        PDF_ENUM_NAME_Dissolve = 149,
 
-        PDF_ENUM_NAME_Document = 150,
+        PDF_ENUM_NAME_Dm = 150,
 
-        PDF_ENUM_NAME_Domain = 151,
+        PDF_ENUM_NAME_DocMDP = 151,
 
-        PDF_ENUM_NAME_Draft = 152,
+        PDF_ENUM_NAME_Document = 152,
 
-        PDF_ENUM_NAME_Dur = 153,
+        PDF_ENUM_NAME_Domain = 153,
 
-        PDF_ENUM_NAME_E = 154,
+        PDF_ENUM_NAME_Draft = 154,
 
-        PDF_ENUM_NAME_EF = 155,
+        PDF_ENUM_NAME_Dur = 155,
 
-        PDF_ENUM_NAME_EarlyChange = 156,
+        PDF_ENUM_NAME_E = 156,
 
-        PDF_ENUM_NAME_EmbeddedFile = 157,
+        PDF_ENUM_NAME_EF = 157,
 
-        PDF_ENUM_NAME_EmbeddedFiles = 158,
+        PDF_ENUM_NAME_EarlyChange = 158,
 
-        PDF_ENUM_NAME_Encode = 159,
+        PDF_ENUM_NAME_EmbeddedFile = 159,
 
-        PDF_ENUM_NAME_EncodedByteAlign = 160,
+        PDF_ENUM_NAME_EmbeddedFiles = 160,
 
-        PDF_ENUM_NAME_Encoding = 161,
+        PDF_ENUM_NAME_Encode = 161,
 
-        PDF_ENUM_NAME_Encrypt = 162,
+        PDF_ENUM_NAME_EncodedByteAlign = 162,
 
-        PDF_ENUM_NAME_EncryptMetadata = 163,
+        PDF_ENUM_NAME_Encoding = 163,
 
-        PDF_ENUM_NAME_EndOfBlock = 164,
+        PDF_ENUM_NAME_Encrypt = 164,
 
-        PDF_ENUM_NAME_EndOfLine = 165,
+        PDF_ENUM_NAME_EncryptMetadata = 165,
 
-        PDF_ENUM_NAME_Exclude = 166,
+        PDF_ENUM_NAME_EndOfBlock = 166,
 
-        PDF_ENUM_NAME_Experimental = 167,
+        PDF_ENUM_NAME_EndOfLine = 167,
 
-        PDF_ENUM_NAME_Expired = 168,
+        PDF_ENUM_NAME_Exclude = 168,
 
-        PDF_ENUM_NAME_ExtGState = 169,
+        PDF_ENUM_NAME_Experimental = 169,
 
-        PDF_ENUM_NAME_Extend = 170,
+        PDF_ENUM_NAME_Expired = 170,
 
-        PDF_ENUM_NAME_F = 171,
+        PDF_ENUM_NAME_ExtGState = 171,
 
-        PDF_ENUM_NAME_FL = 172,
+        PDF_ENUM_NAME_Extend = 172,
 
-        PDF_ENUM_NAME_FRM = 173,
+        PDF_ENUM_NAME_F = 173,
 
-        PDF_ENUM_NAME_FS = 174,
+        PDF_ENUM_NAME_FL = 174,
 
-        PDF_ENUM_NAME_FT = 175,
+        PDF_ENUM_NAME_FRM = 175,
 
-        PDF_ENUM_NAME_Fade = 176,
+        PDF_ENUM_NAME_FS = 176,
 
-        PDF_ENUM_NAME_Ff = 177,
+        PDF_ENUM_NAME_FT = 177,
 
-        PDF_ENUM_NAME_FieldMDP = 178,
+        PDF_ENUM_NAME_Fade = 178,
 
-        PDF_ENUM_NAME_Fields = 179,
+        PDF_ENUM_NAME_Ff = 179,
 
-        PDF_ENUM_NAME_FileAttachment = 180,
+        PDF_ENUM_NAME_FieldMDP = 180,
 
-        PDF_ENUM_NAME_FileSize = 181,
+        PDF_ENUM_NAME_Fields = 181,
 
-        PDF_ENUM_NAME_Filespec = 182,
+        PDF_ENUM_NAME_FileAttachment = 182,
 
-        PDF_ENUM_NAME_Filter = 183,
+        PDF_ENUM_NAME_FileSize = 183,
 
-        PDF_ENUM_NAME_Final = 184,
+        PDF_ENUM_NAME_Filespec = 184,
 
-        PDF_ENUM_NAME_Fingerprint = 185,
+        PDF_ENUM_NAME_Filter = 185,
 
-        PDF_ENUM_NAME_First = 186,
+        PDF_ENUM_NAME_Final = 186,
 
-        PDF_ENUM_NAME_FirstChar = 187,
+        PDF_ENUM_NAME_Fingerprint = 187,
 
-        PDF_ENUM_NAME_FirstPage = 188,
+        PDF_ENUM_NAME_First = 188,
 
-        PDF_ENUM_NAME_Fit = 189,
+        PDF_ENUM_NAME_FirstChar = 189,
 
-        PDF_ENUM_NAME_FitB = 190,
+        PDF_ENUM_NAME_FirstPage = 190,
 
-        PDF_ENUM_NAME_FitBH = 191,
+        PDF_ENUM_NAME_Fit = 191,
 
-        PDF_ENUM_NAME_FitBV = 192,
+        PDF_ENUM_NAME_FitB = 192,
 
-        PDF_ENUM_NAME_FitH = 193,
+        PDF_ENUM_NAME_FitBH = 193,
 
-        PDF_ENUM_NAME_FitR = 194,
+        PDF_ENUM_NAME_FitBV = 194,
 
-        PDF_ENUM_NAME_FitV = 195,
+        PDF_ENUM_NAME_FitH = 195,
 
-        PDF_ENUM_NAME_Fl = 196,
+        PDF_ENUM_NAME_FitR = 196,
 
-        PDF_ENUM_NAME_Flags = 197,
+        PDF_ENUM_NAME_FitV = 197,
 
-        PDF_ENUM_NAME_FlateDecode = 198,
+        PDF_ENUM_NAME_Fl = 198,
 
-        PDF_ENUM_NAME_Fly = 199,
+        PDF_ENUM_NAME_Flags = 199,
 
-        PDF_ENUM_NAME_Font = 200,
+        PDF_ENUM_NAME_FlateDecode = 200,
 
-        PDF_ENUM_NAME_FontBBox = 201,
+        PDF_ENUM_NAME_Fly = 201,
 
-        PDF_ENUM_NAME_FontDescriptor = 202,
+        PDF_ENUM_NAME_Font = 202,
 
-        PDF_ENUM_NAME_FontFile = 203,
+        PDF_ENUM_NAME_FontBBox = 203,
 
-        PDF_ENUM_NAME_FontFile2 = 204,
+        PDF_ENUM_NAME_FontDescriptor = 204,
 
-        PDF_ENUM_NAME_FontFile3 = 205,
+        PDF_ENUM_NAME_FontFile = 205,
 
-        PDF_ENUM_NAME_FontMatrix = 206,
+        PDF_ENUM_NAME_FontFile2 = 206,
 
-        PDF_ENUM_NAME_FontName = 207,
+        PDF_ENUM_NAME_FontFile3 = 207,
 
-        PDF_ENUM_NAME_ForComment = 208,
+        PDF_ENUM_NAME_FontMatrix = 208,
 
-        PDF_ENUM_NAME_ForPublicRelease = 209,
+        PDF_ENUM_NAME_FontName = 209,
 
-        PDF_ENUM_NAME_Form = 210,
+        PDF_ENUM_NAME_ForComment = 210,
 
-        PDF_ENUM_NAME_FormEx = 211,
+        PDF_ENUM_NAME_ForPublicRelease = 211,
 
-        PDF_ENUM_NAME_FormType = 212,
+        PDF_ENUM_NAME_Form = 212,
 
-        PDF_ENUM_NAME_FreeText = 213,
+        PDF_ENUM_NAME_FormEx = 213,
 
-        PDF_ENUM_NAME_Function = 214,
+        PDF_ENUM_NAME_FormType = 214,
 
-        PDF_ENUM_NAME_FunctionType = 215,
+        PDF_ENUM_NAME_FreeText = 215,
 
-        PDF_ENUM_NAME_Functions = 216,
+        PDF_ENUM_NAME_Function = 216,
 
-        PDF_ENUM_NAME_G = 217,
+        PDF_ENUM_NAME_FunctionType = 217,
 
-        PDF_ENUM_NAME_Gamma = 218,
+        PDF_ENUM_NAME_Functions = 218,
 
-        PDF_ENUM_NAME_Glitter = 219,
+        PDF_ENUM_NAME_G = 219,
 
-        PDF_ENUM_NAME_GoTo = 220,
+        PDF_ENUM_NAME_GTS_PDFX = 220,
 
-        PDF_ENUM_NAME_GoToR = 221,
+        PDF_ENUM_NAME_Gamma = 221,
 
-        PDF_ENUM_NAME_Group = 222,
+        PDF_ENUM_NAME_Glitter = 222,
 
-        PDF_ENUM_NAME_H = 223,
+        PDF_ENUM_NAME_GoTo = 223,
 
-        PDF_ENUM_NAME_Height = 224,
+        PDF_ENUM_NAME_GoToR = 224,
 
-        PDF_ENUM_NAME_Helv = 225,
+        PDF_ENUM_NAME_Group = 225,
 
-        PDF_ENUM_NAME_Highlight = 226,
+        PDF_ENUM_NAME_H = 226,
 
-        PDF_ENUM_NAME_HistoryPos = 227,
+        PDF_ENUM_NAME_Height = 227,
 
-        PDF_ENUM_NAME_I = 228,
+        PDF_ENUM_NAME_Helv = 228,
 
-        PDF_ENUM_NAME_IC = 229,
+        PDF_ENUM_NAME_Highlight = 229,
 
-        PDF_ENUM_NAME_ICCBased = 230,
+        PDF_ENUM_NAME_HistoryPos = 230,
 
-        PDF_ENUM_NAME_ID = 231,
+        PDF_ENUM_NAME_I = 231,
 
-        PDF_ENUM_NAME_IM = 232,
+        PDF_ENUM_NAME_IC = 232,
 
-        PDF_ENUM_NAME_IRT = 233,
+        PDF_ENUM_NAME_ICCBased = 233,
 
-        PDF_ENUM_NAME_Identity = 234,
+        PDF_ENUM_NAME_ID = 234,
 
-        PDF_ENUM_NAME_Identity_H = 235,
+        PDF_ENUM_NAME_IM = 235,
 
-        PDF_ENUM_NAME_Identity_V = 236,
+        PDF_ENUM_NAME_IRT = 236,
 
-        PDF_ENUM_NAME_Image = 237,
+        PDF_ENUM_NAME_Identity = 237,
 
-        PDF_ENUM_NAME_ImageMask = 238,
+        PDF_ENUM_NAME_Identity_H = 238,
 
-        PDF_ENUM_NAME_Include = 239,
+        PDF_ENUM_NAME_Identity_V = 239,
 
-        PDF_ENUM_NAME_Index = 240,
+        PDF_ENUM_NAME_Image = 240,
 
-        PDF_ENUM_NAME_Indexed = 241,
+        PDF_ENUM_NAME_ImageMask = 241,
 
-        PDF_ENUM_NAME_Info = 242,
+        PDF_ENUM_NAME_Include = 242,
 
-        PDF_ENUM_NAME_Ink = 243,
+        PDF_ENUM_NAME_Index = 243,
 
-        PDF_ENUM_NAME_InkList = 244,
+        PDF_ENUM_NAME_Indexed = 244,
 
-        PDF_ENUM_NAME_Intent = 245,
+        PDF_ENUM_NAME_Info = 245,
 
-        PDF_ENUM_NAME_Interpolate = 246,
+        PDF_ENUM_NAME_Ink = 246,
 
-        PDF_ENUM_NAME_IsMap = 247,
+        PDF_ENUM_NAME_InkList = 247,
 
-        PDF_ENUM_NAME_ItalicAngle = 248,
+        PDF_ENUM_NAME_Intent = 248,
 
-        PDF_ENUM_NAME_JBIG2Decode = 249,
+        PDF_ENUM_NAME_Interpolate = 249,
 
-        PDF_ENUM_NAME_JBIG2Globals = 250,
+        PDF_ENUM_NAME_IsMap = 250,
 
-        PDF_ENUM_NAME_JPXDecode = 251,
+        PDF_ENUM_NAME_ItalicAngle = 251,
 
-        PDF_ENUM_NAME_JS = 252,
+        PDF_ENUM_NAME_JBIG2Decode = 252,
 
-        PDF_ENUM_NAME_JavaScript = 253,
+        PDF_ENUM_NAME_JBIG2Globals = 253,
 
-        PDF_ENUM_NAME_K = 254,
+        PDF_ENUM_NAME_JPXDecode = 254,
 
-        PDF_ENUM_NAME_Kids = 255,
+        PDF_ENUM_NAME_JS = 255,
 
-        PDF_ENUM_NAME_L = 256,
+        PDF_ENUM_NAME_JavaScript = 256,
 
-        PDF_ENUM_NAME_LC = 257,
+        PDF_ENUM_NAME_K = 257,
 
-        PDF_ENUM_NAME_LE = 258,
+        PDF_ENUM_NAME_Keywords = 258,
 
-        PDF_ENUM_NAME_LJ = 259,
+        PDF_ENUM_NAME_Kids = 259,
 
-        PDF_ENUM_NAME_LW = 260,
+        PDF_ENUM_NAME_L = 260,
 
-        PDF_ENUM_NAME_LZ = 261,
+        PDF_ENUM_NAME_LC = 261,
 
-        PDF_ENUM_NAME_LZW = 262,
+        PDF_ENUM_NAME_LE = 262,
 
-        PDF_ENUM_NAME_LZWDecode = 263,
+        PDF_ENUM_NAME_LJ = 263,
 
-        PDF_ENUM_NAME_Lab = 264,
+        PDF_ENUM_NAME_LW = 264,
 
-        PDF_ENUM_NAME_Lang = 265,
+        PDF_ENUM_NAME_LZ = 265,
 
-        PDF_ENUM_NAME_Last = 266,
+        PDF_ENUM_NAME_LZW = 266,
 
-        PDF_ENUM_NAME_LastChar = 267,
+        PDF_ENUM_NAME_LZWDecode = 267,
 
-        PDF_ENUM_NAME_LastPage = 268,
+        PDF_ENUM_NAME_Lab = 268,
 
-        PDF_ENUM_NAME_Launch = 269,
+        PDF_ENUM_NAME_Lang = 269,
 
-        PDF_ENUM_NAME_Length = 270,
+        PDF_ENUM_NAME_Last = 270,
 
-        PDF_ENUM_NAME_Length1 = 271,
+        PDF_ENUM_NAME_LastChar = 271,
 
-        PDF_ENUM_NAME_Length2 = 272,
+        PDF_ENUM_NAME_LastPage = 272,
 
-        PDF_ENUM_NAME_Length3 = 273,
+        PDF_ENUM_NAME_Launch = 273,
 
-        PDF_ENUM_NAME_Limits = 274,
+        PDF_ENUM_NAME_Length = 274,
 
-        PDF_ENUM_NAME_Line = 275,
+        PDF_ENUM_NAME_Length1 = 275,
 
-        PDF_ENUM_NAME_Linearized = 276,
+        PDF_ENUM_NAME_Length2 = 276,
 
-        PDF_ENUM_NAME_Link = 277,
+        PDF_ENUM_NAME_Length3 = 277,
 
-        PDF_ENUM_NAME_Location = 278,
+        PDF_ENUM_NAME_Limits = 278,
 
-        PDF_ENUM_NAME_Lock = 279,
+        PDF_ENUM_NAME_Line = 279,
 
-        PDF_ENUM_NAME_Locked = 280,
+        PDF_ENUM_NAME_Linearized = 280,
 
-        PDF_ENUM_NAME_Luminosity = 281,
+        PDF_ENUM_NAME_Link = 281,
 
-        PDF_ENUM_NAME_M = 282,
+        PDF_ENUM_NAME_Location = 282,
 
-        PDF_ENUM_NAME_MCID = 283,
+        PDF_ENUM_NAME_Lock = 283,
 
-        PDF_ENUM_NAME_MK = 284,
+        PDF_ENUM_NAME_Locked = 284,
 
-        PDF_ENUM_NAME_ML = 285,
+        PDF_ENUM_NAME_Luminosity = 285,
 
-        PDF_ENUM_NAME_MMType1 = 286,
+        PDF_ENUM_NAME_M = 286,
 
-        PDF_ENUM_NAME_Mac = 287,
+        PDF_ENUM_NAME_MCID = 287,
 
-        PDF_ENUM_NAME_Mask = 288,
+        PDF_ENUM_NAME_MK = 288,
 
-        PDF_ENUM_NAME_Matrix = 289,
+        PDF_ENUM_NAME_ML = 289,
 
-        PDF_ENUM_NAME_Matte = 290,
+        PDF_ENUM_NAME_MMType1 = 290,
 
-        PDF_ENUM_NAME_MaxLen = 291,
+        PDF_ENUM_NAME_Mac = 291,
 
-        PDF_ENUM_NAME_MediaBox = 292,
+        PDF_ENUM_NAME_Mask = 292,
 
-        PDF_ENUM_NAME_Metadata = 293,
+        PDF_ENUM_NAME_Matrix = 293,
 
-        PDF_ENUM_NAME_MissingWidth = 294,
+        PDF_ENUM_NAME_Matte = 294,
 
-        PDF_ENUM_NAME_ModDate = 295,
+        PDF_ENUM_NAME_MaxLen = 295,
 
-        PDF_ENUM_NAME_Movie = 296,
+        PDF_ENUM_NAME_MediaBox = 296,
 
-        PDF_ENUM_NAME_Msg = 297,
+        PDF_ENUM_NAME_Metadata = 297,
 
-        PDF_ENUM_NAME_Multiply = 298,
+        PDF_ENUM_NAME_MissingWidth = 298,
 
-        PDF_ENUM_NAME_N = 299,
+        PDF_ENUM_NAME_ModDate = 299,
 
-        PDF_ENUM_NAME_Name = 300,
+        PDF_ENUM_NAME_Movie = 300,
 
-        PDF_ENUM_NAME_Named = 301,
+        PDF_ENUM_NAME_Msg = 301,
 
-        PDF_ENUM_NAME_Names = 302,
+        PDF_ENUM_NAME_Multiply = 302,
 
-        PDF_ENUM_NAME_NewWindow = 303,
+        PDF_ENUM_NAME_N = 303,
 
-        PDF_ENUM_NAME_Next = 304,
+        PDF_ENUM_NAME_Name = 304,
 
-        PDF_ENUM_NAME_NextPage = 305,
+        PDF_ENUM_NAME_Named = 305,
 
-        PDF_ENUM_NAME_NonEFontNoWarn = 306,
+        PDF_ENUM_NAME_Names = 306,
 
-        PDF_ENUM_NAME_None = 307,
+        PDF_ENUM_NAME_NewWindow = 307,
 
-        PDF_ENUM_NAME_Normal = 308,
+        PDF_ENUM_NAME_Next = 308,
 
-        PDF_ENUM_NAME_NotApproved = 309,
+        PDF_ENUM_NAME_NextPage = 309,
 
-        PDF_ENUM_NAME_NotForPublicRelease = 310,
+        PDF_ENUM_NAME_NonEFontNoWarn = 310,
 
-        PDF_ENUM_NAME_NumSections = 311,
+        PDF_ENUM_NAME_None = 311,
 
-        PDF_ENUM_NAME_Nums = 312,
+        PDF_ENUM_NAME_Normal = 312,
 
-        PDF_ENUM_NAME_O = 313,
+        PDF_ENUM_NAME_NotApproved = 313,
 
-        PDF_ENUM_NAME_OC = 314,
+        PDF_ENUM_NAME_NotForPublicRelease = 314,
 
-        PDF_ENUM_NAME_OCG = 315,
+        PDF_ENUM_NAME_NumSections = 315,
 
-        PDF_ENUM_NAME_OCGs = 316,
+        PDF_ENUM_NAME_Nums = 316,
 
-        PDF_ENUM_NAME_OCMD = 317,
+        PDF_ENUM_NAME_O = 317,
 
-        PDF_ENUM_NAME_OCProperties = 318,
+        PDF_ENUM_NAME_OC = 318,
 
-        PDF_ENUM_NAME_OE = 319,
+        PDF_ENUM_NAME_OCG = 319,
 
-        PDF_ENUM_NAME_OFF = 320,
+        PDF_ENUM_NAME_OCGs = 320,
 
-        PDF_ENUM_NAME_ON = 321,
+        PDF_ENUM_NAME_OCMD = 321,
 
-        PDF_ENUM_NAME_OP = 322,
+        PDF_ENUM_NAME_OCProperties = 322,
 
-        PDF_ENUM_NAME_OPM = 323,
+        PDF_ENUM_NAME_OE = 323,
 
-        PDF_ENUM_NAME_OS = 324,
+        PDF_ENUM_NAME_OFF = 324,
 
-        PDF_ENUM_NAME_ObjStm = 325,
+        PDF_ENUM_NAME_ON = 325,
 
-        PDF_ENUM_NAME_Of = 326,
+        PDF_ENUM_NAME_OP = 326,
 
-        PDF_ENUM_NAME_Off = 327,
+        PDF_ENUM_NAME_OPM = 327,
 
-        PDF_ENUM_NAME_Open = 328,
+        PDF_ENUM_NAME_OS = 328,
 
-        PDF_ENUM_NAME_OpenArrow = 329,
+        PDF_ENUM_NAME_ObjStm = 329,
 
-        PDF_ENUM_NAME_OpenType = 330,
+        PDF_ENUM_NAME_Of = 330,
 
-        PDF_ENUM_NAME_Opt = 331,
+        PDF_ENUM_NAME_Off = 331,
 
-        PDF_ENUM_NAME_Order = 332,
+        PDF_ENUM_NAME_Open = 332,
 
-        PDF_ENUM_NAME_Ordering = 333,
+        PDF_ENUM_NAME_OpenArrow = 333,
 
-        PDF_ENUM_NAME_Outlines = 334,
+        PDF_ENUM_NAME_OpenType = 334,
 
-        PDF_ENUM_NAME_OutputIntents = 335,
+        PDF_ENUM_NAME_Opt = 335,
 
-        PDF_ENUM_NAME_P = 336,
+        PDF_ENUM_NAME_Order = 336,
 
-        PDF_ENUM_NAME_PDF = 337,
+        PDF_ENUM_NAME_Ordering = 337,
 
-        PDF_ENUM_NAME_PS = 338,
+        PDF_ENUM_NAME_Outlines = 338,
 
-        PDF_ENUM_NAME_Page = 339,
+        PDF_ENUM_NAME_OutputCondition = 339,
 
-        PDF_ENUM_NAME_PageMode = 340,
+        PDF_ENUM_NAME_OutputConditionIdentifier = 340,
 
-        PDF_ENUM_NAME_Pages = 341,
+        PDF_ENUM_NAME_OutputIntent = 341,
 
-        PDF_ENUM_NAME_PaintType = 342,
+        PDF_ENUM_NAME_OutputIntents = 342,
 
-        PDF_ENUM_NAME_Params = 343,
+        PDF_ENUM_NAME_P = 343,
 
-        PDF_ENUM_NAME_Parent = 344,
+        PDF_ENUM_NAME_PDF = 344,
 
-        PDF_ENUM_NAME_Pattern = 345,
+        PDF_ENUM_NAME_PS = 345,
 
-        PDF_ENUM_NAME_PatternType = 346,
+        PDF_ENUM_NAME_Page = 346,
 
-        PDF_ENUM_NAME_Perms = 347,
+        PDF_ENUM_NAME_PageMode = 347,
 
-        PDF_ENUM_NAME_PolyLine = 348,
+        PDF_ENUM_NAME_Pages = 348,
 
-        PDF_ENUM_NAME_Polygon = 349,
+        PDF_ENUM_NAME_PaintType = 349,
 
-        PDF_ENUM_NAME_Popup = 350,
+        PDF_ENUM_NAME_Params = 350,
 
-        PDF_ENUM_NAME_PreRelease = 351,
+        PDF_ENUM_NAME_Parent = 351,
 
-        PDF_ENUM_NAME_Predictor = 352,
+        PDF_ENUM_NAME_Pattern = 352,
 
-        PDF_ENUM_NAME_Prev = 353,
+        PDF_ENUM_NAME_PatternType = 353,
 
-        PDF_ENUM_NAME_PrevPage = 354,
+        PDF_ENUM_NAME_Perms = 354,
 
-        PDF_ENUM_NAME_Preview = 355,
+        PDF_ENUM_NAME_PolyLine = 355,
 
-        PDF_ENUM_NAME_Print = 356,
+        PDF_ENUM_NAME_Polygon = 356,
 
-        PDF_ENUM_NAME_PrinterMark = 357,
+        PDF_ENUM_NAME_Popup = 357,
 
-        PDF_ENUM_NAME_ProcSet = 358,
+        PDF_ENUM_NAME_PreRelease = 358,
 
-        PDF_ENUM_NAME_Producer = 359,
+        PDF_ENUM_NAME_Predictor = 359,
 
-        PDF_ENUM_NAME_Properties = 360,
+        PDF_ENUM_NAME_Prev = 360,
 
-        PDF_ENUM_NAME_Prop_AuthTime = 361,
+        PDF_ENUM_NAME_PrevPage = 361,
 
-        PDF_ENUM_NAME_Prop_AuthType = 362,
+        PDF_ENUM_NAME_Preview = 362,
 
-        PDF_ENUM_NAME_Prop_Build = 363,
+        PDF_ENUM_NAME_Print = 363,
 
-        PDF_ENUM_NAME_PubSec = 364,
+        PDF_ENUM_NAME_PrinterMark = 364,
 
-        PDF_ENUM_NAME_Push = 365,
+        PDF_ENUM_NAME_ProcSet = 365,
 
-        PDF_ENUM_NAME_Q = 366,
+        PDF_ENUM_NAME_Producer = 366,
 
-        PDF_ENUM_NAME_QuadPoints = 367,
+        PDF_ENUM_NAME_Properties = 367,
 
-        PDF_ENUM_NAME_R = 368,
+        PDF_ENUM_NAME_Prop_AuthTime = 368,
 
-        PDF_ENUM_NAME_RBGroups = 369,
+        PDF_ENUM_NAME_Prop_AuthType = 369,
 
-        PDF_ENUM_NAME_RC = 370,
+        PDF_ENUM_NAME_Prop_Build = 370,
 
-        PDF_ENUM_NAME_RClosedArrow = 371,
+        PDF_ENUM_NAME_PubSec = 371,
 
-        PDF_ENUM_NAME_REx = 372,
+        PDF_ENUM_NAME_Push = 372,
 
-        PDF_ENUM_NAME_RGB = 373,
+        PDF_ENUM_NAME_Q = 373,
 
-        PDF_ENUM_NAME_RI = 374,
+        PDF_ENUM_NAME_QuadPoints = 374,
 
-        PDF_ENUM_NAME_RL = 375,
+        PDF_ENUM_NAME_R = 375,
 
-        PDF_ENUM_NAME_ROpenArrow = 376,
+        PDF_ENUM_NAME_RBGroups = 376,
 
-        PDF_ENUM_NAME_Range = 377,
+        PDF_ENUM_NAME_RC = 377,
 
-        PDF_ENUM_NAME_Reason = 378,
+        PDF_ENUM_NAME_RClosedArrow = 378,
 
-        PDF_ENUM_NAME_Rect = 379,
+        PDF_ENUM_NAME_REx = 379,
 
-        PDF_ENUM_NAME_Redact = 380,
+        PDF_ENUM_NAME_RGB = 380,
 
-        PDF_ENUM_NAME_Ref = 381,
+        PDF_ENUM_NAME_RI = 381,
 
-        PDF_ENUM_NAME_Reference = 382,
+        PDF_ENUM_NAME_RL = 382,
 
-        PDF_ENUM_NAME_Registry = 383,
+        PDF_ENUM_NAME_ROpenArrow = 383,
 
-        PDF_ENUM_NAME_ResetForm = 384,
+        PDF_ENUM_NAME_Range = 384,
 
-        PDF_ENUM_NAME_Resources = 385,
+        PDF_ENUM_NAME_Reason = 385,
 
-        PDF_ENUM_NAME_Root = 386,
+        PDF_ENUM_NAME_Rect = 386,
 
-        PDF_ENUM_NAME_Rotate = 387,
+        PDF_ENUM_NAME_Redact = 387,
 
-        PDF_ENUM_NAME_Rows = 388,
+        PDF_ENUM_NAME_Ref = 388,
 
-        PDF_ENUM_NAME_RunLengthDecode = 389,
+        PDF_ENUM_NAME_Reference = 389,
 
-        PDF_ENUM_NAME_S = 390,
+        PDF_ENUM_NAME_Registry = 390,
 
-        PDF_ENUM_NAME_SMask = 391,
+        PDF_ENUM_NAME_ResetForm = 391,
 
-        PDF_ENUM_NAME_SMaskInData = 392,
+        PDF_ENUM_NAME_Resources = 392,
 
-        PDF_ENUM_NAME_Schema = 393,
+        PDF_ENUM_NAME_Root = 393,
 
-        PDF_ENUM_NAME_Screen = 394,
+        PDF_ENUM_NAME_Rotate = 394,
 
-        PDF_ENUM_NAME_Separation = 395,
+        PDF_ENUM_NAME_Rows = 395,
 
-        PDF_ENUM_NAME_Shading = 396,
+        PDF_ENUM_NAME_RunLengthDecode = 396,
 
-        PDF_ENUM_NAME_ShadingType = 397,
+        PDF_ENUM_NAME_S = 397,
 
-        PDF_ENUM_NAME_Si = 398,
+        PDF_ENUM_NAME_SMask = 398,
 
-        PDF_ENUM_NAME_Sig = 399,
+        PDF_ENUM_NAME_SMaskInData = 399,
 
-        PDF_ENUM_NAME_SigFlags = 400,
+        PDF_ENUM_NAME_Schema = 400,
 
-        PDF_ENUM_NAME_SigQ = 401,
+        PDF_ENUM_NAME_Screen = 401,
 
-        PDF_ENUM_NAME_SigRef = 402,
+        PDF_ENUM_NAME_Separation = 402,
 
-        PDF_ENUM_NAME_Size = 403,
+        PDF_ENUM_NAME_Shading = 403,
 
-        PDF_ENUM_NAME_Slash = 404,
+        PDF_ENUM_NAME_ShadingType = 404,
 
-        PDF_ENUM_NAME_Sold = 405,
+        PDF_ENUM_NAME_Si = 405,
 
-        PDF_ENUM_NAME_Sound = 406,
+        PDF_ENUM_NAME_Sig = 406,
 
-        PDF_ENUM_NAME_Split = 407,
+        PDF_ENUM_NAME_SigFlags = 407,
 
-        PDF_ENUM_NAME_Square = 408,
+        PDF_ENUM_NAME_SigQ = 408,
 
-        PDF_ENUM_NAME_Squiggly = 409,
+        PDF_ENUM_NAME_SigRef = 409,
 
-        PDF_ENUM_NAME_Stamp = 410,
+        PDF_ENUM_NAME_Size = 410,
 
-        PDF_ENUM_NAME_Standard = 411,
+        PDF_ENUM_NAME_Slash = 411,
 
-        PDF_ENUM_NAME_StdCF = 412,
+        PDF_ENUM_NAME_Sold = 412,
 
-        PDF_ENUM_NAME_StemV = 413,
+        PDF_ENUM_NAME_Sound = 413,
 
-        PDF_ENUM_NAME_StmF = 414,
+        PDF_ENUM_NAME_Split = 414,
 
-        PDF_ENUM_NAME_StrF = 415,
+        PDF_ENUM_NAME_Square = 415,
 
-        PDF_ENUM_NAME_StrikeOut = 416,
+        PDF_ENUM_NAME_Squiggly = 416,
 
-        PDF_ENUM_NAME_StructParent = 417,
+        PDF_ENUM_NAME_Stamp = 417,
 
-        PDF_ENUM_NAME_StructParents = 418,
+        PDF_ENUM_NAME_Standard = 418,
 
-        PDF_ENUM_NAME_SubFilter = 419,
+        PDF_ENUM_NAME_StdCF = 419,
 
-        PDF_ENUM_NAME_Subtype = 420,
+        PDF_ENUM_NAME_StemV = 420,
 
-        PDF_ENUM_NAME_Subtype2 = 421,
+        PDF_ENUM_NAME_StmF = 421,
 
-        PDF_ENUM_NAME_Supplement = 422,
+        PDF_ENUM_NAME_StrF = 422,
 
-        PDF_ENUM_NAME_Symb = 423,
+        PDF_ENUM_NAME_StrikeOut = 423,
 
-        PDF_ENUM_NAME_T = 424,
+        PDF_ENUM_NAME_StructParent = 424,
 
-        PDF_ENUM_NAME_TI = 425,
+        PDF_ENUM_NAME_StructParents = 425,
 
-        PDF_ENUM_NAME_TR = 426,
+        PDF_ENUM_NAME_SubFilter = 426,
 
-        PDF_ENUM_NAME_TR2 = 427,
+        PDF_ENUM_NAME_Subject = 427,
 
-        PDF_ENUM_NAME_TU = 428,
+        PDF_ENUM_NAME_Subtype = 428,
 
-        PDF_ENUM_NAME_Text = 429,
+        PDF_ENUM_NAME_Subtype2 = 429,
 
-        PDF_ENUM_NAME_TilingType = 430,
+        PDF_ENUM_NAME_Supplement = 430,
 
-        PDF_ENUM_NAME_Times = 431,
+        PDF_ENUM_NAME_Symb = 431,
 
-        PDF_ENUM_NAME_Title = 432,
+        PDF_ENUM_NAME_T = 432,
 
-        PDF_ENUM_NAME_ToUnicode = 433,
+        PDF_ENUM_NAME_TI = 433,
 
-        PDF_ENUM_NAME_TopSecret = 434,
+        PDF_ENUM_NAME_TR = 434,
 
-        PDF_ENUM_NAME_Trans = 435,
+        PDF_ENUM_NAME_TR2 = 435,
 
-        PDF_ENUM_NAME_TransformMethod = 436,
+        PDF_ENUM_NAME_TU = 436,
 
-        PDF_ENUM_NAME_TransformParams = 437,
+        PDF_ENUM_NAME_Text = 437,
 
-        PDF_ENUM_NAME_Transparency = 438,
+        PDF_ENUM_NAME_TilingType = 438,
 
-        PDF_ENUM_NAME_TrapNet = 439,
+        PDF_ENUM_NAME_Times = 439,
 
-        PDF_ENUM_NAME_TrimBox = 440,
+        PDF_ENUM_NAME_Title = 440,
 
-        PDF_ENUM_NAME_TrueType = 441,
+        PDF_ENUM_NAME_ToUnicode = 441,
 
-        PDF_ENUM_NAME_TrustedMode = 442,
+        PDF_ENUM_NAME_TopSecret = 442,
 
-        PDF_ENUM_NAME_Tx = 443,
+        PDF_ENUM_NAME_Trans = 443,
 
-        PDF_ENUM_NAME_Type = 444,
+        PDF_ENUM_NAME_TransformMethod = 444,
 
-        PDF_ENUM_NAME_Type0 = 445,
+        PDF_ENUM_NAME_TransformParams = 445,
 
-        PDF_ENUM_NAME_Type1 = 446,
+        PDF_ENUM_NAME_Transparency = 446,
 
-        PDF_ENUM_NAME_Type1C = 447,
+        PDF_ENUM_NAME_TrapNet = 447,
 
-        PDF_ENUM_NAME_Type3 = 448,
+        PDF_ENUM_NAME_TrimBox = 448,
 
-        PDF_ENUM_NAME_U = 449,
+        PDF_ENUM_NAME_TrueType = 449,
 
-        PDF_ENUM_NAME_UE = 450,
+        PDF_ENUM_NAME_TrustedMode = 450,
 
-        PDF_ENUM_NAME_UF = 451,
+        PDF_ENUM_NAME_Tx = 451,
 
-        PDF_ENUM_NAME_URI = 452,
+        PDF_ENUM_NAME_Type = 452,
 
-        PDF_ENUM_NAME_URL = 453,
+        PDF_ENUM_NAME_Type0 = 453,
 
-        PDF_ENUM_NAME_Unchanged = 454,
+        PDF_ENUM_NAME_Type1 = 454,
 
-        PDF_ENUM_NAME_Uncover = 455,
+        PDF_ENUM_NAME_Type1C = 455,
 
-        PDF_ENUM_NAME_Underline = 456,
+        PDF_ENUM_NAME_Type3 = 456,
 
-        PDF_ENUM_NAME_Unix = 457,
+        PDF_ENUM_NAME_U = 457,
 
-        PDF_ENUM_NAME_Usage = 458,
+        PDF_ENUM_NAME_UE = 458,
 
-        PDF_ENUM_NAME_UseBlackPtComp = 459,
+        PDF_ENUM_NAME_UF = 459,
 
-        PDF_ENUM_NAME_UseCMap = 460,
+        PDF_ENUM_NAME_URI = 460,
 
-        PDF_ENUM_NAME_UseOutlines = 461,
+        PDF_ENUM_NAME_URL = 461,
 
-        PDF_ENUM_NAME_UserUnit = 462,
+        PDF_ENUM_NAME_Unchanged = 462,
 
-        PDF_ENUM_NAME_V = 463,
+        PDF_ENUM_NAME_Uncover = 463,
 
-        PDF_ENUM_NAME_V2 = 464,
+        PDF_ENUM_NAME_Underline = 464,
 
-        PDF_ENUM_NAME_VE = 465,
+        PDF_ENUM_NAME_Unix = 465,
 
-        PDF_ENUM_NAME_Version = 466,
+        PDF_ENUM_NAME_Usage = 466,
 
-        PDF_ENUM_NAME_Vertices = 467,
+        PDF_ENUM_NAME_UseBlackPtComp = 467,
 
-        PDF_ENUM_NAME_VerticesPerRow = 468,
+        PDF_ENUM_NAME_UseCMap = 468,
 
-        PDF_ENUM_NAME_View = 469,
+        PDF_ENUM_NAME_UseOutlines = 469,
 
-        PDF_ENUM_NAME_W = 470,
+        PDF_ENUM_NAME_UserUnit = 470,
 
-        PDF_ENUM_NAME_W2 = 471,
+        PDF_ENUM_NAME_V = 471,
 
-        PDF_ENUM_NAME_WMode = 472,
+        PDF_ENUM_NAME_V2 = 472,
 
-        PDF_ENUM_NAME_Watermark = 473,
+        PDF_ENUM_NAME_VE = 473,
 
-        PDF_ENUM_NAME_WhitePoint = 474,
+        PDF_ENUM_NAME_Version = 474,
 
-        PDF_ENUM_NAME_Widget = 475,
+        PDF_ENUM_NAME_Vertices = 475,
 
-        PDF_ENUM_NAME_Width = 476,
+        PDF_ENUM_NAME_VerticesPerRow = 476,
 
-        PDF_ENUM_NAME_Widths = 477,
+        PDF_ENUM_NAME_View = 477,
 
-        PDF_ENUM_NAME_WinAnsiEncoding = 478,
+        PDF_ENUM_NAME_W = 478,
 
-        PDF_ENUM_NAME_Wipe = 479,
+        PDF_ENUM_NAME_W2 = 479,
 
-        PDF_ENUM_NAME_XFA = 480,
+        PDF_ENUM_NAME_WMode = 480,
 
-        PDF_ENUM_NAME_XHeight = 481,
+        PDF_ENUM_NAME_Watermark = 481,
 
-        PDF_ENUM_NAME_XML = 482,
+        PDF_ENUM_NAME_WhitePoint = 482,
 
-        PDF_ENUM_NAME_XObject = 483,
+        PDF_ENUM_NAME_Widget = 483,
 
-        PDF_ENUM_NAME_XRef = 484,
+        PDF_ENUM_NAME_Width = 484,
 
-        PDF_ENUM_NAME_XRefStm = 485,
+        PDF_ENUM_NAME_Widths = 485,
 
-        PDF_ENUM_NAME_XStep = 486,
+        PDF_ENUM_NAME_WinAnsiEncoding = 486,
 
-        PDF_ENUM_NAME_XYZ = 487,
+        PDF_ENUM_NAME_Wipe = 487,
 
-        PDF_ENUM_NAME_YStep = 488,
+        PDF_ENUM_NAME_XFA = 488,
 
-        PDF_ENUM_NAME_Yes = 489,
+        PDF_ENUM_NAME_XHeight = 489,
 
-        PDF_ENUM_NAME_ZaDb = 490,
+        PDF_ENUM_NAME_XML = 490,
 
-        PDF_ENUM_NAME_adbe_pkcs7_detached = 491,
+        PDF_ENUM_NAME_XObject = 491,
 
-        PDF_ENUM_NAME_ca = 492,
+        PDF_ENUM_NAME_XRef = 492,
 
-        PDF_ENUM_NAME_n0 = 493,
+        PDF_ENUM_NAME_XRefStm = 493,
 
-        PDF_ENUM_NAME_n1 = 494,
+        PDF_ENUM_NAME_XStep = 494,
 
-        PDF_ENUM_NAME_n2 = 495,
+        PDF_ENUM_NAME_XYZ = 495,
 
-        PDF_ENUM_NAME_op = 496,
+        PDF_ENUM_NAME_YStep = 496,
 
-        PDF_ENUM_LIMIT = 497,
+        PDF_ENUM_NAME_Yes = 497,
+
+        PDF_ENUM_NAME_ZaDb = 498,
+
+        PDF_ENUM_NAME_adbe_pkcs7_detached = 499,
+
+        PDF_ENUM_NAME_ca = 500,
+
+        PDF_ENUM_NAME_n0 = 501,
+
+        PDF_ENUM_NAME_n1 = 502,
+
+        PDF_ENUM_NAME_n2 = 503,
+
+        PDF_ENUM_NAME_op = 504,
+
+        PDF_ENUM_LIMIT = 505,
     }
-    enum PDF_ENUM_NULL = _Anonymous_73.PDF_ENUM_NULL;
-    enum PDF_ENUM_TRUE = _Anonymous_73.PDF_ENUM_TRUE;
-    enum PDF_ENUM_FALSE = _Anonymous_73.PDF_ENUM_FALSE;
-    enum PDF_ENUM_NAME_1_2 = _Anonymous_73.PDF_ENUM_NAME_1_2;
-    enum PDF_ENUM_NAME_3D = _Anonymous_73.PDF_ENUM_NAME_3D;
-    enum PDF_ENUM_NAME_A = _Anonymous_73.PDF_ENUM_NAME_A;
-    enum PDF_ENUM_NAME_A85 = _Anonymous_73.PDF_ENUM_NAME_A85;
-    enum PDF_ENUM_NAME_AA = _Anonymous_73.PDF_ENUM_NAME_AA;
-    enum PDF_ENUM_NAME_AC = _Anonymous_73.PDF_ENUM_NAME_AC;
-    enum PDF_ENUM_NAME_AESV2 = _Anonymous_73.PDF_ENUM_NAME_AESV2;
-    enum PDF_ENUM_NAME_AESV3 = _Anonymous_73.PDF_ENUM_NAME_AESV3;
-    enum PDF_ENUM_NAME_AHx = _Anonymous_73.PDF_ENUM_NAME_AHx;
-    enum PDF_ENUM_NAME_AP = _Anonymous_73.PDF_ENUM_NAME_AP;
-    enum PDF_ENUM_NAME_AS = _Anonymous_73.PDF_ENUM_NAME_AS;
-    enum PDF_ENUM_NAME_ASCII85Decode = _Anonymous_73.PDF_ENUM_NAME_ASCII85Decode;
-    enum PDF_ENUM_NAME_ASCIIHexDecode = _Anonymous_73.PDF_ENUM_NAME_ASCIIHexDecode;
-    enum PDF_ENUM_NAME_AcroForm = _Anonymous_73.PDF_ENUM_NAME_AcroForm;
-    enum PDF_ENUM_NAME_Action = _Anonymous_73.PDF_ENUM_NAME_Action;
-    enum PDF_ENUM_NAME_ActualText = _Anonymous_73.PDF_ENUM_NAME_ActualText;
-    enum PDF_ENUM_NAME_Adobe_PPKLite = _Anonymous_73.PDF_ENUM_NAME_Adobe_PPKLite;
-    enum PDF_ENUM_NAME_All = _Anonymous_73.PDF_ENUM_NAME_All;
-    enum PDF_ENUM_NAME_AllOff = _Anonymous_73.PDF_ENUM_NAME_AllOff;
-    enum PDF_ENUM_NAME_AllOn = _Anonymous_73.PDF_ENUM_NAME_AllOn;
-    enum PDF_ENUM_NAME_Alpha = _Anonymous_73.PDF_ENUM_NAME_Alpha;
-    enum PDF_ENUM_NAME_Alt = _Anonymous_73.PDF_ENUM_NAME_Alt;
-    enum PDF_ENUM_NAME_Alternate = _Anonymous_73.PDF_ENUM_NAME_Alternate;
-    enum PDF_ENUM_NAME_Annot = _Anonymous_73.PDF_ENUM_NAME_Annot;
-    enum PDF_ENUM_NAME_Annots = _Anonymous_73.PDF_ENUM_NAME_Annots;
-    enum PDF_ENUM_NAME_AnyOff = _Anonymous_73.PDF_ENUM_NAME_AnyOff;
-    enum PDF_ENUM_NAME_App = _Anonymous_73.PDF_ENUM_NAME_App;
-    enum PDF_ENUM_NAME_Approved = _Anonymous_73.PDF_ENUM_NAME_Approved;
-    enum PDF_ENUM_NAME_ArtBox = _Anonymous_73.PDF_ENUM_NAME_ArtBox;
-    enum PDF_ENUM_NAME_AsIs = _Anonymous_73.PDF_ENUM_NAME_AsIs;
-    enum PDF_ENUM_NAME_Ascent = _Anonymous_73.PDF_ENUM_NAME_Ascent;
-    enum PDF_ENUM_NAME_AuthEvent = _Anonymous_73.PDF_ENUM_NAME_AuthEvent;
-    enum PDF_ENUM_NAME_B = _Anonymous_73.PDF_ENUM_NAME_B;
-    enum PDF_ENUM_NAME_BBox = _Anonymous_73.PDF_ENUM_NAME_BBox;
-    enum PDF_ENUM_NAME_BC = _Anonymous_73.PDF_ENUM_NAME_BC;
-    enum PDF_ENUM_NAME_BE = _Anonymous_73.PDF_ENUM_NAME_BE;
-    enum PDF_ENUM_NAME_BG = _Anonymous_73.PDF_ENUM_NAME_BG;
-    enum PDF_ENUM_NAME_BM = _Anonymous_73.PDF_ENUM_NAME_BM;
-    enum PDF_ENUM_NAME_BPC = _Anonymous_73.PDF_ENUM_NAME_BPC;
-    enum PDF_ENUM_NAME_BS = _Anonymous_73.PDF_ENUM_NAME_BS;
-    enum PDF_ENUM_NAME_Background = _Anonymous_73.PDF_ENUM_NAME_Background;
-    enum PDF_ENUM_NAME_BaseEncoding = _Anonymous_73.PDF_ENUM_NAME_BaseEncoding;
-    enum PDF_ENUM_NAME_BaseFont = _Anonymous_73.PDF_ENUM_NAME_BaseFont;
-    enum PDF_ENUM_NAME_BaseState = _Anonymous_73.PDF_ENUM_NAME_BaseState;
-    enum PDF_ENUM_NAME_BitsPerComponent = _Anonymous_73.PDF_ENUM_NAME_BitsPerComponent;
-    enum PDF_ENUM_NAME_BitsPerCoordinate = _Anonymous_73.PDF_ENUM_NAME_BitsPerCoordinate;
-    enum PDF_ENUM_NAME_BitsPerFlag = _Anonymous_73.PDF_ENUM_NAME_BitsPerFlag;
-    enum PDF_ENUM_NAME_BitsPerSample = _Anonymous_73.PDF_ENUM_NAME_BitsPerSample;
-    enum PDF_ENUM_NAME_BlackIs1 = _Anonymous_73.PDF_ENUM_NAME_BlackIs1;
-    enum PDF_ENUM_NAME_BlackPoint = _Anonymous_73.PDF_ENUM_NAME_BlackPoint;
-    enum PDF_ENUM_NAME_BleedBox = _Anonymous_73.PDF_ENUM_NAME_BleedBox;
-    enum PDF_ENUM_NAME_Blinds = _Anonymous_73.PDF_ENUM_NAME_Blinds;
-    enum PDF_ENUM_NAME_Border = _Anonymous_73.PDF_ENUM_NAME_Border;
-    enum PDF_ENUM_NAME_Bounds = _Anonymous_73.PDF_ENUM_NAME_Bounds;
-    enum PDF_ENUM_NAME_Box = _Anonymous_73.PDF_ENUM_NAME_Box;
-    enum PDF_ENUM_NAME_Bt = _Anonymous_73.PDF_ENUM_NAME_Bt;
-    enum PDF_ENUM_NAME_Btn = _Anonymous_73.PDF_ENUM_NAME_Btn;
-    enum PDF_ENUM_NAME_Butt = _Anonymous_73.PDF_ENUM_NAME_Butt;
-    enum PDF_ENUM_NAME_ByteRange = _Anonymous_73.PDF_ENUM_NAME_ByteRange;
-    enum PDF_ENUM_NAME_C = _Anonymous_73.PDF_ENUM_NAME_C;
-    enum PDF_ENUM_NAME_C0 = _Anonymous_73.PDF_ENUM_NAME_C0;
-    enum PDF_ENUM_NAME_C1 = _Anonymous_73.PDF_ENUM_NAME_C1;
-    enum PDF_ENUM_NAME_CA = _Anonymous_73.PDF_ENUM_NAME_CA;
-    enum PDF_ENUM_NAME_CCF = _Anonymous_73.PDF_ENUM_NAME_CCF;
-    enum PDF_ENUM_NAME_CCITTFaxDecode = _Anonymous_73.PDF_ENUM_NAME_CCITTFaxDecode;
-    enum PDF_ENUM_NAME_CF = _Anonymous_73.PDF_ENUM_NAME_CF;
-    enum PDF_ENUM_NAME_CFM = _Anonymous_73.PDF_ENUM_NAME_CFM;
-    enum PDF_ENUM_NAME_CI = _Anonymous_73.PDF_ENUM_NAME_CI;
-    enum PDF_ENUM_NAME_CIDFontType0 = _Anonymous_73.PDF_ENUM_NAME_CIDFontType0;
-    enum PDF_ENUM_NAME_CIDFontType0C = _Anonymous_73.PDF_ENUM_NAME_CIDFontType0C;
-    enum PDF_ENUM_NAME_CIDFontType2 = _Anonymous_73.PDF_ENUM_NAME_CIDFontType2;
-    enum PDF_ENUM_NAME_CIDSystemInfo = _Anonymous_73.PDF_ENUM_NAME_CIDSystemInfo;
-    enum PDF_ENUM_NAME_CIDToGIDMap = _Anonymous_73.PDF_ENUM_NAME_CIDToGIDMap;
-    enum PDF_ENUM_NAME_CMYK = _Anonymous_73.PDF_ENUM_NAME_CMYK;
-    enum PDF_ENUM_NAME_CS = _Anonymous_73.PDF_ENUM_NAME_CS;
-    enum PDF_ENUM_NAME_CalCMYK = _Anonymous_73.PDF_ENUM_NAME_CalCMYK;
-    enum PDF_ENUM_NAME_CalGray = _Anonymous_73.PDF_ENUM_NAME_CalGray;
-    enum PDF_ENUM_NAME_CalRGB = _Anonymous_73.PDF_ENUM_NAME_CalRGB;
-    enum PDF_ENUM_NAME_CapHeight = _Anonymous_73.PDF_ENUM_NAME_CapHeight;
-    enum PDF_ENUM_NAME_Caret = _Anonymous_73.PDF_ENUM_NAME_Caret;
-    enum PDF_ENUM_NAME_Catalog = _Anonymous_73.PDF_ENUM_NAME_Catalog;
-    enum PDF_ENUM_NAME_Cert = _Anonymous_73.PDF_ENUM_NAME_Cert;
-    enum PDF_ENUM_NAME_Ch = _Anonymous_73.PDF_ENUM_NAME_Ch;
-    enum PDF_ENUM_NAME_Changes = _Anonymous_73.PDF_ENUM_NAME_Changes;
-    enum PDF_ENUM_NAME_CharProcs = _Anonymous_73.PDF_ENUM_NAME_CharProcs;
-    enum PDF_ENUM_NAME_Circle = _Anonymous_73.PDF_ENUM_NAME_Circle;
-    enum PDF_ENUM_NAME_ClosedArrow = _Anonymous_73.PDF_ENUM_NAME_ClosedArrow;
-    enum PDF_ENUM_NAME_Collection = _Anonymous_73.PDF_ENUM_NAME_Collection;
-    enum PDF_ENUM_NAME_ColorSpace = _Anonymous_73.PDF_ENUM_NAME_ColorSpace;
-    enum PDF_ENUM_NAME_ColorTransform = _Anonymous_73.PDF_ENUM_NAME_ColorTransform;
-    enum PDF_ENUM_NAME_Colorants = _Anonymous_73.PDF_ENUM_NAME_Colorants;
-    enum PDF_ENUM_NAME_Colors = _Anonymous_73.PDF_ENUM_NAME_Colors;
-    enum PDF_ENUM_NAME_Columns = _Anonymous_73.PDF_ENUM_NAME_Columns;
-    enum PDF_ENUM_NAME_Confidential = _Anonymous_73.PDF_ENUM_NAME_Confidential;
-    enum PDF_ENUM_NAME_Configs = _Anonymous_73.PDF_ENUM_NAME_Configs;
-    enum PDF_ENUM_NAME_ContactInfo = _Anonymous_73.PDF_ENUM_NAME_ContactInfo;
-    enum PDF_ENUM_NAME_Contents = _Anonymous_73.PDF_ENUM_NAME_Contents;
-    enum PDF_ENUM_NAME_Coords = _Anonymous_73.PDF_ENUM_NAME_Coords;
-    enum PDF_ENUM_NAME_Count = _Anonymous_73.PDF_ENUM_NAME_Count;
-    enum PDF_ENUM_NAME_Cover = _Anonymous_73.PDF_ENUM_NAME_Cover;
-    enum PDF_ENUM_NAME_CreationDate = _Anonymous_73.PDF_ENUM_NAME_CreationDate;
-    enum PDF_ENUM_NAME_Creator = _Anonymous_73.PDF_ENUM_NAME_Creator;
-    enum PDF_ENUM_NAME_CropBox = _Anonymous_73.PDF_ENUM_NAME_CropBox;
-    enum PDF_ENUM_NAME_Crypt = _Anonymous_73.PDF_ENUM_NAME_Crypt;
-    enum PDF_ENUM_NAME_D = _Anonymous_73.PDF_ENUM_NAME_D;
-    enum PDF_ENUM_NAME_DA = _Anonymous_73.PDF_ENUM_NAME_DA;
-    enum PDF_ENUM_NAME_DC = _Anonymous_73.PDF_ENUM_NAME_DC;
-    enum PDF_ENUM_NAME_DCT = _Anonymous_73.PDF_ENUM_NAME_DCT;
-    enum PDF_ENUM_NAME_DCTDecode = _Anonymous_73.PDF_ENUM_NAME_DCTDecode;
-    enum PDF_ENUM_NAME_DL = _Anonymous_73.PDF_ENUM_NAME_DL;
-    enum PDF_ENUM_NAME_DOS = _Anonymous_73.PDF_ENUM_NAME_DOS;
-    enum PDF_ENUM_NAME_DP = _Anonymous_73.PDF_ENUM_NAME_DP;
-    enum PDF_ENUM_NAME_DR = _Anonymous_73.PDF_ENUM_NAME_DR;
-    enum PDF_ENUM_NAME_DS = _Anonymous_73.PDF_ENUM_NAME_DS;
-    enum PDF_ENUM_NAME_DV = _Anonymous_73.PDF_ENUM_NAME_DV;
-    enum PDF_ENUM_NAME_DW = _Anonymous_73.PDF_ENUM_NAME_DW;
-    enum PDF_ENUM_NAME_DW2 = _Anonymous_73.PDF_ENUM_NAME_DW2;
-    enum PDF_ENUM_NAME_DamagedRowsBeforeError = _Anonymous_73.PDF_ENUM_NAME_DamagedRowsBeforeError;
-    enum PDF_ENUM_NAME_Data = _Anonymous_73.PDF_ENUM_NAME_Data;
-    enum PDF_ENUM_NAME_Date = _Anonymous_73.PDF_ENUM_NAME_Date;
-    enum PDF_ENUM_NAME_Decode = _Anonymous_73.PDF_ENUM_NAME_Decode;
-    enum PDF_ENUM_NAME_DecodeParms = _Anonymous_73.PDF_ENUM_NAME_DecodeParms;
-    enum PDF_ENUM_NAME_Default = _Anonymous_73.PDF_ENUM_NAME_Default;
-    enum PDF_ENUM_NAME_DefaultCMYK = _Anonymous_73.PDF_ENUM_NAME_DefaultCMYK;
-    enum PDF_ENUM_NAME_DefaultGray = _Anonymous_73.PDF_ENUM_NAME_DefaultGray;
-    enum PDF_ENUM_NAME_DefaultRGB = _Anonymous_73.PDF_ENUM_NAME_DefaultRGB;
-    enum PDF_ENUM_NAME_Departmental = _Anonymous_73.PDF_ENUM_NAME_Departmental;
-    enum PDF_ENUM_NAME_Desc = _Anonymous_73.PDF_ENUM_NAME_Desc;
-    enum PDF_ENUM_NAME_DescendantFonts = _Anonymous_73.PDF_ENUM_NAME_DescendantFonts;
-    enum PDF_ENUM_NAME_Descent = _Anonymous_73.PDF_ENUM_NAME_Descent;
-    enum PDF_ENUM_NAME_Design = _Anonymous_73.PDF_ENUM_NAME_Design;
-    enum PDF_ENUM_NAME_Dest = _Anonymous_73.PDF_ENUM_NAME_Dest;
-    enum PDF_ENUM_NAME_DestOutputProfile = _Anonymous_73.PDF_ENUM_NAME_DestOutputProfile;
-    enum PDF_ENUM_NAME_Dests = _Anonymous_73.PDF_ENUM_NAME_Dests;
-    enum PDF_ENUM_NAME_DeviceCMYK = _Anonymous_73.PDF_ENUM_NAME_DeviceCMYK;
-    enum PDF_ENUM_NAME_DeviceGray = _Anonymous_73.PDF_ENUM_NAME_DeviceGray;
-    enum PDF_ENUM_NAME_DeviceN = _Anonymous_73.PDF_ENUM_NAME_DeviceN;
-    enum PDF_ENUM_NAME_DeviceRGB = _Anonymous_73.PDF_ENUM_NAME_DeviceRGB;
-    enum PDF_ENUM_NAME_Di = _Anonymous_73.PDF_ENUM_NAME_Di;
-    enum PDF_ENUM_NAME_Diamond = _Anonymous_73.PDF_ENUM_NAME_Diamond;
-    enum PDF_ENUM_NAME_Differences = _Anonymous_73.PDF_ENUM_NAME_Differences;
-    enum PDF_ENUM_NAME_DigestLocation = _Anonymous_73.PDF_ENUM_NAME_DigestLocation;
-    enum PDF_ENUM_NAME_DigestMethod = _Anonymous_73.PDF_ENUM_NAME_DigestMethod;
-    enum PDF_ENUM_NAME_DigestValue = _Anonymous_73.PDF_ENUM_NAME_DigestValue;
-    enum PDF_ENUM_NAME_Dissolve = _Anonymous_73.PDF_ENUM_NAME_Dissolve;
-    enum PDF_ENUM_NAME_Dm = _Anonymous_73.PDF_ENUM_NAME_Dm;
-    enum PDF_ENUM_NAME_DocMDP = _Anonymous_73.PDF_ENUM_NAME_DocMDP;
-    enum PDF_ENUM_NAME_Document = _Anonymous_73.PDF_ENUM_NAME_Document;
-    enum PDF_ENUM_NAME_Domain = _Anonymous_73.PDF_ENUM_NAME_Domain;
-    enum PDF_ENUM_NAME_Draft = _Anonymous_73.PDF_ENUM_NAME_Draft;
-    enum PDF_ENUM_NAME_Dur = _Anonymous_73.PDF_ENUM_NAME_Dur;
-    enum PDF_ENUM_NAME_E = _Anonymous_73.PDF_ENUM_NAME_E;
-    enum PDF_ENUM_NAME_EF = _Anonymous_73.PDF_ENUM_NAME_EF;
-    enum PDF_ENUM_NAME_EarlyChange = _Anonymous_73.PDF_ENUM_NAME_EarlyChange;
-    enum PDF_ENUM_NAME_EmbeddedFile = _Anonymous_73.PDF_ENUM_NAME_EmbeddedFile;
-    enum PDF_ENUM_NAME_EmbeddedFiles = _Anonymous_73.PDF_ENUM_NAME_EmbeddedFiles;
-    enum PDF_ENUM_NAME_Encode = _Anonymous_73.PDF_ENUM_NAME_Encode;
-    enum PDF_ENUM_NAME_EncodedByteAlign = _Anonymous_73.PDF_ENUM_NAME_EncodedByteAlign;
-    enum PDF_ENUM_NAME_Encoding = _Anonymous_73.PDF_ENUM_NAME_Encoding;
-    enum PDF_ENUM_NAME_Encrypt = _Anonymous_73.PDF_ENUM_NAME_Encrypt;
-    enum PDF_ENUM_NAME_EncryptMetadata = _Anonymous_73.PDF_ENUM_NAME_EncryptMetadata;
-    enum PDF_ENUM_NAME_EndOfBlock = _Anonymous_73.PDF_ENUM_NAME_EndOfBlock;
-    enum PDF_ENUM_NAME_EndOfLine = _Anonymous_73.PDF_ENUM_NAME_EndOfLine;
-    enum PDF_ENUM_NAME_Exclude = _Anonymous_73.PDF_ENUM_NAME_Exclude;
-    enum PDF_ENUM_NAME_Experimental = _Anonymous_73.PDF_ENUM_NAME_Experimental;
-    enum PDF_ENUM_NAME_Expired = _Anonymous_73.PDF_ENUM_NAME_Expired;
-    enum PDF_ENUM_NAME_ExtGState = _Anonymous_73.PDF_ENUM_NAME_ExtGState;
-    enum PDF_ENUM_NAME_Extend = _Anonymous_73.PDF_ENUM_NAME_Extend;
-    enum PDF_ENUM_NAME_F = _Anonymous_73.PDF_ENUM_NAME_F;
-    enum PDF_ENUM_NAME_FL = _Anonymous_73.PDF_ENUM_NAME_FL;
-    enum PDF_ENUM_NAME_FRM = _Anonymous_73.PDF_ENUM_NAME_FRM;
-    enum PDF_ENUM_NAME_FS = _Anonymous_73.PDF_ENUM_NAME_FS;
-    enum PDF_ENUM_NAME_FT = _Anonymous_73.PDF_ENUM_NAME_FT;
-    enum PDF_ENUM_NAME_Fade = _Anonymous_73.PDF_ENUM_NAME_Fade;
-    enum PDF_ENUM_NAME_Ff = _Anonymous_73.PDF_ENUM_NAME_Ff;
-    enum PDF_ENUM_NAME_FieldMDP = _Anonymous_73.PDF_ENUM_NAME_FieldMDP;
-    enum PDF_ENUM_NAME_Fields = _Anonymous_73.PDF_ENUM_NAME_Fields;
-    enum PDF_ENUM_NAME_FileAttachment = _Anonymous_73.PDF_ENUM_NAME_FileAttachment;
-    enum PDF_ENUM_NAME_FileSize = _Anonymous_73.PDF_ENUM_NAME_FileSize;
-    enum PDF_ENUM_NAME_Filespec = _Anonymous_73.PDF_ENUM_NAME_Filespec;
-    enum PDF_ENUM_NAME_Filter = _Anonymous_73.PDF_ENUM_NAME_Filter;
-    enum PDF_ENUM_NAME_Final = _Anonymous_73.PDF_ENUM_NAME_Final;
-    enum PDF_ENUM_NAME_Fingerprint = _Anonymous_73.PDF_ENUM_NAME_Fingerprint;
-    enum PDF_ENUM_NAME_First = _Anonymous_73.PDF_ENUM_NAME_First;
-    enum PDF_ENUM_NAME_FirstChar = _Anonymous_73.PDF_ENUM_NAME_FirstChar;
-    enum PDF_ENUM_NAME_FirstPage = _Anonymous_73.PDF_ENUM_NAME_FirstPage;
-    enum PDF_ENUM_NAME_Fit = _Anonymous_73.PDF_ENUM_NAME_Fit;
-    enum PDF_ENUM_NAME_FitB = _Anonymous_73.PDF_ENUM_NAME_FitB;
-    enum PDF_ENUM_NAME_FitBH = _Anonymous_73.PDF_ENUM_NAME_FitBH;
-    enum PDF_ENUM_NAME_FitBV = _Anonymous_73.PDF_ENUM_NAME_FitBV;
-    enum PDF_ENUM_NAME_FitH = _Anonymous_73.PDF_ENUM_NAME_FitH;
-    enum PDF_ENUM_NAME_FitR = _Anonymous_73.PDF_ENUM_NAME_FitR;
-    enum PDF_ENUM_NAME_FitV = _Anonymous_73.PDF_ENUM_NAME_FitV;
-    enum PDF_ENUM_NAME_Fl = _Anonymous_73.PDF_ENUM_NAME_Fl;
-    enum PDF_ENUM_NAME_Flags = _Anonymous_73.PDF_ENUM_NAME_Flags;
-    enum PDF_ENUM_NAME_FlateDecode = _Anonymous_73.PDF_ENUM_NAME_FlateDecode;
-    enum PDF_ENUM_NAME_Fly = _Anonymous_73.PDF_ENUM_NAME_Fly;
-    enum PDF_ENUM_NAME_Font = _Anonymous_73.PDF_ENUM_NAME_Font;
-    enum PDF_ENUM_NAME_FontBBox = _Anonymous_73.PDF_ENUM_NAME_FontBBox;
-    enum PDF_ENUM_NAME_FontDescriptor = _Anonymous_73.PDF_ENUM_NAME_FontDescriptor;
-    enum PDF_ENUM_NAME_FontFile = _Anonymous_73.PDF_ENUM_NAME_FontFile;
-    enum PDF_ENUM_NAME_FontFile2 = _Anonymous_73.PDF_ENUM_NAME_FontFile2;
-    enum PDF_ENUM_NAME_FontFile3 = _Anonymous_73.PDF_ENUM_NAME_FontFile3;
-    enum PDF_ENUM_NAME_FontMatrix = _Anonymous_73.PDF_ENUM_NAME_FontMatrix;
-    enum PDF_ENUM_NAME_FontName = _Anonymous_73.PDF_ENUM_NAME_FontName;
-    enum PDF_ENUM_NAME_ForComment = _Anonymous_73.PDF_ENUM_NAME_ForComment;
-    enum PDF_ENUM_NAME_ForPublicRelease = _Anonymous_73.PDF_ENUM_NAME_ForPublicRelease;
-    enum PDF_ENUM_NAME_Form = _Anonymous_73.PDF_ENUM_NAME_Form;
-    enum PDF_ENUM_NAME_FormEx = _Anonymous_73.PDF_ENUM_NAME_FormEx;
-    enum PDF_ENUM_NAME_FormType = _Anonymous_73.PDF_ENUM_NAME_FormType;
-    enum PDF_ENUM_NAME_FreeText = _Anonymous_73.PDF_ENUM_NAME_FreeText;
-    enum PDF_ENUM_NAME_Function = _Anonymous_73.PDF_ENUM_NAME_Function;
-    enum PDF_ENUM_NAME_FunctionType = _Anonymous_73.PDF_ENUM_NAME_FunctionType;
-    enum PDF_ENUM_NAME_Functions = _Anonymous_73.PDF_ENUM_NAME_Functions;
-    enum PDF_ENUM_NAME_G = _Anonymous_73.PDF_ENUM_NAME_G;
-    enum PDF_ENUM_NAME_Gamma = _Anonymous_73.PDF_ENUM_NAME_Gamma;
-    enum PDF_ENUM_NAME_Glitter = _Anonymous_73.PDF_ENUM_NAME_Glitter;
-    enum PDF_ENUM_NAME_GoTo = _Anonymous_73.PDF_ENUM_NAME_GoTo;
-    enum PDF_ENUM_NAME_GoToR = _Anonymous_73.PDF_ENUM_NAME_GoToR;
-    enum PDF_ENUM_NAME_Group = _Anonymous_73.PDF_ENUM_NAME_Group;
-    enum PDF_ENUM_NAME_H = _Anonymous_73.PDF_ENUM_NAME_H;
-    enum PDF_ENUM_NAME_Height = _Anonymous_73.PDF_ENUM_NAME_Height;
-    enum PDF_ENUM_NAME_Helv = _Anonymous_73.PDF_ENUM_NAME_Helv;
-    enum PDF_ENUM_NAME_Highlight = _Anonymous_73.PDF_ENUM_NAME_Highlight;
-    enum PDF_ENUM_NAME_HistoryPos = _Anonymous_73.PDF_ENUM_NAME_HistoryPos;
-    enum PDF_ENUM_NAME_I = _Anonymous_73.PDF_ENUM_NAME_I;
-    enum PDF_ENUM_NAME_IC = _Anonymous_73.PDF_ENUM_NAME_IC;
-    enum PDF_ENUM_NAME_ICCBased = _Anonymous_73.PDF_ENUM_NAME_ICCBased;
-    enum PDF_ENUM_NAME_ID = _Anonymous_73.PDF_ENUM_NAME_ID;
-    enum PDF_ENUM_NAME_IM = _Anonymous_73.PDF_ENUM_NAME_IM;
-    enum PDF_ENUM_NAME_IRT = _Anonymous_73.PDF_ENUM_NAME_IRT;
-    enum PDF_ENUM_NAME_Identity = _Anonymous_73.PDF_ENUM_NAME_Identity;
-    enum PDF_ENUM_NAME_Identity_H = _Anonymous_73.PDF_ENUM_NAME_Identity_H;
-    enum PDF_ENUM_NAME_Identity_V = _Anonymous_73.PDF_ENUM_NAME_Identity_V;
-    enum PDF_ENUM_NAME_Image = _Anonymous_73.PDF_ENUM_NAME_Image;
-    enum PDF_ENUM_NAME_ImageMask = _Anonymous_73.PDF_ENUM_NAME_ImageMask;
-    enum PDF_ENUM_NAME_Include = _Anonymous_73.PDF_ENUM_NAME_Include;
-    enum PDF_ENUM_NAME_Index = _Anonymous_73.PDF_ENUM_NAME_Index;
-    enum PDF_ENUM_NAME_Indexed = _Anonymous_73.PDF_ENUM_NAME_Indexed;
-    enum PDF_ENUM_NAME_Info = _Anonymous_73.PDF_ENUM_NAME_Info;
-    enum PDF_ENUM_NAME_Ink = _Anonymous_73.PDF_ENUM_NAME_Ink;
-    enum PDF_ENUM_NAME_InkList = _Anonymous_73.PDF_ENUM_NAME_InkList;
-    enum PDF_ENUM_NAME_Intent = _Anonymous_73.PDF_ENUM_NAME_Intent;
-    enum PDF_ENUM_NAME_Interpolate = _Anonymous_73.PDF_ENUM_NAME_Interpolate;
-    enum PDF_ENUM_NAME_IsMap = _Anonymous_73.PDF_ENUM_NAME_IsMap;
-    enum PDF_ENUM_NAME_ItalicAngle = _Anonymous_73.PDF_ENUM_NAME_ItalicAngle;
-    enum PDF_ENUM_NAME_JBIG2Decode = _Anonymous_73.PDF_ENUM_NAME_JBIG2Decode;
-    enum PDF_ENUM_NAME_JBIG2Globals = _Anonymous_73.PDF_ENUM_NAME_JBIG2Globals;
-    enum PDF_ENUM_NAME_JPXDecode = _Anonymous_73.PDF_ENUM_NAME_JPXDecode;
-    enum PDF_ENUM_NAME_JS = _Anonymous_73.PDF_ENUM_NAME_JS;
-    enum PDF_ENUM_NAME_JavaScript = _Anonymous_73.PDF_ENUM_NAME_JavaScript;
-    enum PDF_ENUM_NAME_K = _Anonymous_73.PDF_ENUM_NAME_K;
-    enum PDF_ENUM_NAME_Kids = _Anonymous_73.PDF_ENUM_NAME_Kids;
-    enum PDF_ENUM_NAME_L = _Anonymous_73.PDF_ENUM_NAME_L;
-    enum PDF_ENUM_NAME_LC = _Anonymous_73.PDF_ENUM_NAME_LC;
-    enum PDF_ENUM_NAME_LE = _Anonymous_73.PDF_ENUM_NAME_LE;
-    enum PDF_ENUM_NAME_LJ = _Anonymous_73.PDF_ENUM_NAME_LJ;
-    enum PDF_ENUM_NAME_LW = _Anonymous_73.PDF_ENUM_NAME_LW;
-    enum PDF_ENUM_NAME_LZ = _Anonymous_73.PDF_ENUM_NAME_LZ;
-    enum PDF_ENUM_NAME_LZW = _Anonymous_73.PDF_ENUM_NAME_LZW;
-    enum PDF_ENUM_NAME_LZWDecode = _Anonymous_73.PDF_ENUM_NAME_LZWDecode;
-    enum PDF_ENUM_NAME_Lab = _Anonymous_73.PDF_ENUM_NAME_Lab;
-    enum PDF_ENUM_NAME_Lang = _Anonymous_73.PDF_ENUM_NAME_Lang;
-    enum PDF_ENUM_NAME_Last = _Anonymous_73.PDF_ENUM_NAME_Last;
-    enum PDF_ENUM_NAME_LastChar = _Anonymous_73.PDF_ENUM_NAME_LastChar;
-    enum PDF_ENUM_NAME_LastPage = _Anonymous_73.PDF_ENUM_NAME_LastPage;
-    enum PDF_ENUM_NAME_Launch = _Anonymous_73.PDF_ENUM_NAME_Launch;
-    enum PDF_ENUM_NAME_Length = _Anonymous_73.PDF_ENUM_NAME_Length;
-    enum PDF_ENUM_NAME_Length1 = _Anonymous_73.PDF_ENUM_NAME_Length1;
-    enum PDF_ENUM_NAME_Length2 = _Anonymous_73.PDF_ENUM_NAME_Length2;
-    enum PDF_ENUM_NAME_Length3 = _Anonymous_73.PDF_ENUM_NAME_Length3;
-    enum PDF_ENUM_NAME_Limits = _Anonymous_73.PDF_ENUM_NAME_Limits;
-    enum PDF_ENUM_NAME_Line = _Anonymous_73.PDF_ENUM_NAME_Line;
-    enum PDF_ENUM_NAME_Linearized = _Anonymous_73.PDF_ENUM_NAME_Linearized;
-    enum PDF_ENUM_NAME_Link = _Anonymous_73.PDF_ENUM_NAME_Link;
-    enum PDF_ENUM_NAME_Location = _Anonymous_73.PDF_ENUM_NAME_Location;
-    enum PDF_ENUM_NAME_Lock = _Anonymous_73.PDF_ENUM_NAME_Lock;
-    enum PDF_ENUM_NAME_Locked = _Anonymous_73.PDF_ENUM_NAME_Locked;
-    enum PDF_ENUM_NAME_Luminosity = _Anonymous_73.PDF_ENUM_NAME_Luminosity;
-    enum PDF_ENUM_NAME_M = _Anonymous_73.PDF_ENUM_NAME_M;
-    enum PDF_ENUM_NAME_MCID = _Anonymous_73.PDF_ENUM_NAME_MCID;
-    enum PDF_ENUM_NAME_MK = _Anonymous_73.PDF_ENUM_NAME_MK;
-    enum PDF_ENUM_NAME_ML = _Anonymous_73.PDF_ENUM_NAME_ML;
-    enum PDF_ENUM_NAME_MMType1 = _Anonymous_73.PDF_ENUM_NAME_MMType1;
-    enum PDF_ENUM_NAME_Mac = _Anonymous_73.PDF_ENUM_NAME_Mac;
-    enum PDF_ENUM_NAME_Mask = _Anonymous_73.PDF_ENUM_NAME_Mask;
-    enum PDF_ENUM_NAME_Matrix = _Anonymous_73.PDF_ENUM_NAME_Matrix;
-    enum PDF_ENUM_NAME_Matte = _Anonymous_73.PDF_ENUM_NAME_Matte;
-    enum PDF_ENUM_NAME_MaxLen = _Anonymous_73.PDF_ENUM_NAME_MaxLen;
-    enum PDF_ENUM_NAME_MediaBox = _Anonymous_73.PDF_ENUM_NAME_MediaBox;
-    enum PDF_ENUM_NAME_Metadata = _Anonymous_73.PDF_ENUM_NAME_Metadata;
-    enum PDF_ENUM_NAME_MissingWidth = _Anonymous_73.PDF_ENUM_NAME_MissingWidth;
-    enum PDF_ENUM_NAME_ModDate = _Anonymous_73.PDF_ENUM_NAME_ModDate;
-    enum PDF_ENUM_NAME_Movie = _Anonymous_73.PDF_ENUM_NAME_Movie;
-    enum PDF_ENUM_NAME_Msg = _Anonymous_73.PDF_ENUM_NAME_Msg;
-    enum PDF_ENUM_NAME_Multiply = _Anonymous_73.PDF_ENUM_NAME_Multiply;
-    enum PDF_ENUM_NAME_N = _Anonymous_73.PDF_ENUM_NAME_N;
-    enum PDF_ENUM_NAME_Name = _Anonymous_73.PDF_ENUM_NAME_Name;
-    enum PDF_ENUM_NAME_Named = _Anonymous_73.PDF_ENUM_NAME_Named;
-    enum PDF_ENUM_NAME_Names = _Anonymous_73.PDF_ENUM_NAME_Names;
-    enum PDF_ENUM_NAME_NewWindow = _Anonymous_73.PDF_ENUM_NAME_NewWindow;
-    enum PDF_ENUM_NAME_Next = _Anonymous_73.PDF_ENUM_NAME_Next;
-    enum PDF_ENUM_NAME_NextPage = _Anonymous_73.PDF_ENUM_NAME_NextPage;
-    enum PDF_ENUM_NAME_NonEFontNoWarn = _Anonymous_73.PDF_ENUM_NAME_NonEFontNoWarn;
-    enum PDF_ENUM_NAME_None = _Anonymous_73.PDF_ENUM_NAME_None;
-    enum PDF_ENUM_NAME_Normal = _Anonymous_73.PDF_ENUM_NAME_Normal;
-    enum PDF_ENUM_NAME_NotApproved = _Anonymous_73.PDF_ENUM_NAME_NotApproved;
-    enum PDF_ENUM_NAME_NotForPublicRelease = _Anonymous_73.PDF_ENUM_NAME_NotForPublicRelease;
-    enum PDF_ENUM_NAME_NumSections = _Anonymous_73.PDF_ENUM_NAME_NumSections;
-    enum PDF_ENUM_NAME_Nums = _Anonymous_73.PDF_ENUM_NAME_Nums;
-    enum PDF_ENUM_NAME_O = _Anonymous_73.PDF_ENUM_NAME_O;
-    enum PDF_ENUM_NAME_OC = _Anonymous_73.PDF_ENUM_NAME_OC;
-    enum PDF_ENUM_NAME_OCG = _Anonymous_73.PDF_ENUM_NAME_OCG;
-    enum PDF_ENUM_NAME_OCGs = _Anonymous_73.PDF_ENUM_NAME_OCGs;
-    enum PDF_ENUM_NAME_OCMD = _Anonymous_73.PDF_ENUM_NAME_OCMD;
-    enum PDF_ENUM_NAME_OCProperties = _Anonymous_73.PDF_ENUM_NAME_OCProperties;
-    enum PDF_ENUM_NAME_OE = _Anonymous_73.PDF_ENUM_NAME_OE;
-    enum PDF_ENUM_NAME_OFF = _Anonymous_73.PDF_ENUM_NAME_OFF;
-    enum PDF_ENUM_NAME_ON = _Anonymous_73.PDF_ENUM_NAME_ON;
-    enum PDF_ENUM_NAME_OP = _Anonymous_73.PDF_ENUM_NAME_OP;
-    enum PDF_ENUM_NAME_OPM = _Anonymous_73.PDF_ENUM_NAME_OPM;
-    enum PDF_ENUM_NAME_OS = _Anonymous_73.PDF_ENUM_NAME_OS;
-    enum PDF_ENUM_NAME_ObjStm = _Anonymous_73.PDF_ENUM_NAME_ObjStm;
-    enum PDF_ENUM_NAME_Of = _Anonymous_73.PDF_ENUM_NAME_Of;
-    enum PDF_ENUM_NAME_Off = _Anonymous_73.PDF_ENUM_NAME_Off;
-    enum PDF_ENUM_NAME_Open = _Anonymous_73.PDF_ENUM_NAME_Open;
-    enum PDF_ENUM_NAME_OpenArrow = _Anonymous_73.PDF_ENUM_NAME_OpenArrow;
-    enum PDF_ENUM_NAME_OpenType = _Anonymous_73.PDF_ENUM_NAME_OpenType;
-    enum PDF_ENUM_NAME_Opt = _Anonymous_73.PDF_ENUM_NAME_Opt;
-    enum PDF_ENUM_NAME_Order = _Anonymous_73.PDF_ENUM_NAME_Order;
-    enum PDF_ENUM_NAME_Ordering = _Anonymous_73.PDF_ENUM_NAME_Ordering;
-    enum PDF_ENUM_NAME_Outlines = _Anonymous_73.PDF_ENUM_NAME_Outlines;
-    enum PDF_ENUM_NAME_OutputIntents = _Anonymous_73.PDF_ENUM_NAME_OutputIntents;
-    enum PDF_ENUM_NAME_P = _Anonymous_73.PDF_ENUM_NAME_P;
-    enum PDF_ENUM_NAME_PDF = _Anonymous_73.PDF_ENUM_NAME_PDF;
-    enum PDF_ENUM_NAME_PS = _Anonymous_73.PDF_ENUM_NAME_PS;
-    enum PDF_ENUM_NAME_Page = _Anonymous_73.PDF_ENUM_NAME_Page;
-    enum PDF_ENUM_NAME_PageMode = _Anonymous_73.PDF_ENUM_NAME_PageMode;
-    enum PDF_ENUM_NAME_Pages = _Anonymous_73.PDF_ENUM_NAME_Pages;
-    enum PDF_ENUM_NAME_PaintType = _Anonymous_73.PDF_ENUM_NAME_PaintType;
-    enum PDF_ENUM_NAME_Params = _Anonymous_73.PDF_ENUM_NAME_Params;
-    enum PDF_ENUM_NAME_Parent = _Anonymous_73.PDF_ENUM_NAME_Parent;
-    enum PDF_ENUM_NAME_Pattern = _Anonymous_73.PDF_ENUM_NAME_Pattern;
-    enum PDF_ENUM_NAME_PatternType = _Anonymous_73.PDF_ENUM_NAME_PatternType;
-    enum PDF_ENUM_NAME_Perms = _Anonymous_73.PDF_ENUM_NAME_Perms;
-    enum PDF_ENUM_NAME_PolyLine = _Anonymous_73.PDF_ENUM_NAME_PolyLine;
-    enum PDF_ENUM_NAME_Polygon = _Anonymous_73.PDF_ENUM_NAME_Polygon;
-    enum PDF_ENUM_NAME_Popup = _Anonymous_73.PDF_ENUM_NAME_Popup;
-    enum PDF_ENUM_NAME_PreRelease = _Anonymous_73.PDF_ENUM_NAME_PreRelease;
-    enum PDF_ENUM_NAME_Predictor = _Anonymous_73.PDF_ENUM_NAME_Predictor;
-    enum PDF_ENUM_NAME_Prev = _Anonymous_73.PDF_ENUM_NAME_Prev;
-    enum PDF_ENUM_NAME_PrevPage = _Anonymous_73.PDF_ENUM_NAME_PrevPage;
-    enum PDF_ENUM_NAME_Preview = _Anonymous_73.PDF_ENUM_NAME_Preview;
-    enum PDF_ENUM_NAME_Print = _Anonymous_73.PDF_ENUM_NAME_Print;
-    enum PDF_ENUM_NAME_PrinterMark = _Anonymous_73.PDF_ENUM_NAME_PrinterMark;
-    enum PDF_ENUM_NAME_ProcSet = _Anonymous_73.PDF_ENUM_NAME_ProcSet;
-    enum PDF_ENUM_NAME_Producer = _Anonymous_73.PDF_ENUM_NAME_Producer;
-    enum PDF_ENUM_NAME_Properties = _Anonymous_73.PDF_ENUM_NAME_Properties;
-    enum PDF_ENUM_NAME_Prop_AuthTime = _Anonymous_73.PDF_ENUM_NAME_Prop_AuthTime;
-    enum PDF_ENUM_NAME_Prop_AuthType = _Anonymous_73.PDF_ENUM_NAME_Prop_AuthType;
-    enum PDF_ENUM_NAME_Prop_Build = _Anonymous_73.PDF_ENUM_NAME_Prop_Build;
-    enum PDF_ENUM_NAME_PubSec = _Anonymous_73.PDF_ENUM_NAME_PubSec;
-    enum PDF_ENUM_NAME_Push = _Anonymous_73.PDF_ENUM_NAME_Push;
-    enum PDF_ENUM_NAME_Q = _Anonymous_73.PDF_ENUM_NAME_Q;
-    enum PDF_ENUM_NAME_QuadPoints = _Anonymous_73.PDF_ENUM_NAME_QuadPoints;
-    enum PDF_ENUM_NAME_R = _Anonymous_73.PDF_ENUM_NAME_R;
-    enum PDF_ENUM_NAME_RBGroups = _Anonymous_73.PDF_ENUM_NAME_RBGroups;
-    enum PDF_ENUM_NAME_RC = _Anonymous_73.PDF_ENUM_NAME_RC;
-    enum PDF_ENUM_NAME_RClosedArrow = _Anonymous_73.PDF_ENUM_NAME_RClosedArrow;
-    enum PDF_ENUM_NAME_REx = _Anonymous_73.PDF_ENUM_NAME_REx;
-    enum PDF_ENUM_NAME_RGB = _Anonymous_73.PDF_ENUM_NAME_RGB;
-    enum PDF_ENUM_NAME_RI = _Anonymous_73.PDF_ENUM_NAME_RI;
-    enum PDF_ENUM_NAME_RL = _Anonymous_73.PDF_ENUM_NAME_RL;
-    enum PDF_ENUM_NAME_ROpenArrow = _Anonymous_73.PDF_ENUM_NAME_ROpenArrow;
-    enum PDF_ENUM_NAME_Range = _Anonymous_73.PDF_ENUM_NAME_Range;
-    enum PDF_ENUM_NAME_Reason = _Anonymous_73.PDF_ENUM_NAME_Reason;
-    enum PDF_ENUM_NAME_Rect = _Anonymous_73.PDF_ENUM_NAME_Rect;
-    enum PDF_ENUM_NAME_Redact = _Anonymous_73.PDF_ENUM_NAME_Redact;
-    enum PDF_ENUM_NAME_Ref = _Anonymous_73.PDF_ENUM_NAME_Ref;
-    enum PDF_ENUM_NAME_Reference = _Anonymous_73.PDF_ENUM_NAME_Reference;
-    enum PDF_ENUM_NAME_Registry = _Anonymous_73.PDF_ENUM_NAME_Registry;
-    enum PDF_ENUM_NAME_ResetForm = _Anonymous_73.PDF_ENUM_NAME_ResetForm;
-    enum PDF_ENUM_NAME_Resources = _Anonymous_73.PDF_ENUM_NAME_Resources;
-    enum PDF_ENUM_NAME_Root = _Anonymous_73.PDF_ENUM_NAME_Root;
-    enum PDF_ENUM_NAME_Rotate = _Anonymous_73.PDF_ENUM_NAME_Rotate;
-    enum PDF_ENUM_NAME_Rows = _Anonymous_73.PDF_ENUM_NAME_Rows;
-    enum PDF_ENUM_NAME_RunLengthDecode = _Anonymous_73.PDF_ENUM_NAME_RunLengthDecode;
-    enum PDF_ENUM_NAME_S = _Anonymous_73.PDF_ENUM_NAME_S;
-    enum PDF_ENUM_NAME_SMask = _Anonymous_73.PDF_ENUM_NAME_SMask;
-    enum PDF_ENUM_NAME_SMaskInData = _Anonymous_73.PDF_ENUM_NAME_SMaskInData;
-    enum PDF_ENUM_NAME_Schema = _Anonymous_73.PDF_ENUM_NAME_Schema;
-    enum PDF_ENUM_NAME_Screen = _Anonymous_73.PDF_ENUM_NAME_Screen;
-    enum PDF_ENUM_NAME_Separation = _Anonymous_73.PDF_ENUM_NAME_Separation;
-    enum PDF_ENUM_NAME_Shading = _Anonymous_73.PDF_ENUM_NAME_Shading;
-    enum PDF_ENUM_NAME_ShadingType = _Anonymous_73.PDF_ENUM_NAME_ShadingType;
-    enum PDF_ENUM_NAME_Si = _Anonymous_73.PDF_ENUM_NAME_Si;
-    enum PDF_ENUM_NAME_Sig = _Anonymous_73.PDF_ENUM_NAME_Sig;
-    enum PDF_ENUM_NAME_SigFlags = _Anonymous_73.PDF_ENUM_NAME_SigFlags;
-    enum PDF_ENUM_NAME_SigQ = _Anonymous_73.PDF_ENUM_NAME_SigQ;
-    enum PDF_ENUM_NAME_SigRef = _Anonymous_73.PDF_ENUM_NAME_SigRef;
-    enum PDF_ENUM_NAME_Size = _Anonymous_73.PDF_ENUM_NAME_Size;
-    enum PDF_ENUM_NAME_Slash = _Anonymous_73.PDF_ENUM_NAME_Slash;
-    enum PDF_ENUM_NAME_Sold = _Anonymous_73.PDF_ENUM_NAME_Sold;
-    enum PDF_ENUM_NAME_Sound = _Anonymous_73.PDF_ENUM_NAME_Sound;
-    enum PDF_ENUM_NAME_Split = _Anonymous_73.PDF_ENUM_NAME_Split;
-    enum PDF_ENUM_NAME_Square = _Anonymous_73.PDF_ENUM_NAME_Square;
-    enum PDF_ENUM_NAME_Squiggly = _Anonymous_73.PDF_ENUM_NAME_Squiggly;
-    enum PDF_ENUM_NAME_Stamp = _Anonymous_73.PDF_ENUM_NAME_Stamp;
-    enum PDF_ENUM_NAME_Standard = _Anonymous_73.PDF_ENUM_NAME_Standard;
-    enum PDF_ENUM_NAME_StdCF = _Anonymous_73.PDF_ENUM_NAME_StdCF;
-    enum PDF_ENUM_NAME_StemV = _Anonymous_73.PDF_ENUM_NAME_StemV;
-    enum PDF_ENUM_NAME_StmF = _Anonymous_73.PDF_ENUM_NAME_StmF;
-    enum PDF_ENUM_NAME_StrF = _Anonymous_73.PDF_ENUM_NAME_StrF;
-    enum PDF_ENUM_NAME_StrikeOut = _Anonymous_73.PDF_ENUM_NAME_StrikeOut;
-    enum PDF_ENUM_NAME_StructParent = _Anonymous_73.PDF_ENUM_NAME_StructParent;
-    enum PDF_ENUM_NAME_StructParents = _Anonymous_73.PDF_ENUM_NAME_StructParents;
-    enum PDF_ENUM_NAME_SubFilter = _Anonymous_73.PDF_ENUM_NAME_SubFilter;
-    enum PDF_ENUM_NAME_Subtype = _Anonymous_73.PDF_ENUM_NAME_Subtype;
-    enum PDF_ENUM_NAME_Subtype2 = _Anonymous_73.PDF_ENUM_NAME_Subtype2;
-    enum PDF_ENUM_NAME_Supplement = _Anonymous_73.PDF_ENUM_NAME_Supplement;
-    enum PDF_ENUM_NAME_Symb = _Anonymous_73.PDF_ENUM_NAME_Symb;
-    enum PDF_ENUM_NAME_T = _Anonymous_73.PDF_ENUM_NAME_T;
-    enum PDF_ENUM_NAME_TI = _Anonymous_73.PDF_ENUM_NAME_TI;
-    enum PDF_ENUM_NAME_TR = _Anonymous_73.PDF_ENUM_NAME_TR;
-    enum PDF_ENUM_NAME_TR2 = _Anonymous_73.PDF_ENUM_NAME_TR2;
-    enum PDF_ENUM_NAME_TU = _Anonymous_73.PDF_ENUM_NAME_TU;
-    enum PDF_ENUM_NAME_Text = _Anonymous_73.PDF_ENUM_NAME_Text;
-    enum PDF_ENUM_NAME_TilingType = _Anonymous_73.PDF_ENUM_NAME_TilingType;
-    enum PDF_ENUM_NAME_Times = _Anonymous_73.PDF_ENUM_NAME_Times;
-    enum PDF_ENUM_NAME_Title = _Anonymous_73.PDF_ENUM_NAME_Title;
-    enum PDF_ENUM_NAME_ToUnicode = _Anonymous_73.PDF_ENUM_NAME_ToUnicode;
-    enum PDF_ENUM_NAME_TopSecret = _Anonymous_73.PDF_ENUM_NAME_TopSecret;
-    enum PDF_ENUM_NAME_Trans = _Anonymous_73.PDF_ENUM_NAME_Trans;
-    enum PDF_ENUM_NAME_TransformMethod = _Anonymous_73.PDF_ENUM_NAME_TransformMethod;
-    enum PDF_ENUM_NAME_TransformParams = _Anonymous_73.PDF_ENUM_NAME_TransformParams;
-    enum PDF_ENUM_NAME_Transparency = _Anonymous_73.PDF_ENUM_NAME_Transparency;
-    enum PDF_ENUM_NAME_TrapNet = _Anonymous_73.PDF_ENUM_NAME_TrapNet;
-    enum PDF_ENUM_NAME_TrimBox = _Anonymous_73.PDF_ENUM_NAME_TrimBox;
-    enum PDF_ENUM_NAME_TrueType = _Anonymous_73.PDF_ENUM_NAME_TrueType;
-    enum PDF_ENUM_NAME_TrustedMode = _Anonymous_73.PDF_ENUM_NAME_TrustedMode;
-    enum PDF_ENUM_NAME_Tx = _Anonymous_73.PDF_ENUM_NAME_Tx;
-    enum PDF_ENUM_NAME_Type = _Anonymous_73.PDF_ENUM_NAME_Type;
-    enum PDF_ENUM_NAME_Type0 = _Anonymous_73.PDF_ENUM_NAME_Type0;
-    enum PDF_ENUM_NAME_Type1 = _Anonymous_73.PDF_ENUM_NAME_Type1;
-    enum PDF_ENUM_NAME_Type1C = _Anonymous_73.PDF_ENUM_NAME_Type1C;
-    enum PDF_ENUM_NAME_Type3 = _Anonymous_73.PDF_ENUM_NAME_Type3;
-    enum PDF_ENUM_NAME_U = _Anonymous_73.PDF_ENUM_NAME_U;
-    enum PDF_ENUM_NAME_UE = _Anonymous_73.PDF_ENUM_NAME_UE;
-    enum PDF_ENUM_NAME_UF = _Anonymous_73.PDF_ENUM_NAME_UF;
-    enum PDF_ENUM_NAME_URI = _Anonymous_73.PDF_ENUM_NAME_URI;
-    enum PDF_ENUM_NAME_URL = _Anonymous_73.PDF_ENUM_NAME_URL;
-    enum PDF_ENUM_NAME_Unchanged = _Anonymous_73.PDF_ENUM_NAME_Unchanged;
-    enum PDF_ENUM_NAME_Uncover = _Anonymous_73.PDF_ENUM_NAME_Uncover;
-    enum PDF_ENUM_NAME_Underline = _Anonymous_73.PDF_ENUM_NAME_Underline;
-    enum PDF_ENUM_NAME_Unix = _Anonymous_73.PDF_ENUM_NAME_Unix;
-    enum PDF_ENUM_NAME_Usage = _Anonymous_73.PDF_ENUM_NAME_Usage;
-    enum PDF_ENUM_NAME_UseBlackPtComp = _Anonymous_73.PDF_ENUM_NAME_UseBlackPtComp;
-    enum PDF_ENUM_NAME_UseCMap = _Anonymous_73.PDF_ENUM_NAME_UseCMap;
-    enum PDF_ENUM_NAME_UseOutlines = _Anonymous_73.PDF_ENUM_NAME_UseOutlines;
-    enum PDF_ENUM_NAME_UserUnit = _Anonymous_73.PDF_ENUM_NAME_UserUnit;
-    enum PDF_ENUM_NAME_V = _Anonymous_73.PDF_ENUM_NAME_V;
-    enum PDF_ENUM_NAME_V2 = _Anonymous_73.PDF_ENUM_NAME_V2;
-    enum PDF_ENUM_NAME_VE = _Anonymous_73.PDF_ENUM_NAME_VE;
-    enum PDF_ENUM_NAME_Version = _Anonymous_73.PDF_ENUM_NAME_Version;
-    enum PDF_ENUM_NAME_Vertices = _Anonymous_73.PDF_ENUM_NAME_Vertices;
-    enum PDF_ENUM_NAME_VerticesPerRow = _Anonymous_73.PDF_ENUM_NAME_VerticesPerRow;
-    enum PDF_ENUM_NAME_View = _Anonymous_73.PDF_ENUM_NAME_View;
-    enum PDF_ENUM_NAME_W = _Anonymous_73.PDF_ENUM_NAME_W;
-    enum PDF_ENUM_NAME_W2 = _Anonymous_73.PDF_ENUM_NAME_W2;
-    enum PDF_ENUM_NAME_WMode = _Anonymous_73.PDF_ENUM_NAME_WMode;
-    enum PDF_ENUM_NAME_Watermark = _Anonymous_73.PDF_ENUM_NAME_Watermark;
-    enum PDF_ENUM_NAME_WhitePoint = _Anonymous_73.PDF_ENUM_NAME_WhitePoint;
-    enum PDF_ENUM_NAME_Widget = _Anonymous_73.PDF_ENUM_NAME_Widget;
-    enum PDF_ENUM_NAME_Width = _Anonymous_73.PDF_ENUM_NAME_Width;
-    enum PDF_ENUM_NAME_Widths = _Anonymous_73.PDF_ENUM_NAME_Widths;
-    enum PDF_ENUM_NAME_WinAnsiEncoding = _Anonymous_73.PDF_ENUM_NAME_WinAnsiEncoding;
-    enum PDF_ENUM_NAME_Wipe = _Anonymous_73.PDF_ENUM_NAME_Wipe;
-    enum PDF_ENUM_NAME_XFA = _Anonymous_73.PDF_ENUM_NAME_XFA;
-    enum PDF_ENUM_NAME_XHeight = _Anonymous_73.PDF_ENUM_NAME_XHeight;
-    enum PDF_ENUM_NAME_XML = _Anonymous_73.PDF_ENUM_NAME_XML;
-    enum PDF_ENUM_NAME_XObject = _Anonymous_73.PDF_ENUM_NAME_XObject;
-    enum PDF_ENUM_NAME_XRef = _Anonymous_73.PDF_ENUM_NAME_XRef;
-    enum PDF_ENUM_NAME_XRefStm = _Anonymous_73.PDF_ENUM_NAME_XRefStm;
-    enum PDF_ENUM_NAME_XStep = _Anonymous_73.PDF_ENUM_NAME_XStep;
-    enum PDF_ENUM_NAME_XYZ = _Anonymous_73.PDF_ENUM_NAME_XYZ;
-    enum PDF_ENUM_NAME_YStep = _Anonymous_73.PDF_ENUM_NAME_YStep;
-    enum PDF_ENUM_NAME_Yes = _Anonymous_73.PDF_ENUM_NAME_Yes;
-    enum PDF_ENUM_NAME_ZaDb = _Anonymous_73.PDF_ENUM_NAME_ZaDb;
-    enum PDF_ENUM_NAME_adbe_pkcs7_detached = _Anonymous_73.PDF_ENUM_NAME_adbe_pkcs7_detached;
-    enum PDF_ENUM_NAME_ca = _Anonymous_73.PDF_ENUM_NAME_ca;
-    enum PDF_ENUM_NAME_n0 = _Anonymous_73.PDF_ENUM_NAME_n0;
-    enum PDF_ENUM_NAME_n1 = _Anonymous_73.PDF_ENUM_NAME_n1;
-    enum PDF_ENUM_NAME_n2 = _Anonymous_73.PDF_ENUM_NAME_n2;
-    enum PDF_ENUM_NAME_op = _Anonymous_73.PDF_ENUM_NAME_op;
-    enum PDF_ENUM_LIMIT = _Anonymous_73.PDF_ENUM_LIMIT;
+    enum PDF_ENUM_NULL = _Anonymous_74.PDF_ENUM_NULL;
+    enum PDF_ENUM_TRUE = _Anonymous_74.PDF_ENUM_TRUE;
+    enum PDF_ENUM_FALSE = _Anonymous_74.PDF_ENUM_FALSE;
+    enum PDF_ENUM_NAME_1_2 = _Anonymous_74.PDF_ENUM_NAME_1_2;
+    enum PDF_ENUM_NAME_3D = _Anonymous_74.PDF_ENUM_NAME_3D;
+    enum PDF_ENUM_NAME_A = _Anonymous_74.PDF_ENUM_NAME_A;
+    enum PDF_ENUM_NAME_A85 = _Anonymous_74.PDF_ENUM_NAME_A85;
+    enum PDF_ENUM_NAME_AA = _Anonymous_74.PDF_ENUM_NAME_AA;
+    enum PDF_ENUM_NAME_AC = _Anonymous_74.PDF_ENUM_NAME_AC;
+    enum PDF_ENUM_NAME_AESV2 = _Anonymous_74.PDF_ENUM_NAME_AESV2;
+    enum PDF_ENUM_NAME_AESV3 = _Anonymous_74.PDF_ENUM_NAME_AESV3;
+    enum PDF_ENUM_NAME_AHx = _Anonymous_74.PDF_ENUM_NAME_AHx;
+    enum PDF_ENUM_NAME_AP = _Anonymous_74.PDF_ENUM_NAME_AP;
+    enum PDF_ENUM_NAME_AS = _Anonymous_74.PDF_ENUM_NAME_AS;
+    enum PDF_ENUM_NAME_ASCII85Decode = _Anonymous_74.PDF_ENUM_NAME_ASCII85Decode;
+    enum PDF_ENUM_NAME_ASCIIHexDecode = _Anonymous_74.PDF_ENUM_NAME_ASCIIHexDecode;
+    enum PDF_ENUM_NAME_AcroForm = _Anonymous_74.PDF_ENUM_NAME_AcroForm;
+    enum PDF_ENUM_NAME_Action = _Anonymous_74.PDF_ENUM_NAME_Action;
+    enum PDF_ENUM_NAME_ActualText = _Anonymous_74.PDF_ENUM_NAME_ActualText;
+    enum PDF_ENUM_NAME_Adobe_PPKLite = _Anonymous_74.PDF_ENUM_NAME_Adobe_PPKLite;
+    enum PDF_ENUM_NAME_All = _Anonymous_74.PDF_ENUM_NAME_All;
+    enum PDF_ENUM_NAME_AllOff = _Anonymous_74.PDF_ENUM_NAME_AllOff;
+    enum PDF_ENUM_NAME_AllOn = _Anonymous_74.PDF_ENUM_NAME_AllOn;
+    enum PDF_ENUM_NAME_Alpha = _Anonymous_74.PDF_ENUM_NAME_Alpha;
+    enum PDF_ENUM_NAME_Alt = _Anonymous_74.PDF_ENUM_NAME_Alt;
+    enum PDF_ENUM_NAME_Alternate = _Anonymous_74.PDF_ENUM_NAME_Alternate;
+    enum PDF_ENUM_NAME_Annot = _Anonymous_74.PDF_ENUM_NAME_Annot;
+    enum PDF_ENUM_NAME_Annots = _Anonymous_74.PDF_ENUM_NAME_Annots;
+    enum PDF_ENUM_NAME_AnyOff = _Anonymous_74.PDF_ENUM_NAME_AnyOff;
+    enum PDF_ENUM_NAME_App = _Anonymous_74.PDF_ENUM_NAME_App;
+    enum PDF_ENUM_NAME_Approved = _Anonymous_74.PDF_ENUM_NAME_Approved;
+    enum PDF_ENUM_NAME_ArtBox = _Anonymous_74.PDF_ENUM_NAME_ArtBox;
+    enum PDF_ENUM_NAME_AsIs = _Anonymous_74.PDF_ENUM_NAME_AsIs;
+    enum PDF_ENUM_NAME_Ascent = _Anonymous_74.PDF_ENUM_NAME_Ascent;
+    enum PDF_ENUM_NAME_AuthEvent = _Anonymous_74.PDF_ENUM_NAME_AuthEvent;
+    enum PDF_ENUM_NAME_Author = _Anonymous_74.PDF_ENUM_NAME_Author;
+    enum PDF_ENUM_NAME_B = _Anonymous_74.PDF_ENUM_NAME_B;
+    enum PDF_ENUM_NAME_BBox = _Anonymous_74.PDF_ENUM_NAME_BBox;
+    enum PDF_ENUM_NAME_BC = _Anonymous_74.PDF_ENUM_NAME_BC;
+    enum PDF_ENUM_NAME_BE = _Anonymous_74.PDF_ENUM_NAME_BE;
+    enum PDF_ENUM_NAME_BG = _Anonymous_74.PDF_ENUM_NAME_BG;
+    enum PDF_ENUM_NAME_BM = _Anonymous_74.PDF_ENUM_NAME_BM;
+    enum PDF_ENUM_NAME_BPC = _Anonymous_74.PDF_ENUM_NAME_BPC;
+    enum PDF_ENUM_NAME_BS = _Anonymous_74.PDF_ENUM_NAME_BS;
+    enum PDF_ENUM_NAME_Background = _Anonymous_74.PDF_ENUM_NAME_Background;
+    enum PDF_ENUM_NAME_BaseEncoding = _Anonymous_74.PDF_ENUM_NAME_BaseEncoding;
+    enum PDF_ENUM_NAME_BaseFont = _Anonymous_74.PDF_ENUM_NAME_BaseFont;
+    enum PDF_ENUM_NAME_BaseState = _Anonymous_74.PDF_ENUM_NAME_BaseState;
+    enum PDF_ENUM_NAME_BitsPerComponent = _Anonymous_74.PDF_ENUM_NAME_BitsPerComponent;
+    enum PDF_ENUM_NAME_BitsPerCoordinate = _Anonymous_74.PDF_ENUM_NAME_BitsPerCoordinate;
+    enum PDF_ENUM_NAME_BitsPerFlag = _Anonymous_74.PDF_ENUM_NAME_BitsPerFlag;
+    enum PDF_ENUM_NAME_BitsPerSample = _Anonymous_74.PDF_ENUM_NAME_BitsPerSample;
+    enum PDF_ENUM_NAME_BlackIs1 = _Anonymous_74.PDF_ENUM_NAME_BlackIs1;
+    enum PDF_ENUM_NAME_BlackPoint = _Anonymous_74.PDF_ENUM_NAME_BlackPoint;
+    enum PDF_ENUM_NAME_BleedBox = _Anonymous_74.PDF_ENUM_NAME_BleedBox;
+    enum PDF_ENUM_NAME_Blinds = _Anonymous_74.PDF_ENUM_NAME_Blinds;
+    enum PDF_ENUM_NAME_Border = _Anonymous_74.PDF_ENUM_NAME_Border;
+    enum PDF_ENUM_NAME_Bounds = _Anonymous_74.PDF_ENUM_NAME_Bounds;
+    enum PDF_ENUM_NAME_Box = _Anonymous_74.PDF_ENUM_NAME_Box;
+    enum PDF_ENUM_NAME_Bt = _Anonymous_74.PDF_ENUM_NAME_Bt;
+    enum PDF_ENUM_NAME_Btn = _Anonymous_74.PDF_ENUM_NAME_Btn;
+    enum PDF_ENUM_NAME_Butt = _Anonymous_74.PDF_ENUM_NAME_Butt;
+    enum PDF_ENUM_NAME_ByteRange = _Anonymous_74.PDF_ENUM_NAME_ByteRange;
+    enum PDF_ENUM_NAME_C = _Anonymous_74.PDF_ENUM_NAME_C;
+    enum PDF_ENUM_NAME_C0 = _Anonymous_74.PDF_ENUM_NAME_C0;
+    enum PDF_ENUM_NAME_C1 = _Anonymous_74.PDF_ENUM_NAME_C1;
+    enum PDF_ENUM_NAME_CA = _Anonymous_74.PDF_ENUM_NAME_CA;
+    enum PDF_ENUM_NAME_CCF = _Anonymous_74.PDF_ENUM_NAME_CCF;
+    enum PDF_ENUM_NAME_CCITTFaxDecode = _Anonymous_74.PDF_ENUM_NAME_CCITTFaxDecode;
+    enum PDF_ENUM_NAME_CF = _Anonymous_74.PDF_ENUM_NAME_CF;
+    enum PDF_ENUM_NAME_CFM = _Anonymous_74.PDF_ENUM_NAME_CFM;
+    enum PDF_ENUM_NAME_CI = _Anonymous_74.PDF_ENUM_NAME_CI;
+    enum PDF_ENUM_NAME_CIDFontType0 = _Anonymous_74.PDF_ENUM_NAME_CIDFontType0;
+    enum PDF_ENUM_NAME_CIDFontType0C = _Anonymous_74.PDF_ENUM_NAME_CIDFontType0C;
+    enum PDF_ENUM_NAME_CIDFontType2 = _Anonymous_74.PDF_ENUM_NAME_CIDFontType2;
+    enum PDF_ENUM_NAME_CIDSystemInfo = _Anonymous_74.PDF_ENUM_NAME_CIDSystemInfo;
+    enum PDF_ENUM_NAME_CIDToGIDMap = _Anonymous_74.PDF_ENUM_NAME_CIDToGIDMap;
+    enum PDF_ENUM_NAME_CMYK = _Anonymous_74.PDF_ENUM_NAME_CMYK;
+    enum PDF_ENUM_NAME_CS = _Anonymous_74.PDF_ENUM_NAME_CS;
+    enum PDF_ENUM_NAME_CalCMYK = _Anonymous_74.PDF_ENUM_NAME_CalCMYK;
+    enum PDF_ENUM_NAME_CalGray = _Anonymous_74.PDF_ENUM_NAME_CalGray;
+    enum PDF_ENUM_NAME_CalRGB = _Anonymous_74.PDF_ENUM_NAME_CalRGB;
+    enum PDF_ENUM_NAME_CapHeight = _Anonymous_74.PDF_ENUM_NAME_CapHeight;
+    enum PDF_ENUM_NAME_Caret = _Anonymous_74.PDF_ENUM_NAME_Caret;
+    enum PDF_ENUM_NAME_Catalog = _Anonymous_74.PDF_ENUM_NAME_Catalog;
+    enum PDF_ENUM_NAME_Cert = _Anonymous_74.PDF_ENUM_NAME_Cert;
+    enum PDF_ENUM_NAME_Ch = _Anonymous_74.PDF_ENUM_NAME_Ch;
+    enum PDF_ENUM_NAME_Changes = _Anonymous_74.PDF_ENUM_NAME_Changes;
+    enum PDF_ENUM_NAME_CharProcs = _Anonymous_74.PDF_ENUM_NAME_CharProcs;
+    enum PDF_ENUM_NAME_CheckSum = _Anonymous_74.PDF_ENUM_NAME_CheckSum;
+    enum PDF_ENUM_NAME_Circle = _Anonymous_74.PDF_ENUM_NAME_Circle;
+    enum PDF_ENUM_NAME_ClosedArrow = _Anonymous_74.PDF_ENUM_NAME_ClosedArrow;
+    enum PDF_ENUM_NAME_Collection = _Anonymous_74.PDF_ENUM_NAME_Collection;
+    enum PDF_ENUM_NAME_ColorSpace = _Anonymous_74.PDF_ENUM_NAME_ColorSpace;
+    enum PDF_ENUM_NAME_ColorTransform = _Anonymous_74.PDF_ENUM_NAME_ColorTransform;
+    enum PDF_ENUM_NAME_Colorants = _Anonymous_74.PDF_ENUM_NAME_Colorants;
+    enum PDF_ENUM_NAME_Colors = _Anonymous_74.PDF_ENUM_NAME_Colors;
+    enum PDF_ENUM_NAME_Columns = _Anonymous_74.PDF_ENUM_NAME_Columns;
+    enum PDF_ENUM_NAME_Confidential = _Anonymous_74.PDF_ENUM_NAME_Confidential;
+    enum PDF_ENUM_NAME_Configs = _Anonymous_74.PDF_ENUM_NAME_Configs;
+    enum PDF_ENUM_NAME_ContactInfo = _Anonymous_74.PDF_ENUM_NAME_ContactInfo;
+    enum PDF_ENUM_NAME_Contents = _Anonymous_74.PDF_ENUM_NAME_Contents;
+    enum PDF_ENUM_NAME_Coords = _Anonymous_74.PDF_ENUM_NAME_Coords;
+    enum PDF_ENUM_NAME_Count = _Anonymous_74.PDF_ENUM_NAME_Count;
+    enum PDF_ENUM_NAME_Cover = _Anonymous_74.PDF_ENUM_NAME_Cover;
+    enum PDF_ENUM_NAME_CreationDate = _Anonymous_74.PDF_ENUM_NAME_CreationDate;
+    enum PDF_ENUM_NAME_Creator = _Anonymous_74.PDF_ENUM_NAME_Creator;
+    enum PDF_ENUM_NAME_CropBox = _Anonymous_74.PDF_ENUM_NAME_CropBox;
+    enum PDF_ENUM_NAME_Crypt = _Anonymous_74.PDF_ENUM_NAME_Crypt;
+    enum PDF_ENUM_NAME_D = _Anonymous_74.PDF_ENUM_NAME_D;
+    enum PDF_ENUM_NAME_DA = _Anonymous_74.PDF_ENUM_NAME_DA;
+    enum PDF_ENUM_NAME_DC = _Anonymous_74.PDF_ENUM_NAME_DC;
+    enum PDF_ENUM_NAME_DCT = _Anonymous_74.PDF_ENUM_NAME_DCT;
+    enum PDF_ENUM_NAME_DCTDecode = _Anonymous_74.PDF_ENUM_NAME_DCTDecode;
+    enum PDF_ENUM_NAME_DL = _Anonymous_74.PDF_ENUM_NAME_DL;
+    enum PDF_ENUM_NAME_DOS = _Anonymous_74.PDF_ENUM_NAME_DOS;
+    enum PDF_ENUM_NAME_DP = _Anonymous_74.PDF_ENUM_NAME_DP;
+    enum PDF_ENUM_NAME_DR = _Anonymous_74.PDF_ENUM_NAME_DR;
+    enum PDF_ENUM_NAME_DS = _Anonymous_74.PDF_ENUM_NAME_DS;
+    enum PDF_ENUM_NAME_DV = _Anonymous_74.PDF_ENUM_NAME_DV;
+    enum PDF_ENUM_NAME_DW = _Anonymous_74.PDF_ENUM_NAME_DW;
+    enum PDF_ENUM_NAME_DW2 = _Anonymous_74.PDF_ENUM_NAME_DW2;
+    enum PDF_ENUM_NAME_DamagedRowsBeforeError = _Anonymous_74.PDF_ENUM_NAME_DamagedRowsBeforeError;
+    enum PDF_ENUM_NAME_Data = _Anonymous_74.PDF_ENUM_NAME_Data;
+    enum PDF_ENUM_NAME_Date = _Anonymous_74.PDF_ENUM_NAME_Date;
+    enum PDF_ENUM_NAME_Decode = _Anonymous_74.PDF_ENUM_NAME_Decode;
+    enum PDF_ENUM_NAME_DecodeParms = _Anonymous_74.PDF_ENUM_NAME_DecodeParms;
+    enum PDF_ENUM_NAME_Default = _Anonymous_74.PDF_ENUM_NAME_Default;
+    enum PDF_ENUM_NAME_DefaultCMYK = _Anonymous_74.PDF_ENUM_NAME_DefaultCMYK;
+    enum PDF_ENUM_NAME_DefaultGray = _Anonymous_74.PDF_ENUM_NAME_DefaultGray;
+    enum PDF_ENUM_NAME_DefaultRGB = _Anonymous_74.PDF_ENUM_NAME_DefaultRGB;
+    enum PDF_ENUM_NAME_Departmental = _Anonymous_74.PDF_ENUM_NAME_Departmental;
+    enum PDF_ENUM_NAME_Desc = _Anonymous_74.PDF_ENUM_NAME_Desc;
+    enum PDF_ENUM_NAME_DescendantFonts = _Anonymous_74.PDF_ENUM_NAME_DescendantFonts;
+    enum PDF_ENUM_NAME_Descent = _Anonymous_74.PDF_ENUM_NAME_Descent;
+    enum PDF_ENUM_NAME_Design = _Anonymous_74.PDF_ENUM_NAME_Design;
+    enum PDF_ENUM_NAME_Dest = _Anonymous_74.PDF_ENUM_NAME_Dest;
+    enum PDF_ENUM_NAME_DestOutputProfile = _Anonymous_74.PDF_ENUM_NAME_DestOutputProfile;
+    enum PDF_ENUM_NAME_Dests = _Anonymous_74.PDF_ENUM_NAME_Dests;
+    enum PDF_ENUM_NAME_DeviceCMYK = _Anonymous_74.PDF_ENUM_NAME_DeviceCMYK;
+    enum PDF_ENUM_NAME_DeviceGray = _Anonymous_74.PDF_ENUM_NAME_DeviceGray;
+    enum PDF_ENUM_NAME_DeviceN = _Anonymous_74.PDF_ENUM_NAME_DeviceN;
+    enum PDF_ENUM_NAME_DeviceRGB = _Anonymous_74.PDF_ENUM_NAME_DeviceRGB;
+    enum PDF_ENUM_NAME_Di = _Anonymous_74.PDF_ENUM_NAME_Di;
+    enum PDF_ENUM_NAME_Diamond = _Anonymous_74.PDF_ENUM_NAME_Diamond;
+    enum PDF_ENUM_NAME_Differences = _Anonymous_74.PDF_ENUM_NAME_Differences;
+    enum PDF_ENUM_NAME_DigestLocation = _Anonymous_74.PDF_ENUM_NAME_DigestLocation;
+    enum PDF_ENUM_NAME_DigestMethod = _Anonymous_74.PDF_ENUM_NAME_DigestMethod;
+    enum PDF_ENUM_NAME_DigestValue = _Anonymous_74.PDF_ENUM_NAME_DigestValue;
+    enum PDF_ENUM_NAME_Dissolve = _Anonymous_74.PDF_ENUM_NAME_Dissolve;
+    enum PDF_ENUM_NAME_Dm = _Anonymous_74.PDF_ENUM_NAME_Dm;
+    enum PDF_ENUM_NAME_DocMDP = _Anonymous_74.PDF_ENUM_NAME_DocMDP;
+    enum PDF_ENUM_NAME_Document = _Anonymous_74.PDF_ENUM_NAME_Document;
+    enum PDF_ENUM_NAME_Domain = _Anonymous_74.PDF_ENUM_NAME_Domain;
+    enum PDF_ENUM_NAME_Draft = _Anonymous_74.PDF_ENUM_NAME_Draft;
+    enum PDF_ENUM_NAME_Dur = _Anonymous_74.PDF_ENUM_NAME_Dur;
+    enum PDF_ENUM_NAME_E = _Anonymous_74.PDF_ENUM_NAME_E;
+    enum PDF_ENUM_NAME_EF = _Anonymous_74.PDF_ENUM_NAME_EF;
+    enum PDF_ENUM_NAME_EarlyChange = _Anonymous_74.PDF_ENUM_NAME_EarlyChange;
+    enum PDF_ENUM_NAME_EmbeddedFile = _Anonymous_74.PDF_ENUM_NAME_EmbeddedFile;
+    enum PDF_ENUM_NAME_EmbeddedFiles = _Anonymous_74.PDF_ENUM_NAME_EmbeddedFiles;
+    enum PDF_ENUM_NAME_Encode = _Anonymous_74.PDF_ENUM_NAME_Encode;
+    enum PDF_ENUM_NAME_EncodedByteAlign = _Anonymous_74.PDF_ENUM_NAME_EncodedByteAlign;
+    enum PDF_ENUM_NAME_Encoding = _Anonymous_74.PDF_ENUM_NAME_Encoding;
+    enum PDF_ENUM_NAME_Encrypt = _Anonymous_74.PDF_ENUM_NAME_Encrypt;
+    enum PDF_ENUM_NAME_EncryptMetadata = _Anonymous_74.PDF_ENUM_NAME_EncryptMetadata;
+    enum PDF_ENUM_NAME_EndOfBlock = _Anonymous_74.PDF_ENUM_NAME_EndOfBlock;
+    enum PDF_ENUM_NAME_EndOfLine = _Anonymous_74.PDF_ENUM_NAME_EndOfLine;
+    enum PDF_ENUM_NAME_Exclude = _Anonymous_74.PDF_ENUM_NAME_Exclude;
+    enum PDF_ENUM_NAME_Experimental = _Anonymous_74.PDF_ENUM_NAME_Experimental;
+    enum PDF_ENUM_NAME_Expired = _Anonymous_74.PDF_ENUM_NAME_Expired;
+    enum PDF_ENUM_NAME_ExtGState = _Anonymous_74.PDF_ENUM_NAME_ExtGState;
+    enum PDF_ENUM_NAME_Extend = _Anonymous_74.PDF_ENUM_NAME_Extend;
+    enum PDF_ENUM_NAME_F = _Anonymous_74.PDF_ENUM_NAME_F;
+    enum PDF_ENUM_NAME_FL = _Anonymous_74.PDF_ENUM_NAME_FL;
+    enum PDF_ENUM_NAME_FRM = _Anonymous_74.PDF_ENUM_NAME_FRM;
+    enum PDF_ENUM_NAME_FS = _Anonymous_74.PDF_ENUM_NAME_FS;
+    enum PDF_ENUM_NAME_FT = _Anonymous_74.PDF_ENUM_NAME_FT;
+    enum PDF_ENUM_NAME_Fade = _Anonymous_74.PDF_ENUM_NAME_Fade;
+    enum PDF_ENUM_NAME_Ff = _Anonymous_74.PDF_ENUM_NAME_Ff;
+    enum PDF_ENUM_NAME_FieldMDP = _Anonymous_74.PDF_ENUM_NAME_FieldMDP;
+    enum PDF_ENUM_NAME_Fields = _Anonymous_74.PDF_ENUM_NAME_Fields;
+    enum PDF_ENUM_NAME_FileAttachment = _Anonymous_74.PDF_ENUM_NAME_FileAttachment;
+    enum PDF_ENUM_NAME_FileSize = _Anonymous_74.PDF_ENUM_NAME_FileSize;
+    enum PDF_ENUM_NAME_Filespec = _Anonymous_74.PDF_ENUM_NAME_Filespec;
+    enum PDF_ENUM_NAME_Filter = _Anonymous_74.PDF_ENUM_NAME_Filter;
+    enum PDF_ENUM_NAME_Final = _Anonymous_74.PDF_ENUM_NAME_Final;
+    enum PDF_ENUM_NAME_Fingerprint = _Anonymous_74.PDF_ENUM_NAME_Fingerprint;
+    enum PDF_ENUM_NAME_First = _Anonymous_74.PDF_ENUM_NAME_First;
+    enum PDF_ENUM_NAME_FirstChar = _Anonymous_74.PDF_ENUM_NAME_FirstChar;
+    enum PDF_ENUM_NAME_FirstPage = _Anonymous_74.PDF_ENUM_NAME_FirstPage;
+    enum PDF_ENUM_NAME_Fit = _Anonymous_74.PDF_ENUM_NAME_Fit;
+    enum PDF_ENUM_NAME_FitB = _Anonymous_74.PDF_ENUM_NAME_FitB;
+    enum PDF_ENUM_NAME_FitBH = _Anonymous_74.PDF_ENUM_NAME_FitBH;
+    enum PDF_ENUM_NAME_FitBV = _Anonymous_74.PDF_ENUM_NAME_FitBV;
+    enum PDF_ENUM_NAME_FitH = _Anonymous_74.PDF_ENUM_NAME_FitH;
+    enum PDF_ENUM_NAME_FitR = _Anonymous_74.PDF_ENUM_NAME_FitR;
+    enum PDF_ENUM_NAME_FitV = _Anonymous_74.PDF_ENUM_NAME_FitV;
+    enum PDF_ENUM_NAME_Fl = _Anonymous_74.PDF_ENUM_NAME_Fl;
+    enum PDF_ENUM_NAME_Flags = _Anonymous_74.PDF_ENUM_NAME_Flags;
+    enum PDF_ENUM_NAME_FlateDecode = _Anonymous_74.PDF_ENUM_NAME_FlateDecode;
+    enum PDF_ENUM_NAME_Fly = _Anonymous_74.PDF_ENUM_NAME_Fly;
+    enum PDF_ENUM_NAME_Font = _Anonymous_74.PDF_ENUM_NAME_Font;
+    enum PDF_ENUM_NAME_FontBBox = _Anonymous_74.PDF_ENUM_NAME_FontBBox;
+    enum PDF_ENUM_NAME_FontDescriptor = _Anonymous_74.PDF_ENUM_NAME_FontDescriptor;
+    enum PDF_ENUM_NAME_FontFile = _Anonymous_74.PDF_ENUM_NAME_FontFile;
+    enum PDF_ENUM_NAME_FontFile2 = _Anonymous_74.PDF_ENUM_NAME_FontFile2;
+    enum PDF_ENUM_NAME_FontFile3 = _Anonymous_74.PDF_ENUM_NAME_FontFile3;
+    enum PDF_ENUM_NAME_FontMatrix = _Anonymous_74.PDF_ENUM_NAME_FontMatrix;
+    enum PDF_ENUM_NAME_FontName = _Anonymous_74.PDF_ENUM_NAME_FontName;
+    enum PDF_ENUM_NAME_ForComment = _Anonymous_74.PDF_ENUM_NAME_ForComment;
+    enum PDF_ENUM_NAME_ForPublicRelease = _Anonymous_74.PDF_ENUM_NAME_ForPublicRelease;
+    enum PDF_ENUM_NAME_Form = _Anonymous_74.PDF_ENUM_NAME_Form;
+    enum PDF_ENUM_NAME_FormEx = _Anonymous_74.PDF_ENUM_NAME_FormEx;
+    enum PDF_ENUM_NAME_FormType = _Anonymous_74.PDF_ENUM_NAME_FormType;
+    enum PDF_ENUM_NAME_FreeText = _Anonymous_74.PDF_ENUM_NAME_FreeText;
+    enum PDF_ENUM_NAME_Function = _Anonymous_74.PDF_ENUM_NAME_Function;
+    enum PDF_ENUM_NAME_FunctionType = _Anonymous_74.PDF_ENUM_NAME_FunctionType;
+    enum PDF_ENUM_NAME_Functions = _Anonymous_74.PDF_ENUM_NAME_Functions;
+    enum PDF_ENUM_NAME_G = _Anonymous_74.PDF_ENUM_NAME_G;
+    enum PDF_ENUM_NAME_GTS_PDFX = _Anonymous_74.PDF_ENUM_NAME_GTS_PDFX;
+    enum PDF_ENUM_NAME_Gamma = _Anonymous_74.PDF_ENUM_NAME_Gamma;
+    enum PDF_ENUM_NAME_Glitter = _Anonymous_74.PDF_ENUM_NAME_Glitter;
+    enum PDF_ENUM_NAME_GoTo = _Anonymous_74.PDF_ENUM_NAME_GoTo;
+    enum PDF_ENUM_NAME_GoToR = _Anonymous_74.PDF_ENUM_NAME_GoToR;
+    enum PDF_ENUM_NAME_Group = _Anonymous_74.PDF_ENUM_NAME_Group;
+    enum PDF_ENUM_NAME_H = _Anonymous_74.PDF_ENUM_NAME_H;
+    enum PDF_ENUM_NAME_Height = _Anonymous_74.PDF_ENUM_NAME_Height;
+    enum PDF_ENUM_NAME_Helv = _Anonymous_74.PDF_ENUM_NAME_Helv;
+    enum PDF_ENUM_NAME_Highlight = _Anonymous_74.PDF_ENUM_NAME_Highlight;
+    enum PDF_ENUM_NAME_HistoryPos = _Anonymous_74.PDF_ENUM_NAME_HistoryPos;
+    enum PDF_ENUM_NAME_I = _Anonymous_74.PDF_ENUM_NAME_I;
+    enum PDF_ENUM_NAME_IC = _Anonymous_74.PDF_ENUM_NAME_IC;
+    enum PDF_ENUM_NAME_ICCBased = _Anonymous_74.PDF_ENUM_NAME_ICCBased;
+    enum PDF_ENUM_NAME_ID = _Anonymous_74.PDF_ENUM_NAME_ID;
+    enum PDF_ENUM_NAME_IM = _Anonymous_74.PDF_ENUM_NAME_IM;
+    enum PDF_ENUM_NAME_IRT = _Anonymous_74.PDF_ENUM_NAME_IRT;
+    enum PDF_ENUM_NAME_Identity = _Anonymous_74.PDF_ENUM_NAME_Identity;
+    enum PDF_ENUM_NAME_Identity_H = _Anonymous_74.PDF_ENUM_NAME_Identity_H;
+    enum PDF_ENUM_NAME_Identity_V = _Anonymous_74.PDF_ENUM_NAME_Identity_V;
+    enum PDF_ENUM_NAME_Image = _Anonymous_74.PDF_ENUM_NAME_Image;
+    enum PDF_ENUM_NAME_ImageMask = _Anonymous_74.PDF_ENUM_NAME_ImageMask;
+    enum PDF_ENUM_NAME_Include = _Anonymous_74.PDF_ENUM_NAME_Include;
+    enum PDF_ENUM_NAME_Index = _Anonymous_74.PDF_ENUM_NAME_Index;
+    enum PDF_ENUM_NAME_Indexed = _Anonymous_74.PDF_ENUM_NAME_Indexed;
+    enum PDF_ENUM_NAME_Info = _Anonymous_74.PDF_ENUM_NAME_Info;
+    enum PDF_ENUM_NAME_Ink = _Anonymous_74.PDF_ENUM_NAME_Ink;
+    enum PDF_ENUM_NAME_InkList = _Anonymous_74.PDF_ENUM_NAME_InkList;
+    enum PDF_ENUM_NAME_Intent = _Anonymous_74.PDF_ENUM_NAME_Intent;
+    enum PDF_ENUM_NAME_Interpolate = _Anonymous_74.PDF_ENUM_NAME_Interpolate;
+    enum PDF_ENUM_NAME_IsMap = _Anonymous_74.PDF_ENUM_NAME_IsMap;
+    enum PDF_ENUM_NAME_ItalicAngle = _Anonymous_74.PDF_ENUM_NAME_ItalicAngle;
+    enum PDF_ENUM_NAME_JBIG2Decode = _Anonymous_74.PDF_ENUM_NAME_JBIG2Decode;
+    enum PDF_ENUM_NAME_JBIG2Globals = _Anonymous_74.PDF_ENUM_NAME_JBIG2Globals;
+    enum PDF_ENUM_NAME_JPXDecode = _Anonymous_74.PDF_ENUM_NAME_JPXDecode;
+    enum PDF_ENUM_NAME_JS = _Anonymous_74.PDF_ENUM_NAME_JS;
+    enum PDF_ENUM_NAME_JavaScript = _Anonymous_74.PDF_ENUM_NAME_JavaScript;
+    enum PDF_ENUM_NAME_K = _Anonymous_74.PDF_ENUM_NAME_K;
+    enum PDF_ENUM_NAME_Keywords = _Anonymous_74.PDF_ENUM_NAME_Keywords;
+    enum PDF_ENUM_NAME_Kids = _Anonymous_74.PDF_ENUM_NAME_Kids;
+    enum PDF_ENUM_NAME_L = _Anonymous_74.PDF_ENUM_NAME_L;
+    enum PDF_ENUM_NAME_LC = _Anonymous_74.PDF_ENUM_NAME_LC;
+    enum PDF_ENUM_NAME_LE = _Anonymous_74.PDF_ENUM_NAME_LE;
+    enum PDF_ENUM_NAME_LJ = _Anonymous_74.PDF_ENUM_NAME_LJ;
+    enum PDF_ENUM_NAME_LW = _Anonymous_74.PDF_ENUM_NAME_LW;
+    enum PDF_ENUM_NAME_LZ = _Anonymous_74.PDF_ENUM_NAME_LZ;
+    enum PDF_ENUM_NAME_LZW = _Anonymous_74.PDF_ENUM_NAME_LZW;
+    enum PDF_ENUM_NAME_LZWDecode = _Anonymous_74.PDF_ENUM_NAME_LZWDecode;
+    enum PDF_ENUM_NAME_Lab = _Anonymous_74.PDF_ENUM_NAME_Lab;
+    enum PDF_ENUM_NAME_Lang = _Anonymous_74.PDF_ENUM_NAME_Lang;
+    enum PDF_ENUM_NAME_Last = _Anonymous_74.PDF_ENUM_NAME_Last;
+    enum PDF_ENUM_NAME_LastChar = _Anonymous_74.PDF_ENUM_NAME_LastChar;
+    enum PDF_ENUM_NAME_LastPage = _Anonymous_74.PDF_ENUM_NAME_LastPage;
+    enum PDF_ENUM_NAME_Launch = _Anonymous_74.PDF_ENUM_NAME_Launch;
+    enum PDF_ENUM_NAME_Length = _Anonymous_74.PDF_ENUM_NAME_Length;
+    enum PDF_ENUM_NAME_Length1 = _Anonymous_74.PDF_ENUM_NAME_Length1;
+    enum PDF_ENUM_NAME_Length2 = _Anonymous_74.PDF_ENUM_NAME_Length2;
+    enum PDF_ENUM_NAME_Length3 = _Anonymous_74.PDF_ENUM_NAME_Length3;
+    enum PDF_ENUM_NAME_Limits = _Anonymous_74.PDF_ENUM_NAME_Limits;
+    enum PDF_ENUM_NAME_Line = _Anonymous_74.PDF_ENUM_NAME_Line;
+    enum PDF_ENUM_NAME_Linearized = _Anonymous_74.PDF_ENUM_NAME_Linearized;
+    enum PDF_ENUM_NAME_Link = _Anonymous_74.PDF_ENUM_NAME_Link;
+    enum PDF_ENUM_NAME_Location = _Anonymous_74.PDF_ENUM_NAME_Location;
+    enum PDF_ENUM_NAME_Lock = _Anonymous_74.PDF_ENUM_NAME_Lock;
+    enum PDF_ENUM_NAME_Locked = _Anonymous_74.PDF_ENUM_NAME_Locked;
+    enum PDF_ENUM_NAME_Luminosity = _Anonymous_74.PDF_ENUM_NAME_Luminosity;
+    enum PDF_ENUM_NAME_M = _Anonymous_74.PDF_ENUM_NAME_M;
+    enum PDF_ENUM_NAME_MCID = _Anonymous_74.PDF_ENUM_NAME_MCID;
+    enum PDF_ENUM_NAME_MK = _Anonymous_74.PDF_ENUM_NAME_MK;
+    enum PDF_ENUM_NAME_ML = _Anonymous_74.PDF_ENUM_NAME_ML;
+    enum PDF_ENUM_NAME_MMType1 = _Anonymous_74.PDF_ENUM_NAME_MMType1;
+    enum PDF_ENUM_NAME_Mac = _Anonymous_74.PDF_ENUM_NAME_Mac;
+    enum PDF_ENUM_NAME_Mask = _Anonymous_74.PDF_ENUM_NAME_Mask;
+    enum PDF_ENUM_NAME_Matrix = _Anonymous_74.PDF_ENUM_NAME_Matrix;
+    enum PDF_ENUM_NAME_Matte = _Anonymous_74.PDF_ENUM_NAME_Matte;
+    enum PDF_ENUM_NAME_MaxLen = _Anonymous_74.PDF_ENUM_NAME_MaxLen;
+    enum PDF_ENUM_NAME_MediaBox = _Anonymous_74.PDF_ENUM_NAME_MediaBox;
+    enum PDF_ENUM_NAME_Metadata = _Anonymous_74.PDF_ENUM_NAME_Metadata;
+    enum PDF_ENUM_NAME_MissingWidth = _Anonymous_74.PDF_ENUM_NAME_MissingWidth;
+    enum PDF_ENUM_NAME_ModDate = _Anonymous_74.PDF_ENUM_NAME_ModDate;
+    enum PDF_ENUM_NAME_Movie = _Anonymous_74.PDF_ENUM_NAME_Movie;
+    enum PDF_ENUM_NAME_Msg = _Anonymous_74.PDF_ENUM_NAME_Msg;
+    enum PDF_ENUM_NAME_Multiply = _Anonymous_74.PDF_ENUM_NAME_Multiply;
+    enum PDF_ENUM_NAME_N = _Anonymous_74.PDF_ENUM_NAME_N;
+    enum PDF_ENUM_NAME_Name = _Anonymous_74.PDF_ENUM_NAME_Name;
+    enum PDF_ENUM_NAME_Named = _Anonymous_74.PDF_ENUM_NAME_Named;
+    enum PDF_ENUM_NAME_Names = _Anonymous_74.PDF_ENUM_NAME_Names;
+    enum PDF_ENUM_NAME_NewWindow = _Anonymous_74.PDF_ENUM_NAME_NewWindow;
+    enum PDF_ENUM_NAME_Next = _Anonymous_74.PDF_ENUM_NAME_Next;
+    enum PDF_ENUM_NAME_NextPage = _Anonymous_74.PDF_ENUM_NAME_NextPage;
+    enum PDF_ENUM_NAME_NonEFontNoWarn = _Anonymous_74.PDF_ENUM_NAME_NonEFontNoWarn;
+    enum PDF_ENUM_NAME_None = _Anonymous_74.PDF_ENUM_NAME_None;
+    enum PDF_ENUM_NAME_Normal = _Anonymous_74.PDF_ENUM_NAME_Normal;
+    enum PDF_ENUM_NAME_NotApproved = _Anonymous_74.PDF_ENUM_NAME_NotApproved;
+    enum PDF_ENUM_NAME_NotForPublicRelease = _Anonymous_74.PDF_ENUM_NAME_NotForPublicRelease;
+    enum PDF_ENUM_NAME_NumSections = _Anonymous_74.PDF_ENUM_NAME_NumSections;
+    enum PDF_ENUM_NAME_Nums = _Anonymous_74.PDF_ENUM_NAME_Nums;
+    enum PDF_ENUM_NAME_O = _Anonymous_74.PDF_ENUM_NAME_O;
+    enum PDF_ENUM_NAME_OC = _Anonymous_74.PDF_ENUM_NAME_OC;
+    enum PDF_ENUM_NAME_OCG = _Anonymous_74.PDF_ENUM_NAME_OCG;
+    enum PDF_ENUM_NAME_OCGs = _Anonymous_74.PDF_ENUM_NAME_OCGs;
+    enum PDF_ENUM_NAME_OCMD = _Anonymous_74.PDF_ENUM_NAME_OCMD;
+    enum PDF_ENUM_NAME_OCProperties = _Anonymous_74.PDF_ENUM_NAME_OCProperties;
+    enum PDF_ENUM_NAME_OE = _Anonymous_74.PDF_ENUM_NAME_OE;
+    enum PDF_ENUM_NAME_OFF = _Anonymous_74.PDF_ENUM_NAME_OFF;
+    enum PDF_ENUM_NAME_ON = _Anonymous_74.PDF_ENUM_NAME_ON;
+    enum PDF_ENUM_NAME_OP = _Anonymous_74.PDF_ENUM_NAME_OP;
+    enum PDF_ENUM_NAME_OPM = _Anonymous_74.PDF_ENUM_NAME_OPM;
+    enum PDF_ENUM_NAME_OS = _Anonymous_74.PDF_ENUM_NAME_OS;
+    enum PDF_ENUM_NAME_ObjStm = _Anonymous_74.PDF_ENUM_NAME_ObjStm;
+    enum PDF_ENUM_NAME_Of = _Anonymous_74.PDF_ENUM_NAME_Of;
+    enum PDF_ENUM_NAME_Off = _Anonymous_74.PDF_ENUM_NAME_Off;
+    enum PDF_ENUM_NAME_Open = _Anonymous_74.PDF_ENUM_NAME_Open;
+    enum PDF_ENUM_NAME_OpenArrow = _Anonymous_74.PDF_ENUM_NAME_OpenArrow;
+    enum PDF_ENUM_NAME_OpenType = _Anonymous_74.PDF_ENUM_NAME_OpenType;
+    enum PDF_ENUM_NAME_Opt = _Anonymous_74.PDF_ENUM_NAME_Opt;
+    enum PDF_ENUM_NAME_Order = _Anonymous_74.PDF_ENUM_NAME_Order;
+    enum PDF_ENUM_NAME_Ordering = _Anonymous_74.PDF_ENUM_NAME_Ordering;
+    enum PDF_ENUM_NAME_Outlines = _Anonymous_74.PDF_ENUM_NAME_Outlines;
+    enum PDF_ENUM_NAME_OutputCondition = _Anonymous_74.PDF_ENUM_NAME_OutputCondition;
+    enum PDF_ENUM_NAME_OutputConditionIdentifier = _Anonymous_74.PDF_ENUM_NAME_OutputConditionIdentifier;
+    enum PDF_ENUM_NAME_OutputIntent = _Anonymous_74.PDF_ENUM_NAME_OutputIntent;
+    enum PDF_ENUM_NAME_OutputIntents = _Anonymous_74.PDF_ENUM_NAME_OutputIntents;
+    enum PDF_ENUM_NAME_P = _Anonymous_74.PDF_ENUM_NAME_P;
+    enum PDF_ENUM_NAME_PDF = _Anonymous_74.PDF_ENUM_NAME_PDF;
+    enum PDF_ENUM_NAME_PS = _Anonymous_74.PDF_ENUM_NAME_PS;
+    enum PDF_ENUM_NAME_Page = _Anonymous_74.PDF_ENUM_NAME_Page;
+    enum PDF_ENUM_NAME_PageMode = _Anonymous_74.PDF_ENUM_NAME_PageMode;
+    enum PDF_ENUM_NAME_Pages = _Anonymous_74.PDF_ENUM_NAME_Pages;
+    enum PDF_ENUM_NAME_PaintType = _Anonymous_74.PDF_ENUM_NAME_PaintType;
+    enum PDF_ENUM_NAME_Params = _Anonymous_74.PDF_ENUM_NAME_Params;
+    enum PDF_ENUM_NAME_Parent = _Anonymous_74.PDF_ENUM_NAME_Parent;
+    enum PDF_ENUM_NAME_Pattern = _Anonymous_74.PDF_ENUM_NAME_Pattern;
+    enum PDF_ENUM_NAME_PatternType = _Anonymous_74.PDF_ENUM_NAME_PatternType;
+    enum PDF_ENUM_NAME_Perms = _Anonymous_74.PDF_ENUM_NAME_Perms;
+    enum PDF_ENUM_NAME_PolyLine = _Anonymous_74.PDF_ENUM_NAME_PolyLine;
+    enum PDF_ENUM_NAME_Polygon = _Anonymous_74.PDF_ENUM_NAME_Polygon;
+    enum PDF_ENUM_NAME_Popup = _Anonymous_74.PDF_ENUM_NAME_Popup;
+    enum PDF_ENUM_NAME_PreRelease = _Anonymous_74.PDF_ENUM_NAME_PreRelease;
+    enum PDF_ENUM_NAME_Predictor = _Anonymous_74.PDF_ENUM_NAME_Predictor;
+    enum PDF_ENUM_NAME_Prev = _Anonymous_74.PDF_ENUM_NAME_Prev;
+    enum PDF_ENUM_NAME_PrevPage = _Anonymous_74.PDF_ENUM_NAME_PrevPage;
+    enum PDF_ENUM_NAME_Preview = _Anonymous_74.PDF_ENUM_NAME_Preview;
+    enum PDF_ENUM_NAME_Print = _Anonymous_74.PDF_ENUM_NAME_Print;
+    enum PDF_ENUM_NAME_PrinterMark = _Anonymous_74.PDF_ENUM_NAME_PrinterMark;
+    enum PDF_ENUM_NAME_ProcSet = _Anonymous_74.PDF_ENUM_NAME_ProcSet;
+    enum PDF_ENUM_NAME_Producer = _Anonymous_74.PDF_ENUM_NAME_Producer;
+    enum PDF_ENUM_NAME_Properties = _Anonymous_74.PDF_ENUM_NAME_Properties;
+    enum PDF_ENUM_NAME_Prop_AuthTime = _Anonymous_74.PDF_ENUM_NAME_Prop_AuthTime;
+    enum PDF_ENUM_NAME_Prop_AuthType = _Anonymous_74.PDF_ENUM_NAME_Prop_AuthType;
+    enum PDF_ENUM_NAME_Prop_Build = _Anonymous_74.PDF_ENUM_NAME_Prop_Build;
+    enum PDF_ENUM_NAME_PubSec = _Anonymous_74.PDF_ENUM_NAME_PubSec;
+    enum PDF_ENUM_NAME_Push = _Anonymous_74.PDF_ENUM_NAME_Push;
+    enum PDF_ENUM_NAME_Q = _Anonymous_74.PDF_ENUM_NAME_Q;
+    enum PDF_ENUM_NAME_QuadPoints = _Anonymous_74.PDF_ENUM_NAME_QuadPoints;
+    enum PDF_ENUM_NAME_R = _Anonymous_74.PDF_ENUM_NAME_R;
+    enum PDF_ENUM_NAME_RBGroups = _Anonymous_74.PDF_ENUM_NAME_RBGroups;
+    enum PDF_ENUM_NAME_RC = _Anonymous_74.PDF_ENUM_NAME_RC;
+    enum PDF_ENUM_NAME_RClosedArrow = _Anonymous_74.PDF_ENUM_NAME_RClosedArrow;
+    enum PDF_ENUM_NAME_REx = _Anonymous_74.PDF_ENUM_NAME_REx;
+    enum PDF_ENUM_NAME_RGB = _Anonymous_74.PDF_ENUM_NAME_RGB;
+    enum PDF_ENUM_NAME_RI = _Anonymous_74.PDF_ENUM_NAME_RI;
+    enum PDF_ENUM_NAME_RL = _Anonymous_74.PDF_ENUM_NAME_RL;
+    enum PDF_ENUM_NAME_ROpenArrow = _Anonymous_74.PDF_ENUM_NAME_ROpenArrow;
+    enum PDF_ENUM_NAME_Range = _Anonymous_74.PDF_ENUM_NAME_Range;
+    enum PDF_ENUM_NAME_Reason = _Anonymous_74.PDF_ENUM_NAME_Reason;
+    enum PDF_ENUM_NAME_Rect = _Anonymous_74.PDF_ENUM_NAME_Rect;
+    enum PDF_ENUM_NAME_Redact = _Anonymous_74.PDF_ENUM_NAME_Redact;
+    enum PDF_ENUM_NAME_Ref = _Anonymous_74.PDF_ENUM_NAME_Ref;
+    enum PDF_ENUM_NAME_Reference = _Anonymous_74.PDF_ENUM_NAME_Reference;
+    enum PDF_ENUM_NAME_Registry = _Anonymous_74.PDF_ENUM_NAME_Registry;
+    enum PDF_ENUM_NAME_ResetForm = _Anonymous_74.PDF_ENUM_NAME_ResetForm;
+    enum PDF_ENUM_NAME_Resources = _Anonymous_74.PDF_ENUM_NAME_Resources;
+    enum PDF_ENUM_NAME_Root = _Anonymous_74.PDF_ENUM_NAME_Root;
+    enum PDF_ENUM_NAME_Rotate = _Anonymous_74.PDF_ENUM_NAME_Rotate;
+    enum PDF_ENUM_NAME_Rows = _Anonymous_74.PDF_ENUM_NAME_Rows;
+    enum PDF_ENUM_NAME_RunLengthDecode = _Anonymous_74.PDF_ENUM_NAME_RunLengthDecode;
+    enum PDF_ENUM_NAME_S = _Anonymous_74.PDF_ENUM_NAME_S;
+    enum PDF_ENUM_NAME_SMask = _Anonymous_74.PDF_ENUM_NAME_SMask;
+    enum PDF_ENUM_NAME_SMaskInData = _Anonymous_74.PDF_ENUM_NAME_SMaskInData;
+    enum PDF_ENUM_NAME_Schema = _Anonymous_74.PDF_ENUM_NAME_Schema;
+    enum PDF_ENUM_NAME_Screen = _Anonymous_74.PDF_ENUM_NAME_Screen;
+    enum PDF_ENUM_NAME_Separation = _Anonymous_74.PDF_ENUM_NAME_Separation;
+    enum PDF_ENUM_NAME_Shading = _Anonymous_74.PDF_ENUM_NAME_Shading;
+    enum PDF_ENUM_NAME_ShadingType = _Anonymous_74.PDF_ENUM_NAME_ShadingType;
+    enum PDF_ENUM_NAME_Si = _Anonymous_74.PDF_ENUM_NAME_Si;
+    enum PDF_ENUM_NAME_Sig = _Anonymous_74.PDF_ENUM_NAME_Sig;
+    enum PDF_ENUM_NAME_SigFlags = _Anonymous_74.PDF_ENUM_NAME_SigFlags;
+    enum PDF_ENUM_NAME_SigQ = _Anonymous_74.PDF_ENUM_NAME_SigQ;
+    enum PDF_ENUM_NAME_SigRef = _Anonymous_74.PDF_ENUM_NAME_SigRef;
+    enum PDF_ENUM_NAME_Size = _Anonymous_74.PDF_ENUM_NAME_Size;
+    enum PDF_ENUM_NAME_Slash = _Anonymous_74.PDF_ENUM_NAME_Slash;
+    enum PDF_ENUM_NAME_Sold = _Anonymous_74.PDF_ENUM_NAME_Sold;
+    enum PDF_ENUM_NAME_Sound = _Anonymous_74.PDF_ENUM_NAME_Sound;
+    enum PDF_ENUM_NAME_Split = _Anonymous_74.PDF_ENUM_NAME_Split;
+    enum PDF_ENUM_NAME_Square = _Anonymous_74.PDF_ENUM_NAME_Square;
+    enum PDF_ENUM_NAME_Squiggly = _Anonymous_74.PDF_ENUM_NAME_Squiggly;
+    enum PDF_ENUM_NAME_Stamp = _Anonymous_74.PDF_ENUM_NAME_Stamp;
+    enum PDF_ENUM_NAME_Standard = _Anonymous_74.PDF_ENUM_NAME_Standard;
+    enum PDF_ENUM_NAME_StdCF = _Anonymous_74.PDF_ENUM_NAME_StdCF;
+    enum PDF_ENUM_NAME_StemV = _Anonymous_74.PDF_ENUM_NAME_StemV;
+    enum PDF_ENUM_NAME_StmF = _Anonymous_74.PDF_ENUM_NAME_StmF;
+    enum PDF_ENUM_NAME_StrF = _Anonymous_74.PDF_ENUM_NAME_StrF;
+    enum PDF_ENUM_NAME_StrikeOut = _Anonymous_74.PDF_ENUM_NAME_StrikeOut;
+    enum PDF_ENUM_NAME_StructParent = _Anonymous_74.PDF_ENUM_NAME_StructParent;
+    enum PDF_ENUM_NAME_StructParents = _Anonymous_74.PDF_ENUM_NAME_StructParents;
+    enum PDF_ENUM_NAME_SubFilter = _Anonymous_74.PDF_ENUM_NAME_SubFilter;
+    enum PDF_ENUM_NAME_Subject = _Anonymous_74.PDF_ENUM_NAME_Subject;
+    enum PDF_ENUM_NAME_Subtype = _Anonymous_74.PDF_ENUM_NAME_Subtype;
+    enum PDF_ENUM_NAME_Subtype2 = _Anonymous_74.PDF_ENUM_NAME_Subtype2;
+    enum PDF_ENUM_NAME_Supplement = _Anonymous_74.PDF_ENUM_NAME_Supplement;
+    enum PDF_ENUM_NAME_Symb = _Anonymous_74.PDF_ENUM_NAME_Symb;
+    enum PDF_ENUM_NAME_T = _Anonymous_74.PDF_ENUM_NAME_T;
+    enum PDF_ENUM_NAME_TI = _Anonymous_74.PDF_ENUM_NAME_TI;
+    enum PDF_ENUM_NAME_TR = _Anonymous_74.PDF_ENUM_NAME_TR;
+    enum PDF_ENUM_NAME_TR2 = _Anonymous_74.PDF_ENUM_NAME_TR2;
+    enum PDF_ENUM_NAME_TU = _Anonymous_74.PDF_ENUM_NAME_TU;
+    enum PDF_ENUM_NAME_Text = _Anonymous_74.PDF_ENUM_NAME_Text;
+    enum PDF_ENUM_NAME_TilingType = _Anonymous_74.PDF_ENUM_NAME_TilingType;
+    enum PDF_ENUM_NAME_Times = _Anonymous_74.PDF_ENUM_NAME_Times;
+    enum PDF_ENUM_NAME_Title = _Anonymous_74.PDF_ENUM_NAME_Title;
+    enum PDF_ENUM_NAME_ToUnicode = _Anonymous_74.PDF_ENUM_NAME_ToUnicode;
+    enum PDF_ENUM_NAME_TopSecret = _Anonymous_74.PDF_ENUM_NAME_TopSecret;
+    enum PDF_ENUM_NAME_Trans = _Anonymous_74.PDF_ENUM_NAME_Trans;
+    enum PDF_ENUM_NAME_TransformMethod = _Anonymous_74.PDF_ENUM_NAME_TransformMethod;
+    enum PDF_ENUM_NAME_TransformParams = _Anonymous_74.PDF_ENUM_NAME_TransformParams;
+    enum PDF_ENUM_NAME_Transparency = _Anonymous_74.PDF_ENUM_NAME_Transparency;
+    enum PDF_ENUM_NAME_TrapNet = _Anonymous_74.PDF_ENUM_NAME_TrapNet;
+    enum PDF_ENUM_NAME_TrimBox = _Anonymous_74.PDF_ENUM_NAME_TrimBox;
+    enum PDF_ENUM_NAME_TrueType = _Anonymous_74.PDF_ENUM_NAME_TrueType;
+    enum PDF_ENUM_NAME_TrustedMode = _Anonymous_74.PDF_ENUM_NAME_TrustedMode;
+    enum PDF_ENUM_NAME_Tx = _Anonymous_74.PDF_ENUM_NAME_Tx;
+    enum PDF_ENUM_NAME_Type = _Anonymous_74.PDF_ENUM_NAME_Type;
+    enum PDF_ENUM_NAME_Type0 = _Anonymous_74.PDF_ENUM_NAME_Type0;
+    enum PDF_ENUM_NAME_Type1 = _Anonymous_74.PDF_ENUM_NAME_Type1;
+    enum PDF_ENUM_NAME_Type1C = _Anonymous_74.PDF_ENUM_NAME_Type1C;
+    enum PDF_ENUM_NAME_Type3 = _Anonymous_74.PDF_ENUM_NAME_Type3;
+    enum PDF_ENUM_NAME_U = _Anonymous_74.PDF_ENUM_NAME_U;
+    enum PDF_ENUM_NAME_UE = _Anonymous_74.PDF_ENUM_NAME_UE;
+    enum PDF_ENUM_NAME_UF = _Anonymous_74.PDF_ENUM_NAME_UF;
+    enum PDF_ENUM_NAME_URI = _Anonymous_74.PDF_ENUM_NAME_URI;
+    enum PDF_ENUM_NAME_URL = _Anonymous_74.PDF_ENUM_NAME_URL;
+    enum PDF_ENUM_NAME_Unchanged = _Anonymous_74.PDF_ENUM_NAME_Unchanged;
+    enum PDF_ENUM_NAME_Uncover = _Anonymous_74.PDF_ENUM_NAME_Uncover;
+    enum PDF_ENUM_NAME_Underline = _Anonymous_74.PDF_ENUM_NAME_Underline;
+    enum PDF_ENUM_NAME_Unix = _Anonymous_74.PDF_ENUM_NAME_Unix;
+    enum PDF_ENUM_NAME_Usage = _Anonymous_74.PDF_ENUM_NAME_Usage;
+    enum PDF_ENUM_NAME_UseBlackPtComp = _Anonymous_74.PDF_ENUM_NAME_UseBlackPtComp;
+    enum PDF_ENUM_NAME_UseCMap = _Anonymous_74.PDF_ENUM_NAME_UseCMap;
+    enum PDF_ENUM_NAME_UseOutlines = _Anonymous_74.PDF_ENUM_NAME_UseOutlines;
+    enum PDF_ENUM_NAME_UserUnit = _Anonymous_74.PDF_ENUM_NAME_UserUnit;
+    enum PDF_ENUM_NAME_V = _Anonymous_74.PDF_ENUM_NAME_V;
+    enum PDF_ENUM_NAME_V2 = _Anonymous_74.PDF_ENUM_NAME_V2;
+    enum PDF_ENUM_NAME_VE = _Anonymous_74.PDF_ENUM_NAME_VE;
+    enum PDF_ENUM_NAME_Version = _Anonymous_74.PDF_ENUM_NAME_Version;
+    enum PDF_ENUM_NAME_Vertices = _Anonymous_74.PDF_ENUM_NAME_Vertices;
+    enum PDF_ENUM_NAME_VerticesPerRow = _Anonymous_74.PDF_ENUM_NAME_VerticesPerRow;
+    enum PDF_ENUM_NAME_View = _Anonymous_74.PDF_ENUM_NAME_View;
+    enum PDF_ENUM_NAME_W = _Anonymous_74.PDF_ENUM_NAME_W;
+    enum PDF_ENUM_NAME_W2 = _Anonymous_74.PDF_ENUM_NAME_W2;
+    enum PDF_ENUM_NAME_WMode = _Anonymous_74.PDF_ENUM_NAME_WMode;
+    enum PDF_ENUM_NAME_Watermark = _Anonymous_74.PDF_ENUM_NAME_Watermark;
+    enum PDF_ENUM_NAME_WhitePoint = _Anonymous_74.PDF_ENUM_NAME_WhitePoint;
+    enum PDF_ENUM_NAME_Widget = _Anonymous_74.PDF_ENUM_NAME_Widget;
+    enum PDF_ENUM_NAME_Width = _Anonymous_74.PDF_ENUM_NAME_Width;
+    enum PDF_ENUM_NAME_Widths = _Anonymous_74.PDF_ENUM_NAME_Widths;
+    enum PDF_ENUM_NAME_WinAnsiEncoding = _Anonymous_74.PDF_ENUM_NAME_WinAnsiEncoding;
+    enum PDF_ENUM_NAME_Wipe = _Anonymous_74.PDF_ENUM_NAME_Wipe;
+    enum PDF_ENUM_NAME_XFA = _Anonymous_74.PDF_ENUM_NAME_XFA;
+    enum PDF_ENUM_NAME_XHeight = _Anonymous_74.PDF_ENUM_NAME_XHeight;
+    enum PDF_ENUM_NAME_XML = _Anonymous_74.PDF_ENUM_NAME_XML;
+    enum PDF_ENUM_NAME_XObject = _Anonymous_74.PDF_ENUM_NAME_XObject;
+    enum PDF_ENUM_NAME_XRef = _Anonymous_74.PDF_ENUM_NAME_XRef;
+    enum PDF_ENUM_NAME_XRefStm = _Anonymous_74.PDF_ENUM_NAME_XRefStm;
+    enum PDF_ENUM_NAME_XStep = _Anonymous_74.PDF_ENUM_NAME_XStep;
+    enum PDF_ENUM_NAME_XYZ = _Anonymous_74.PDF_ENUM_NAME_XYZ;
+    enum PDF_ENUM_NAME_YStep = _Anonymous_74.PDF_ENUM_NAME_YStep;
+    enum PDF_ENUM_NAME_Yes = _Anonymous_74.PDF_ENUM_NAME_Yes;
+    enum PDF_ENUM_NAME_ZaDb = _Anonymous_74.PDF_ENUM_NAME_ZaDb;
+    enum PDF_ENUM_NAME_adbe_pkcs7_detached = _Anonymous_74.PDF_ENUM_NAME_adbe_pkcs7_detached;
+    enum PDF_ENUM_NAME_ca = _Anonymous_74.PDF_ENUM_NAME_ca;
+    enum PDF_ENUM_NAME_n0 = _Anonymous_74.PDF_ENUM_NAME_n0;
+    enum PDF_ENUM_NAME_n1 = _Anonymous_74.PDF_ENUM_NAME_n1;
+    enum PDF_ENUM_NAME_n2 = _Anonymous_74.PDF_ENUM_NAME_n2;
+    enum PDF_ENUM_NAME_op = _Anonymous_74.PDF_ENUM_NAME_op;
+    enum PDF_ENUM_LIMIT = _Anonymous_74.PDF_ENUM_LIMIT;
 
     void pdf_set_str_len(fz_context*, pdf_obj*, c_ulong) @nogc nothrow;
 
@@ -13774,6 +14485,10 @@ extern(C)
     void pdf_deserialise_journal(fz_context*, pdf_document*, fz_stream*) @nogc nothrow;
 
     void pdf_add_journal_fragment(fz_context*, pdf_document*, int, pdf_obj*, fz_buffer*, int) @nogc nothrow;
+
+    char* pdf_format_date(fz_context*, c_long, char*, c_ulong) @nogc nothrow;
+
+    c_long pdf_parse_date(fz_context*, const(char)*) @nogc nothrow;
 
     int pdf_lookup_page_number(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
@@ -13845,7 +14560,7 @@ extern(C)
 
     fz_pixmap* pdf_new_pixmap_from_page_with_separations_and_usage(fz_context*, pdf_page*, fz_matrix, fz_colorspace*, fz_separations*, int, const(char)*) @nogc nothrow;
 
-    enum _Anonymous_74
+    enum _Anonymous_75
     {
 
         PDF_REDACT_IMAGE_NONE = 0,
@@ -13854,9 +14569,9 @@ extern(C)
 
         PDF_REDACT_IMAGE_PIXELS = 2,
     }
-    enum PDF_REDACT_IMAGE_NONE = _Anonymous_74.PDF_REDACT_IMAGE_NONE;
-    enum PDF_REDACT_IMAGE_REMOVE = _Anonymous_74.PDF_REDACT_IMAGE_REMOVE;
-    enum PDF_REDACT_IMAGE_PIXELS = _Anonymous_74.PDF_REDACT_IMAGE_PIXELS;
+    enum PDF_REDACT_IMAGE_NONE = _Anonymous_75.PDF_REDACT_IMAGE_NONE;
+    enum PDF_REDACT_IMAGE_REMOVE = _Anonymous_75.PDF_REDACT_IMAGE_REMOVE;
+    enum PDF_REDACT_IMAGE_PIXELS = _Anonymous_75.PDF_REDACT_IMAGE_PIXELS;
 
     struct pdf_redact_options
     {
@@ -13874,9 +14589,9 @@ extern(C)
 
     fz_default_colorspaces* pdf_update_default_colorspaces(fz_context*, fz_default_colorspaces*, pdf_obj*) @nogc nothrow;
 
-    alias pdf_token = _Anonymous_75;
+    alias pdf_token = _Anonymous_76;
 
-    enum _Anonymous_75
+    enum _Anonymous_76
     {
 
         PDF_TOK_ERROR = 0,
@@ -13931,32 +14646,32 @@ extern(C)
 
         PDF_NUM_TOKENS = 25,
     }
-    enum PDF_TOK_ERROR = _Anonymous_75.PDF_TOK_ERROR;
-    enum PDF_TOK_EOF = _Anonymous_75.PDF_TOK_EOF;
-    enum PDF_TOK_OPEN_ARRAY = _Anonymous_75.PDF_TOK_OPEN_ARRAY;
-    enum PDF_TOK_CLOSE_ARRAY = _Anonymous_75.PDF_TOK_CLOSE_ARRAY;
-    enum PDF_TOK_OPEN_DICT = _Anonymous_75.PDF_TOK_OPEN_DICT;
-    enum PDF_TOK_CLOSE_DICT = _Anonymous_75.PDF_TOK_CLOSE_DICT;
-    enum PDF_TOK_OPEN_BRACE = _Anonymous_75.PDF_TOK_OPEN_BRACE;
-    enum PDF_TOK_CLOSE_BRACE = _Anonymous_75.PDF_TOK_CLOSE_BRACE;
-    enum PDF_TOK_NAME = _Anonymous_75.PDF_TOK_NAME;
-    enum PDF_TOK_INT = _Anonymous_75.PDF_TOK_INT;
-    enum PDF_TOK_REAL = _Anonymous_75.PDF_TOK_REAL;
-    enum PDF_TOK_STRING = _Anonymous_75.PDF_TOK_STRING;
-    enum PDF_TOK_KEYWORD = _Anonymous_75.PDF_TOK_KEYWORD;
-    enum PDF_TOK_R = _Anonymous_75.PDF_TOK_R;
-    enum PDF_TOK_TRUE = _Anonymous_75.PDF_TOK_TRUE;
-    enum PDF_TOK_FALSE = _Anonymous_75.PDF_TOK_FALSE;
-    enum PDF_TOK_NULL = _Anonymous_75.PDF_TOK_NULL;
-    enum PDF_TOK_OBJ = _Anonymous_75.PDF_TOK_OBJ;
-    enum PDF_TOK_ENDOBJ = _Anonymous_75.PDF_TOK_ENDOBJ;
-    enum PDF_TOK_STREAM = _Anonymous_75.PDF_TOK_STREAM;
-    enum PDF_TOK_ENDSTREAM = _Anonymous_75.PDF_TOK_ENDSTREAM;
-    enum PDF_TOK_XREF = _Anonymous_75.PDF_TOK_XREF;
-    enum PDF_TOK_TRAILER = _Anonymous_75.PDF_TOK_TRAILER;
-    enum PDF_TOK_STARTXREF = _Anonymous_75.PDF_TOK_STARTXREF;
-    enum PDF_TOK_NEWOBJ = _Anonymous_75.PDF_TOK_NEWOBJ;
-    enum PDF_NUM_TOKENS = _Anonymous_75.PDF_NUM_TOKENS;
+    enum PDF_TOK_ERROR = _Anonymous_76.PDF_TOK_ERROR;
+    enum PDF_TOK_EOF = _Anonymous_76.PDF_TOK_EOF;
+    enum PDF_TOK_OPEN_ARRAY = _Anonymous_76.PDF_TOK_OPEN_ARRAY;
+    enum PDF_TOK_CLOSE_ARRAY = _Anonymous_76.PDF_TOK_CLOSE_ARRAY;
+    enum PDF_TOK_OPEN_DICT = _Anonymous_76.PDF_TOK_OPEN_DICT;
+    enum PDF_TOK_CLOSE_DICT = _Anonymous_76.PDF_TOK_CLOSE_DICT;
+    enum PDF_TOK_OPEN_BRACE = _Anonymous_76.PDF_TOK_OPEN_BRACE;
+    enum PDF_TOK_CLOSE_BRACE = _Anonymous_76.PDF_TOK_CLOSE_BRACE;
+    enum PDF_TOK_NAME = _Anonymous_76.PDF_TOK_NAME;
+    enum PDF_TOK_INT = _Anonymous_76.PDF_TOK_INT;
+    enum PDF_TOK_REAL = _Anonymous_76.PDF_TOK_REAL;
+    enum PDF_TOK_STRING = _Anonymous_76.PDF_TOK_STRING;
+    enum PDF_TOK_KEYWORD = _Anonymous_76.PDF_TOK_KEYWORD;
+    enum PDF_TOK_R = _Anonymous_76.PDF_TOK_R;
+    enum PDF_TOK_TRUE = _Anonymous_76.PDF_TOK_TRUE;
+    enum PDF_TOK_FALSE = _Anonymous_76.PDF_TOK_FALSE;
+    enum PDF_TOK_NULL = _Anonymous_76.PDF_TOK_NULL;
+    enum PDF_TOK_OBJ = _Anonymous_76.PDF_TOK_OBJ;
+    enum PDF_TOK_ENDOBJ = _Anonymous_76.PDF_TOK_ENDOBJ;
+    enum PDF_TOK_STREAM = _Anonymous_76.PDF_TOK_STREAM;
+    enum PDF_TOK_ENDSTREAM = _Anonymous_76.PDF_TOK_ENDSTREAM;
+    enum PDF_TOK_XREF = _Anonymous_76.PDF_TOK_XREF;
+    enum PDF_TOK_TRAILER = _Anonymous_76.PDF_TOK_TRAILER;
+    enum PDF_TOK_STARTXREF = _Anonymous_76.PDF_TOK_STARTXREF;
+    enum PDF_TOK_NEWOBJ = _Anonymous_76.PDF_TOK_NEWOBJ;
+    enum PDF_NUM_TOKENS = _Anonymous_76.PDF_NUM_TOKENS;
 
     void pdf_lexbuf_init(fz_context*, pdf_lexbuf*, int) @nogc nothrow;
 
@@ -13990,7 +14705,7 @@ extern(C)
 
     void pdf_purge_locals_from_store(fz_context*, pdf_document*) @nogc nothrow;
 
-    enum _Anonymous_76
+    enum _Anonymous_77
     {
 
         PDF_SIMPLE_FONT_RESOURCE = 1,
@@ -13999,11 +14714,11 @@ extern(C)
 
         PDF_CJK_FONT_RESOURCE = 3,
     }
-    enum PDF_SIMPLE_FONT_RESOURCE = _Anonymous_76.PDF_SIMPLE_FONT_RESOURCE;
-    enum PDF_CID_FONT_RESOURCE = _Anonymous_76.PDF_CID_FONT_RESOURCE;
-    enum PDF_CJK_FONT_RESOURCE = _Anonymous_76.PDF_CJK_FONT_RESOURCE;
+    enum PDF_SIMPLE_FONT_RESOURCE = _Anonymous_77.PDF_SIMPLE_FONT_RESOURCE;
+    enum PDF_CID_FONT_RESOURCE = _Anonymous_77.PDF_CID_FONT_RESOURCE;
+    enum PDF_CJK_FONT_RESOURCE = _Anonymous_77.PDF_CJK_FONT_RESOURCE;
 
-    enum _Anonymous_77
+    enum _Anonymous_78
     {
 
         PDF_SIMPLE_ENCODING_LATIN = 0,
@@ -14012,9 +14727,9 @@ extern(C)
 
         PDF_SIMPLE_ENCODING_CYRILLIC = 2,
     }
-    enum PDF_SIMPLE_ENCODING_LATIN = _Anonymous_77.PDF_SIMPLE_ENCODING_LATIN;
-    enum PDF_SIMPLE_ENCODING_GREEK = _Anonymous_77.PDF_SIMPLE_ENCODING_GREEK;
-    enum PDF_SIMPLE_ENCODING_CYRILLIC = _Anonymous_77.PDF_SIMPLE_ENCODING_CYRILLIC;
+    enum PDF_SIMPLE_ENCODING_LATIN = _Anonymous_78.PDF_SIMPLE_ENCODING_LATIN;
+    enum PDF_SIMPLE_ENCODING_GREEK = _Anonymous_78.PDF_SIMPLE_ENCODING_GREEK;
+    enum PDF_SIMPLE_ENCODING_CYRILLIC = _Anonymous_78.PDF_SIMPLE_ENCODING_CYRILLIC;
 
     struct pdf_font_resource_key
     {
@@ -14193,7 +14908,7 @@ extern(C)
 
     fz_stream* pdf_open_inline_stream(fz_context*, pdf_document*, pdf_obj*, int, fz_stream*, fz_compression_params*) @nogc nothrow;
 
-    fz_compressed_buffer* pdf_load_compressed_stream(fz_context*, pdf_document*, int) @nogc nothrow;
+    fz_compressed_buffer* pdf_load_compressed_stream(fz_context*, pdf_document*, int, c_ulong) @nogc nothrow;
 
     void pdf_load_compressed_inline_image(fz_context*, pdf_document*, pdf_obj*, int, fz_stream*, int, fz_compressed_image*) @nogc nothrow;
 
@@ -14209,9 +14924,13 @@ extern(C)
 
     int pdf_xref_len(fz_context*, pdf_document*) @nogc nothrow;
 
+    pdf_obj* pdf_metadata(fz_context*, pdf_document*) @nogc nothrow;
+
     pdf_xref_entry* pdf_get_populating_xref_entry(fz_context*, pdf_document*, int) @nogc nothrow;
 
     pdf_xref_entry* pdf_get_xref_entry(fz_context*, pdf_document*, int) @nogc nothrow;
+
+    pdf_xref_entry* pdf_get_xref_entry_no_null(fz_context*, pdf_document*, int) @nogc nothrow;
 
     void pdf_replace_xref(fz_context*, pdf_document*, pdf_xref_entry*, int) @nogc nothrow;
 
@@ -14230,6 +14949,8 @@ extern(C)
     int pdf_xref_obj_is_unsaved_signature(pdf_document*, pdf_obj*) @nogc nothrow;
 
     void pdf_xref_ensure_local_object(fz_context*, pdf_document*, int) @nogc nothrow;
+
+    int pdf_obj_is_incremental(fz_context*, pdf_obj*) @nogc nothrow;
 
     void pdf_repair_xref(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -14359,7 +15080,7 @@ extern(C)
 
         ulong __value64;
 
-        static struct _Anonymous_78
+        static struct _Anonymous_79
         {
 
             uint __low;
@@ -14367,7 +15088,7 @@ extern(C)
             uint __high;
         }
 
-        _Anonymous_78 __value32;
+        _Anonymous_79 __value32;
     }
 
     int getloadavg(double*, int) @nogc nothrow;
@@ -14396,17 +15117,23 @@ extern(C)
 
     char* qgcvt(real, int, char*) @nogc nothrow;
 
-    alias off_t = c_long;
-
     char* qfcvt(real, int, int*, int*) @nogc nothrow;
+
+    char* qecvt(real, int, int*, int*) @nogc nothrow;
+
+    char* gcvt(double, int, char*) @nogc nothrow;
+
+    char* fcvt(double, int, int*, int*) @nogc nothrow;
+
+    alias off_t = c_long;
 
     alias ssize_t = c_long;
 
     alias fpos_t = _G_fpos_t;
 
-    char* qecvt(real, int, int*, int*) @nogc nothrow;
+    char* ecvt(double, int, int*, int*) @nogc nothrow;
 
-    char* gcvt(double, int, char*) @nogc nothrow;
+    lldiv_t lldiv(long, long) @nogc nothrow;
 
     extern __gshared _IO_FILE* stdin;
 
@@ -14414,7 +15141,7 @@ extern(C)
 
     extern __gshared _IO_FILE* stderr;
 
-    char* fcvt(double, int, int*, int*) @nogc nothrow;
+    ldiv_t ldiv(c_long, c_long) @nogc nothrow;
 
     int remove(const(char)*) @nogc nothrow;
 
@@ -14584,11 +15311,13 @@ extern(C)
 
     int __overflow(_IO_FILE*, int) @nogc nothrow;
 
-    char* ecvt(double, int, int*, int*) @nogc nothrow;
+    div_t div(int, int) @nogc nothrow;
 
-    lldiv_t lldiv(long, long) @nogc nothrow;
+    long llabs(long) @nogc nothrow;
 
-    ldiv_t ldiv(c_long, c_long) @nogc nothrow;
+    c_long labs(c_long) @nogc nothrow;
+
+    int abs(int) @nogc nothrow;
 
     struct div_t
     {
@@ -14606,6 +15335,8 @@ extern(C)
         c_long rem;
     }
 
+    void qsort(void*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
+
     struct lldiv_t
     {
 
@@ -14614,9 +15345,8 @@ extern(C)
         long rem;
     }
 
-    div_t div(int, int) @nogc nothrow;
-
-    long llabs(long) @nogc nothrow;
+    void* bsearch(const(void)*, const(void)*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
+    alias __compar_fn_t = int function(const(void)*, const(void)*);
 
     c_ulong __ctype_get_mb_cur_max() @nogc nothrow;
 
@@ -14797,17 +15527,6 @@ extern(C)
     int system(const(char)*) @nogc nothrow;
 
     char* realpath(const(char)*, char*) @nogc nothrow;
-    alias __compar_fn_t = int function(const(void)*, const(void)*);
-
-    void* bsearch(const(void)*, const(void)*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
-
-    void qsort(void*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
-
-    int abs(int) @nogc nothrow;
-
-    c_long labs(c_long) @nogc nothrow;
-
-
 
 
 
@@ -14817,6 +15536,8 @@ extern(C)
             mixin(enumMixinStr_MB_CUR_MAX);
         }
     }
+
+
 
 
 
@@ -15519,8 +16240,6 @@ extern(C)
 
 
 
-
-
     static if(!is(typeof(INT_LEAST16_MIN))) {
         private enum enumMixinStr_INT_LEAST16_MIN = `enum INT_LEAST16_MIN = ( - 32767 - 1 );`;
         static if(is(typeof({ mixin(enumMixinStr_INT_LEAST16_MIN); }))) {
@@ -15551,16 +16270,6 @@ extern(C)
 
 
 
-    static if(!is(typeof(_BITS_BYTESWAP_H))) {
-        private enum enumMixinStr__BITS_BYTESWAP_H = `enum _BITS_BYTESWAP_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_BYTESWAP_H); }))) {
-            mixin(enumMixinStr__BITS_BYTESWAP_H);
-        }
-    }
-
-
-
-
     static if(!is(typeof(UINT32_MAX))) {
         private enum enumMixinStr_UINT32_MAX = `enum UINT32_MAX = ( 4294967295U );`;
         static if(is(typeof({ mixin(enumMixinStr_UINT32_MAX); }))) {
@@ -15577,8 +16286,6 @@ extern(C)
             mixin(enumMixinStr_UINT16_MAX);
         }
     }
-
-
 
 
 
@@ -15613,8 +16320,6 @@ extern(C)
 
 
 
-
-
     static if(!is(typeof(INT16_MAX))) {
         private enum enumMixinStr_INT16_MAX = `enum INT16_MAX = ( 32767 );`;
         static if(is(typeof({ mixin(enumMixinStr_INT16_MAX); }))) {
@@ -15645,8 +16350,6 @@ extern(C)
 
 
 
-
-
     static if(!is(typeof(INT32_MIN))) {
         private enum enumMixinStr_INT32_MIN = `enum INT32_MIN = ( - 2147483647 - 1 );`;
         static if(is(typeof({ mixin(enumMixinStr_INT32_MIN); }))) {
@@ -15671,6 +16374,56 @@ extern(C)
         private enum enumMixinStr_INT8_MIN = `enum INT8_MIN = ( - 128 );`;
         static if(is(typeof({ mixin(enumMixinStr_INT8_MIN); }))) {
             mixin(enumMixinStr_INT8_MIN);
+        }
+    }
+    static if(!is(typeof(_BITS_BYTESWAP_H))) {
+        private enum enumMixinStr__BITS_BYTESWAP_H = `enum _BITS_BYTESWAP_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_BYTESWAP_H); }))) {
+            mixin(enumMixinStr__BITS_BYTESWAP_H);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_STDINT_H))) {
+        private enum enumMixinStr__STDINT_H = `enum _STDINT_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__STDINT_H); }))) {
+            mixin(enumMixinStr__STDINT_H);
+        }
+    }
+    static if(!is(typeof(_STDC_PREDEF_H))) {
+        private enum enumMixinStr__STDC_PREDEF_H = `enum _STDC_PREDEF_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__STDC_PREDEF_H); }))) {
+            mixin(enumMixinStr__STDC_PREDEF_H);
+        }
+    }
+
+
+
+
+    enum _dpp_impl_sigsetjmp_mixin = ` auto sigsetjmp(A0, A1)(A0 arg0, A1 arg1) {
+        return __sigsetjmp ( arg0 , arg1 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_sigsetjmp_mixin); })) {
+        mixin(_dpp_impl_sigsetjmp_mixin);
+    }
+
+
+    enum _dpp_impl_setjmp_mixin = ` auto setjmp(A0)(A0 arg0) {
+        return _setjmp ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_setjmp_mixin); })) {
+        mixin(_dpp_impl_setjmp_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(_SETJMP_H))) {
+        private enum enumMixinStr__SETJMP_H = `enum _SETJMP_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__SETJMP_H); }))) {
+            mixin(enumMixinStr__SETJMP_H);
         }
     }
 
@@ -15725,10 +16478,46 @@ extern(C)
             mixin(enumMixinStr___FLOAT_WORD_ORDER);
         }
     }
+
+
+
+
+    static if(!is(typeof(__GLIBC_MINOR__))) {
+        private enum enumMixinStr___GLIBC_MINOR__ = `enum __GLIBC_MINOR__ = 36;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_MINOR__); }))) {
+            mixin(enumMixinStr___GLIBC_MINOR__);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC__))) {
+        private enum enumMixinStr___GLIBC__ = `enum __GLIBC__ = 2;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC__); }))) {
+            mixin(enumMixinStr___GLIBC__);
+        }
+    }
+
+
+
+
+
+
     static if(!is(typeof(_BITS_ENDIANNESS_H))) {
         private enum enumMixinStr__BITS_ENDIANNESS_H = `enum _BITS_ENDIANNESS_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__BITS_ENDIANNESS_H); }))) {
             mixin(enumMixinStr__BITS_ENDIANNESS_H);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GNU_LIBRARY__))) {
+        private enum enumMixinStr___GNU_LIBRARY__ = `enum __GNU_LIBRARY__ = 6;`;
+        static if(is(typeof({ mixin(enumMixinStr___GNU_LIBRARY__); }))) {
+            mixin(enumMixinStr___GNU_LIBRARY__);
         }
     }
 
@@ -15747,10 +16536,20 @@ extern(C)
 
 
 
-    static if(!is(typeof(_STDINT_H))) {
-        private enum enumMixinStr__STDINT_H = `enum _STDINT_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__STDINT_H); }))) {
-            mixin(enumMixinStr__STDINT_H);
+    static if(!is(typeof(__GLIBC_USE_DEPRECATED_SCANF))) {
+        private enum enumMixinStr___GLIBC_USE_DEPRECATED_SCANF = `enum __GLIBC_USE_DEPRECATED_SCANF = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF); }))) {
+            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_DEPRECATED_GETS))) {
+        private enum enumMixinStr___GLIBC_USE_DEPRECATED_GETS = `enum __GLIBC_USE_DEPRECATED_GETS = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS); }))) {
+            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS);
         }
     }
 
@@ -15877,104 +16676,6 @@ extern(C)
 
 
 
-    static if(!is(typeof(__HAVE_FLOATN_NOT_TYPEDEF))) {
-        private enum enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF = `enum __HAVE_FLOATN_NOT_TYPEDEF = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF); }))) {
-            mixin(enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(_STDC_PREDEF_H))) {
-        private enum enumMixinStr__STDC_PREDEF_H = `enum _STDC_PREDEF_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__STDC_PREDEF_H); }))) {
-            mixin(enumMixinStr__STDC_PREDEF_H);
-        }
-    }
-
-
-    enum _dpp_impl_sigsetjmp_mixin = ` auto sigsetjmp(A0, A1)(A0 arg0, A1 arg1) {
-        return __sigsetjmp ( arg0 , arg1 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_sigsetjmp_mixin); })) {
-        mixin(_dpp_impl_sigsetjmp_mixin);
-    }
-
-
-
-
-    enum _dpp_impl_setjmp_mixin = ` auto setjmp(A0)(A0 arg0) {
-        return _setjmp ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_setjmp_mixin); })) {
-        mixin(_dpp_impl_setjmp_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(_SETJMP_H))) {
-        private enum enumMixinStr__SETJMP_H = `enum _SETJMP_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__SETJMP_H); }))) {
-            mixin(enumMixinStr__SETJMP_H);
-        }
-    }
-    static if(!is(typeof(__GLIBC_MINOR__))) {
-        private enum enumMixinStr___GLIBC_MINOR__ = `enum __GLIBC_MINOR__ = 36;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_MINOR__); }))) {
-            mixin(enumMixinStr___GLIBC_MINOR__);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC__))) {
-        private enum enumMixinStr___GLIBC__ = `enum __GLIBC__ = 2;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC__); }))) {
-            mixin(enumMixinStr___GLIBC__);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(__GNU_LIBRARY__))) {
-        private enum enumMixinStr___GNU_LIBRARY__ = `enum __GNU_LIBRARY__ = 6;`;
-        static if(is(typeof({ mixin(enumMixinStr___GNU_LIBRARY__); }))) {
-            mixin(enumMixinStr___GNU_LIBRARY__);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_DEPRECATED_SCANF))) {
-        private enum enumMixinStr___GLIBC_USE_DEPRECATED_SCANF = `enum __GLIBC_USE_DEPRECATED_SCANF = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF); }))) {
-            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_DEPRECATED_GETS))) {
-        private enum enumMixinStr___GLIBC_USE_DEPRECATED_GETS = `enum __GLIBC_USE_DEPRECATED_GETS = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS); }))) {
-            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS);
-        }
-    }
-
-
-
-
     static if(!is(typeof(__USE_FORTIFY_LEVEL))) {
         private enum enumMixinStr___USE_FORTIFY_LEVEL = `enum __USE_FORTIFY_LEVEL = 0;`;
         static if(is(typeof({ mixin(enumMixinStr___USE_FORTIFY_LEVEL); }))) {
@@ -15985,10 +16686,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(__CFLOAT32))) {
-        private enum enumMixinStr___CFLOAT32 = `enum __CFLOAT32 = _Complex float;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32); }))) {
-            mixin(enumMixinStr___CFLOAT32);
+    static if(!is(typeof(__HAVE_FLOATN_NOT_TYPEDEF))) {
+        private enum enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF = `enum __HAVE_FLOATN_NOT_TYPEDEF = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF); }))) {
+            mixin(enumMixinStr___HAVE_FLOATN_NOT_TYPEDEF);
         }
     }
 
@@ -16015,22 +16716,14 @@ extern(C)
 
 
 
-    static if(!is(typeof(__CFLOAT64))) {
-        private enum enumMixinStr___CFLOAT64 = `enum __CFLOAT64 = _Complex double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64); }))) {
-            mixin(enumMixinStr___CFLOAT64);
-        }
-    }
-
-
-
-
     static if(!is(typeof(_ATFILE_SOURCE))) {
         private enum enumMixinStr__ATFILE_SOURCE = `enum _ATFILE_SOURCE = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ATFILE_SOURCE); }))) {
             mixin(enumMixinStr__ATFILE_SOURCE);
         }
     }
+
+
 
 
 
@@ -16045,22 +16738,14 @@ extern(C)
 
 
 
-    static if(!is(typeof(__CFLOAT32X))) {
-        private enum enumMixinStr___CFLOAT32X = `enum __CFLOAT32X = _Complex double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32X); }))) {
-            mixin(enumMixinStr___CFLOAT32X);
-        }
-    }
-
-
-
-
     static if(!is(typeof(__USE_ISOC99))) {
         private enum enumMixinStr___USE_ISOC99 = `enum __USE_ISOC99 = 1;`;
         static if(is(typeof({ mixin(enumMixinStr___USE_ISOC99); }))) {
             mixin(enumMixinStr___USE_ISOC99);
         }
     }
+
+
 
 
 
@@ -16083,14 +16768,6 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__CFLOAT64X))) {
-        private enum enumMixinStr___CFLOAT64X = `enum __CFLOAT64X = _Complex long double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64X); }))) {
-            mixin(enumMixinStr___CFLOAT64X);
-        }
-    }
 
 
 
@@ -16125,6 +16802,8 @@ extern(C)
 
 
 
+
+
     static if(!is(typeof(__USE_POSIX))) {
         private enum enumMixinStr___USE_POSIX = `enum __USE_POSIX = 1;`;
         static if(is(typeof({ mixin(enumMixinStr___USE_POSIX); }))) {
@@ -16151,10 +16830,34 @@ extern(C)
             mixin(enumMixinStr__POSIX_SOURCE);
         }
     }
+
+
+
+
     static if(!is(typeof(__USE_POSIX_IMPLICITLY))) {
         private enum enumMixinStr___USE_POSIX_IMPLICITLY = `enum __USE_POSIX_IMPLICITLY = 1;`;
         static if(is(typeof({ mixin(enumMixinStr___USE_POSIX_IMPLICITLY); }))) {
             mixin(enumMixinStr___USE_POSIX_IMPLICITLY);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__CFLOAT32))) {
+        private enum enumMixinStr___CFLOAT32 = `enum __CFLOAT32 = _Complex float;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32); }))) {
+            mixin(enumMixinStr___CFLOAT32);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__CFLOAT64))) {
+        private enum enumMixinStr___CFLOAT64 = `enum __CFLOAT64 = _Complex double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64); }))) {
+            mixin(enumMixinStr___CFLOAT64);
         }
     }
 
@@ -16167,6 +16870,10 @@ extern(C)
             mixin(enumMixinStr___USE_ISOC11);
         }
     }
+
+
+
+
     static if(!is(typeof(__GLIBC_USE_ISOC2X))) {
         private enum enumMixinStr___GLIBC_USE_ISOC2X = `enum __GLIBC_USE_ISOC2X = 0;`;
         static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_ISOC2X); }))) {
@@ -16177,10 +16884,26 @@ extern(C)
 
 
 
+    static if(!is(typeof(__CFLOAT32X))) {
+        private enum enumMixinStr___CFLOAT32X = `enum __CFLOAT32X = _Complex double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32X); }))) {
+            mixin(enumMixinStr___CFLOAT32X);
+        }
+    }
+
+
+
+
     static if(!is(typeof(_DEFAULT_SOURCE))) {
         private enum enumMixinStr__DEFAULT_SOURCE = `enum _DEFAULT_SOURCE = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__DEFAULT_SOURCE); }))) {
             mixin(enumMixinStr__DEFAULT_SOURCE);
+        }
+    }
+    static if(!is(typeof(__CFLOAT64X))) {
+        private enum enumMixinStr___CFLOAT64X = `enum __CFLOAT64X = _Complex long double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64X); }))) {
+            mixin(enumMixinStr___CFLOAT64X);
         }
     }
     static if(!is(typeof(_FEATURES_H))) {
@@ -16205,16 +16928,14 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_be64toh_mixin); })) {
         mixin(_dpp_impl_be64toh_mixin);
     }
+
+
     enum _dpp_impl_htole64_mixin = ` auto htole64(A0)(A0 arg0) {
         return __uint64_identity ( arg0 );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_htole64_mixin); })) {
         mixin(_dpp_impl_htole64_mixin);
     }
-
-
-
-
     enum _dpp_impl_htobe64_mixin = ` auto htobe64(A0)(A0 arg0) {
         return __bswap_64 ( arg0 );
     }`;
@@ -16245,8 +16966,6 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_htole32_mixin); })) {
         mixin(_dpp_impl_htole32_mixin);
     }
-
-
     enum _dpp_impl_htobe32_mixin = ` auto htobe32(A0)(A0 arg0) {
         return __bswap_32 ( arg0 );
     }`;
@@ -16255,51 +16974,11 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__HAVE_FLOAT128))) {
-        private enum enumMixinStr___HAVE_FLOAT128 = `enum __HAVE_FLOAT128 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT128); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT128);
-        }
-    }
-
-
     enum _dpp_impl_le16toh_mixin = ` auto le16toh(A0)(A0 arg0) {
         return __uint16_identity ( arg0 );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_le16toh_mixin); })) {
         mixin(_dpp_impl_le16toh_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(__HAVE_DISTINCT_FLOAT128))) {
-        private enum enumMixinStr___HAVE_DISTINCT_FLOAT128 = `enum __HAVE_DISTINCT_FLOAT128 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128); }))) {
-            mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__HAVE_FLOAT64X))) {
-        private enum enumMixinStr___HAVE_FLOAT64X = `enum __HAVE_FLOAT64X = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT64X);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__HAVE_FLOAT64X_LONG_DOUBLE))) {
-        private enum enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE = `enum __HAVE_FLOAT64X_LONG_DOUBLE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE);
-        }
     }
 
 
@@ -16317,8 +16996,6 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_htole16_mixin); })) {
         mixin(_dpp_impl_htole16_mixin);
     }
-
-
     enum _dpp_impl_htobe16_mixin = ` auto htobe16(A0)(A0 arg0) {
         return __bswap_16 ( arg0 );
     }`;
@@ -16365,16 +17042,14 @@ extern(C)
             mixin(enumMixinStr_LITTLE_ENDIAN);
         }
     }
-
-
-
-
     static if(!is(typeof(_ENDIAN_H))) {
         private enum enumMixinStr__ENDIAN_H = `enum _ENDIAN_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ENDIAN_H); }))) {
             mixin(enumMixinStr__ENDIAN_H);
         }
     }
+
+
 
 
 
@@ -16397,28 +17072,8 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__GLIBC_USE_LIB_EXT2))) {
-        private enum enumMixinStr___GLIBC_USE_LIB_EXT2 = `enum __GLIBC_USE_LIB_EXT2 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_LIB_EXT2); }))) {
-            mixin(enumMixinStr___GLIBC_USE_LIB_EXT2);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT))) {
-        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT = `enum __GLIBC_USE_IEC_60559_BFP_EXT = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT); }))) {
-            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT);
-        }
-    }
-
-
     enum _dpp_impl_assert__mixin = ` auto assert_(A0)(A0 arg0) {
-        return ( cast( void ) ( ( arg0 ) ? 1 : 0 ) .sizeof , __extension__ ( { if ( arg0 ) ; else __assert_fail ( "arg0" , "generated/1.19.0/Linux/mupdf.d.tmp" , 16474 , __extension__ __PRETTY_FUNCTION__ ) ; } ) );
+        return ( cast( void ) ( ( arg0 ) ? 1 : 0 ) .sizeof , __extension__ ( { if ( arg0 ) ; else __assert_fail ( "arg0" , "generated/1.21.0/Linux/mupdf.d.tmp" , 17135 , __extension__ __PRETTY_FUNCTION__ ) ; } ) );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_assert__mixin); })) {
         mixin(_dpp_impl_assert__mixin);
@@ -16439,10 +17094,50 @@ extern(C)
 
 
 
+    static if(!is(typeof(__HAVE_FLOAT128))) {
+        private enum enumMixinStr___HAVE_FLOAT128 = `enum __HAVE_FLOAT128 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT128); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT128);
+        }
+    }
+
+
+
+
     static if(!is(typeof(_ASSERT_H))) {
         private enum enumMixinStr__ASSERT_H = `enum _ASSERT_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ASSERT_H); }))) {
             mixin(enumMixinStr__ASSERT_H);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__HAVE_DISTINCT_FLOAT128))) {
+        private enum enumMixinStr___HAVE_DISTINCT_FLOAT128 = `enum __HAVE_DISTINCT_FLOAT128 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128); }))) {
+            mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__HAVE_FLOAT64X))) {
+        private enum enumMixinStr___HAVE_FLOAT64X = `enum __HAVE_FLOAT64X = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT64X);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__HAVE_FLOAT64X_LONG_DOUBLE))) {
+        private enum enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE = `enum __HAVE_FLOAT64X_LONG_DOUBLE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE);
         }
     }
 
@@ -16457,36 +17152,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT_C2X))) {
-        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X = `enum __GLIBC_USE_IEC_60559_BFP_EXT_C2X = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X); }))) {
-            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X);
-        }
-    }
-
-
-
-
     static if(!is(typeof(_ALLOCA_H))) {
         private enum enumMixinStr__ALLOCA_H = `enum _ALLOCA_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ALLOCA_H); }))) {
             mixin(enumMixinStr__ALLOCA_H);
-        }
-    }
-    static if(!is(typeof(__GLIBC_USE_IEC_60559_EXT))) {
-        private enum enumMixinStr___GLIBC_USE_IEC_60559_EXT = `enum __GLIBC_USE_IEC_60559_EXT = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_EXT); }))) {
-            mixin(enumMixinStr___GLIBC_USE_IEC_60559_EXT);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_IEC_60559_FUNCS_EXT))) {
-        private enum enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT = `enum __GLIBC_USE_IEC_60559_FUNCS_EXT = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT); }))) {
-            mixin(enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT);
         }
     }
     static if(!is(typeof(PDF_LIMIT))) {
@@ -16519,10 +17188,112 @@ extern(C)
 
 
 
+    static if(!is(typeof(__GLIBC_USE_LIB_EXT2))) {
+        private enum enumMixinStr___GLIBC_USE_LIB_EXT2 = `enum __GLIBC_USE_LIB_EXT2 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_LIB_EXT2); }))) {
+            mixin(enumMixinStr___GLIBC_USE_LIB_EXT2);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT))) {
+        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT = `enum __GLIBC_USE_IEC_60559_BFP_EXT = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT); }))) {
+            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT);
+        }
+    }
+
+
+
+
     static if(!is(typeof(PDF_NULL))) {
         private enum enumMixinStr_PDF_NULL = `enum PDF_NULL = ( cast( pdf_obj * ) cast( intptr_t ) PDF_ENUM_NULL );`;
         static if(is(typeof({ mixin(enumMixinStr_PDF_NULL); }))) {
             mixin(enumMixinStr_PDF_NULL);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(PDF_MAKE_NAME))) {
+        private enum enumMixinStr_PDF_MAKE_NAME = `enum PDF_MAKE_NAME = ( STRING , NAME ) PDF_ENUM_NAME_ ## NAME ,;`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_MAKE_NAME); }))) {
+            mixin(enumMixinStr_PDF_MAKE_NAME);
+        }
+    }
+
+
+    enum _dpp_impl_PDF_NAME_mixin = ` auto PDF_NAME(A0)(A0 arg0) {
+        return ( cast( pdf_obj * ) cast( intptr_t ) PDF_ENUM_NAME_arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_PDF_NAME_mixin); })) {
+        mixin(_dpp_impl_PDF_NAME_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(PDF_MAX_GEN_NUMBER))) {
+        private enum enumMixinStr_PDF_MAX_GEN_NUMBER = `enum PDF_MAX_GEN_NUMBER = 65535;`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_MAX_GEN_NUMBER); }))) {
+            mixin(enumMixinStr_PDF_MAX_GEN_NUMBER);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(PDF_MAX_OBJECT_NUMBER))) {
+        private enum enumMixinStr_PDF_MAX_OBJECT_NUMBER = `enum PDF_MAX_OBJECT_NUMBER = 8388607;`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER); }))) {
+            mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT_C2X))) {
+        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X = `enum __GLIBC_USE_IEC_60559_BFP_EXT_C2X = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X); }))) {
+            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X);
+        }
+    }
+    static if(!is(typeof(PDF_SIGNATURE_DEFAULT_APPEARANCE))) {
+        private enum enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE = `enum PDF_SIGNATURE_DEFAULT_APPEARANCE = ( PDF_SIGNATURE_SHOW_LABELS | PDF_SIGNATURE_SHOW_DN | PDF_SIGNATURE_SHOW_DATE | PDF_SIGNATURE_SHOW_TEXT_NAME | PDF_SIGNATURE_SHOW_GRAPHIC_NAME | PDF_SIGNATURE_SHOW_LOGO );`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE); }))) {
+            mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_IEC_60559_EXT))) {
+        private enum enumMixinStr___GLIBC_USE_IEC_60559_EXT = `enum __GLIBC_USE_IEC_60559_EXT = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_EXT); }))) {
+            mixin(enumMixinStr___GLIBC_USE_IEC_60559_EXT);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_IEC_60559_FUNCS_EXT))) {
+        private enum enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT = `enum __GLIBC_USE_IEC_60559_FUNCS_EXT = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT); }))) {
+            mixin(enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT);
+        }
+    }
+    static if(!is(typeof(PDF_MRANGE_CAP))) {
+        private enum enumMixinStr_PDF_MRANGE_CAP = `enum PDF_MRANGE_CAP = 8;`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_MRANGE_CAP); }))) {
+            mixin(enumMixinStr_PDF_MRANGE_CAP);
         }
     }
 
@@ -16565,38 +17336,6 @@ extern(C)
             mixin(enumMixinStr__BITS_PTHREADTYPES_ARCH_H);
         }
     }
-
-
-
-
-    static if(!is(typeof(PDF_MAKE_NAME))) {
-        private enum enumMixinStr_PDF_MAKE_NAME = `enum PDF_MAKE_NAME = ( STRING , NAME ) PDF_ENUM_NAME_ ## NAME ,;`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_MAKE_NAME); }))) {
-            mixin(enumMixinStr_PDF_MAKE_NAME);
-        }
-    }
-
-
-    enum _dpp_impl_PDF_NAME_mixin = ` auto PDF_NAME(A0)(A0 arg0) {
-        return ( cast( pdf_obj * ) cast( intptr_t ) PDF_ENUM_NAME_arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_PDF_NAME_mixin); })) {
-        mixin(_dpp_impl_PDF_NAME_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(PDF_MAX_GEN_NUMBER))) {
-        private enum enumMixinStr_PDF_MAX_GEN_NUMBER = `enum PDF_MAX_GEN_NUMBER = 65535;`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_MAX_GEN_NUMBER); }))) {
-            mixin(enumMixinStr_PDF_MAX_GEN_NUMBER);
-        }
-    }
-
-
-
-
     static if(!is(typeof(__SIZEOF_PTHREAD_MUTEX_T))) {
         private enum enumMixinStr___SIZEOF_PTHREAD_MUTEX_T = `enum __SIZEOF_PTHREAD_MUTEX_T = 40;`;
         static if(is(typeof({ mixin(enumMixinStr___SIZEOF_PTHREAD_MUTEX_T); }))) {
@@ -16683,38 +17422,10 @@ extern(C)
             mixin(enumMixinStr___SIZEOF_PTHREAD_BARRIERATTR_T);
         }
     }
-    static if(!is(typeof(PDF_MAX_OBJECT_NUMBER))) {
-        private enum enumMixinStr_PDF_MAX_OBJECT_NUMBER = `enum PDF_MAX_OBJECT_NUMBER = 8388607;`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER); }))) {
-            mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER);
-        }
-    }
-
-
-
-
     static if(!is(typeof(_BITS_PTHREADTYPES_COMMON_H))) {
         private enum enumMixinStr__BITS_PTHREADTYPES_COMMON_H = `enum _BITS_PTHREADTYPES_COMMON_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H); }))) {
             mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H);
-        }
-    }
-    static if(!is(typeof(PDF_SIGNATURE_DEFAULT_APPEARANCE))) {
-        private enum enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE = `enum PDF_SIGNATURE_DEFAULT_APPEARANCE = ( PDF_SIGNATURE_SHOW_LABELS | PDF_SIGNATURE_SHOW_DN | PDF_SIGNATURE_SHOW_DATE | PDF_SIGNATURE_SHOW_TEXT_NAME | PDF_SIGNATURE_SHOW_GRAPHIC_NAME | PDF_SIGNATURE_SHOW_LOGO );`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE); }))) {
-            mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE);
-        }
-    }
-    static if(!is(typeof(PDF_MRANGE_CAP))) {
-        private enum enumMixinStr_PDF_MRANGE_CAP = `enum PDF_MRANGE_CAP = 8;`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_MRANGE_CAP); }))) {
-            mixin(enumMixinStr_PDF_MRANGE_CAP);
-        }
-    }
-    static if(!is(typeof(__have_pthread_attr_t))) {
-        private enum enumMixinStr___have_pthread_attr_t = `enum __have_pthread_attr_t = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___have_pthread_attr_t); }))) {
-            mixin(enumMixinStr___have_pthread_attr_t);
         }
     }
 
@@ -16775,6 +17486,22 @@ extern(C)
     }
 
 
+    enum _dpp_impl_Memento_setIgnoreNewDelete_mixin = ` auto Memento_setIgnoreNewDelete(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin); })) {
+        mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_setVerbose_mixin = ` auto Memento_setVerbose(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setVerbose_mixin); })) {
+        mixin(_dpp_impl_Memento_setVerbose_mixin);
+    }
+
+
     enum _dpp_impl_Memento_checkIntPointerOrNull_mixin = ` auto Memento_checkIntPointerOrNull(A0)(A0 arg0) {
         return 0;
     }`;
@@ -16812,6 +17539,16 @@ extern(C)
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_reference_mixin); })) {
         mixin(_dpp_impl_Memento_reference_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(__have_pthread_attr_t))) {
+        private enum enumMixinStr___have_pthread_attr_t = `enum __have_pthread_attr_t = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___have_pthread_attr_t); }))) {
+            mixin(enumMixinStr___have_pthread_attr_t);
+        }
     }
 
 
@@ -16893,12 +17630,6 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_blockInfo_mixin); })) {
         mixin(_dpp_impl_Memento_blockInfo_mixin);
     }
-    static if(!is(typeof(_BITS_SETJMP_H))) {
-        private enum enumMixinStr__BITS_SETJMP_H = `enum _BITS_SETJMP_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_SETJMP_H); }))) {
-            mixin(enumMixinStr__BITS_SETJMP_H);
-        }
-    }
 
 
     enum _dpp_impl_Memento_listBlockInfo_mixin = ` auto Memento_listBlockInfo()() {
@@ -16930,16 +17661,6 @@ extern(C)
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_stats_mixin); })) {
         mixin(_dpp_impl_Memento_stats_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(_BITS_STDINT_INTN_H))) {
-        private enum enumMixinStr__BITS_STDINT_INTN_H = `enum _BITS_STDINT_INTN_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_INTN_H); }))) {
-            mixin(enumMixinStr__BITS_STDINT_INTN_H);
-        }
     }
 
 
@@ -16983,16 +17704,6 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(_BITS_STDINT_UINTN_H))) {
-        private enum enumMixinStr__BITS_STDINT_UINTN_H = `enum _BITS_STDINT_UINTN_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_UINTN_H); }))) {
-            mixin(enumMixinStr__BITS_STDINT_UINTN_H);
-        }
-    }
-
-
     enum _dpp_impl_Memento_breakpoint_mixin = ` auto Memento_breakpoint()() {
         return do { } while ( 0 );
     }`;
@@ -17015,6 +17726,12 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_getBlockNum_mixin); })) {
         mixin(_dpp_impl_Memento_getBlockNum_mixin);
     }
+    static if(!is(typeof(_BITS_SETJMP_H))) {
+        private enum enumMixinStr__BITS_SETJMP_H = `enum _BITS_SETJMP_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_SETJMP_H); }))) {
+            mixin(enumMixinStr__BITS_SETJMP_H);
+        }
+    }
 
 
     enum _dpp_impl_Memento_breakOnRealloc_mixin = ` auto Memento_breakOnRealloc(A0)(A0 arg0) {
@@ -17033,6 +17750,134 @@ extern(C)
     }
 
 
+    enum _dpp_impl_Memento_breakAt_mixin = ` auto Memento_breakAt(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_breakAt_mixin); })) {
+        mixin(_dpp_impl_Memento_breakAt_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_paranoidAt_mixin = ` auto Memento_paranoidAt(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_paranoidAt_mixin); })) {
+        mixin(_dpp_impl_Memento_paranoidAt_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_STDINT_INTN_H))) {
+        private enum enumMixinStr__BITS_STDINT_INTN_H = `enum _BITS_STDINT_INTN_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_INTN_H); }))) {
+            mixin(enumMixinStr__BITS_STDINT_INTN_H);
+        }
+    }
+
+
+    enum _dpp_impl_Memento_setParanoia_mixin = ` auto Memento_setParanoia(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setParanoia_mixin); })) {
+        mixin(_dpp_impl_Memento_setParanoia_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_check_mixin = ` auto Memento_check()() {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_check_mixin); })) {
+        mixin(_dpp_impl_Memento_check_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkAllMemory_mixin = ` auto Memento_checkAllMemory()() {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkAllMemory_mixin); })) {
+        mixin(_dpp_impl_Memento_checkAllMemory_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkBlock_mixin = ` auto Memento_checkBlock(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkBlock_mixin); })) {
+        mixin(_dpp_impl_Memento_checkBlock_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(Memento_vasprintf))) {
+        private enum enumMixinStr_Memento_vasprintf = `enum Memento_vasprintf = vasprintf;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_vasprintf); }))) {
+            mixin(enumMixinStr_Memento_vasprintf);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_STDINT_UINTN_H))) {
+        private enum enumMixinStr__BITS_STDINT_UINTN_H = `enum _BITS_STDINT_UINTN_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_UINTN_H); }))) {
+            mixin(enumMixinStr__BITS_STDINT_UINTN_H);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(Memento_asprintf))) {
+        private enum enumMixinStr_Memento_asprintf = `enum Memento_asprintf = asprintf;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_asprintf); }))) {
+            mixin(enumMixinStr_Memento_asprintf);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(Memento_strdup))) {
+        private enum enumMixinStr_Memento_strdup = `enum Memento_strdup = strdup;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_strdup); }))) {
+            mixin(enumMixinStr_Memento_strdup);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(Memento_calloc))) {
+        private enum enumMixinStr_Memento_calloc = `enum Memento_calloc = MEMENTO_UNDERLYING_CALLOC;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_calloc); }))) {
+            mixin(enumMixinStr_Memento_calloc);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(Memento_realloc))) {
+        private enum enumMixinStr_Memento_realloc = `enum Memento_realloc = MEMENTO_UNDERLYING_REALLOC;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_realloc); }))) {
+            mixin(enumMixinStr_Memento_realloc);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(Memento_free))) {
+        private enum enumMixinStr_Memento_free = `enum Memento_free = MEMENTO_UNDERLYING_FREE;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_free); }))) {
+            mixin(enumMixinStr_Memento_free);
+        }
+    }
+
+
 
 
     static if(!is(typeof(_BITS_STDIO_LIM_H))) {
@@ -17043,11 +17888,13 @@ extern(C)
     }
 
 
-    enum _dpp_impl_Memento_breakAt_mixin = ` auto Memento_breakAt(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_breakAt_mixin); })) {
-        mixin(_dpp_impl_Memento_breakAt_mixin);
+
+
+    static if(!is(typeof(Memento_malloc))) {
+        private enum enumMixinStr_Memento_malloc = `enum Memento_malloc = MEMENTO_UNDERLYING_MALLOC;`;
+        static if(is(typeof({ mixin(enumMixinStr_Memento_malloc); }))) {
+            mixin(enumMixinStr_Memento_malloc);
+        }
     }
 
 
@@ -17081,11 +17928,13 @@ extern(C)
     }
 
 
-    enum _dpp_impl_Memento_paranoidAt_mixin = ` auto Memento_paranoidAt(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_paranoidAt_mixin); })) {
-        mixin(_dpp_impl_Memento_paranoidAt_mixin);
+
+
+    static if(!is(typeof(MEMENTO_FREELIST_MAX))) {
+        private enum enumMixinStr_MEMENTO_FREELIST_MAX = `enum MEMENTO_FREELIST_MAX = 0x2000000;`;
+        static if(is(typeof({ mixin(enumMixinStr_MEMENTO_FREELIST_MAX); }))) {
+            mixin(enumMixinStr_MEMENTO_FREELIST_MAX);
+        }
     }
 
 
@@ -17095,166 +17944,6 @@ extern(C)
         private enum enumMixinStr_L_ctermid = `enum L_ctermid = 9;`;
         static if(is(typeof({ mixin(enumMixinStr_L_ctermid); }))) {
             mixin(enumMixinStr_L_ctermid);
-        }
-    }
-
-
-    enum _dpp_impl_Memento_setParanoia_mixin = ` auto Memento_setParanoia(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setParanoia_mixin); })) {
-        mixin(_dpp_impl_Memento_setParanoia_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(FOPEN_MAX))) {
-        private enum enumMixinStr_FOPEN_MAX = `enum FOPEN_MAX = 16;`;
-        static if(is(typeof({ mixin(enumMixinStr_FOPEN_MAX); }))) {
-            mixin(enumMixinStr_FOPEN_MAX);
-        }
-    }
-
-
-    enum _dpp_impl_Memento_check_mixin = ` auto Memento_check()() {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_check_mixin); })) {
-        mixin(_dpp_impl_Memento_check_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(_THREAD_MUTEX_INTERNAL_H))) {
-        private enum enumMixinStr__THREAD_MUTEX_INTERNAL_H = `enum _THREAD_MUTEX_INTERNAL_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H); }))) {
-            mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H);
-        }
-    }
-
-
-    enum _dpp_impl_Memento_checkAllMemory_mixin = ` auto Memento_checkAllMemory()() {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkAllMemory_mixin); })) {
-        mixin(_dpp_impl_Memento_checkAllMemory_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_checkBlock_mixin = ` auto Memento_checkBlock(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkBlock_mixin); })) {
-        mixin(_dpp_impl_Memento_checkBlock_mixin);
-    }
-
-
-
-
-    static if(!is(typeof(Memento_vasprintf))) {
-        private enum enumMixinStr_Memento_vasprintf = `enum Memento_vasprintf = vasprintf;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_vasprintf); }))) {
-            mixin(enumMixinStr_Memento_vasprintf);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__PTHREAD_MUTEX_HAVE_PREV))) {
-        private enum enumMixinStr___PTHREAD_MUTEX_HAVE_PREV = `enum __PTHREAD_MUTEX_HAVE_PREV = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV); }))) {
-            mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(Memento_asprintf))) {
-        private enum enumMixinStr_Memento_asprintf = `enum Memento_asprintf = asprintf;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_asprintf); }))) {
-            mixin(enumMixinStr_Memento_asprintf);
-        }
-    }
-    static if(!is(typeof(Memento_strdup))) {
-        private enum enumMixinStr_Memento_strdup = `enum Memento_strdup = strdup;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_strdup); }))) {
-            mixin(enumMixinStr_Memento_strdup);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(Memento_calloc))) {
-        private enum enumMixinStr_Memento_calloc = `enum Memento_calloc = MEMENTO_UNDERLYING_CALLOC;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_calloc); }))) {
-            mixin(enumMixinStr_Memento_calloc);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__PTHREAD_RWLOCK_ELISION_EXTRA))) {
-        private enum enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA = `enum __PTHREAD_RWLOCK_ELISION_EXTRA = 0 , { 0 , 0 , 0 , 0 , 0 , 0 , 0 };`;
-        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA); }))) {
-            mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(Memento_realloc))) {
-        private enum enumMixinStr_Memento_realloc = `enum Memento_realloc = MEMENTO_UNDERLYING_REALLOC;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_realloc); }))) {
-            mixin(enumMixinStr_Memento_realloc);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(_THREAD_SHARED_TYPES_H))) {
-        private enum enumMixinStr__THREAD_SHARED_TYPES_H = `enum _THREAD_SHARED_TYPES_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__THREAD_SHARED_TYPES_H); }))) {
-            mixin(enumMixinStr__THREAD_SHARED_TYPES_H);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(Memento_free))) {
-        private enum enumMixinStr_Memento_free = `enum Memento_free = MEMENTO_UNDERLYING_FREE;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_free); }))) {
-            mixin(enumMixinStr_Memento_free);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(Memento_malloc))) {
-        private enum enumMixinStr_Memento_malloc = `enum Memento_malloc = MEMENTO_UNDERLYING_MALLOC;`;
-        static if(is(typeof({ mixin(enumMixinStr_Memento_malloc); }))) {
-            mixin(enumMixinStr_Memento_malloc);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(MEMENTO_FREELIST_MAX))) {
-        private enum enumMixinStr_MEMENTO_FREELIST_MAX = `enum MEMENTO_FREELIST_MAX = 0x2000000;`;
-        static if(is(typeof({ mixin(enumMixinStr_MEMENTO_FREELIST_MAX); }))) {
-            mixin(enumMixinStr_MEMENTO_FREELIST_MAX);
         }
     }
 
@@ -17271,10 +17960,30 @@ extern(C)
 
 
 
+    static if(!is(typeof(FOPEN_MAX))) {
+        private enum enumMixinStr_FOPEN_MAX = `enum FOPEN_MAX = 16;`;
+        static if(is(typeof({ mixin(enumMixinStr_FOPEN_MAX); }))) {
+            mixin(enumMixinStr_FOPEN_MAX);
+        }
+    }
+
+
+
+
     static if(!is(typeof(MEMENTO_ALLOCFILL))) {
         private enum enumMixinStr_MEMENTO_ALLOCFILL = `enum MEMENTO_ALLOCFILL = 0xa8;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_ALLOCFILL); }))) {
             mixin(enumMixinStr_MEMENTO_ALLOCFILL);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_THREAD_MUTEX_INTERNAL_H))) {
+        private enum enumMixinStr__THREAD_MUTEX_INTERNAL_H = `enum _THREAD_MUTEX_INTERNAL_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H); }))) {
+            mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H);
         }
     }
 
@@ -17311,16 +18020,22 @@ extern(C)
 
 
 
-    static if(!is(typeof(MEMENTO_UNDERLYING_CALLOC))) {
-        private enum enumMixinStr_MEMENTO_UNDERLYING_CALLOC = `enum MEMENTO_UNDERLYING_CALLOC = calloc;`;
-        static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC); }))) {
-            mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC);
+    static if(!is(typeof(__PTHREAD_MUTEX_HAVE_PREV))) {
+        private enum enumMixinStr___PTHREAD_MUTEX_HAVE_PREV = `enum __PTHREAD_MUTEX_HAVE_PREV = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV); }))) {
+            mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV);
         }
     }
 
 
 
 
+    static if(!is(typeof(MEMENTO_UNDERLYING_CALLOC))) {
+        private enum enumMixinStr_MEMENTO_UNDERLYING_CALLOC = `enum MEMENTO_UNDERLYING_CALLOC = calloc;`;
+        static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC); }))) {
+            mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC);
+        }
+    }
     static if(!is(typeof(MEMENTO_UNDERLYING_REALLOC))) {
         private enum enumMixinStr_MEMENTO_UNDERLYING_REALLOC = `enum MEMENTO_UNDERLYING_REALLOC = realloc;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_REALLOC); }))) {
@@ -17341,10 +18056,32 @@ extern(C)
 
 
 
+    static if(!is(typeof(__PTHREAD_RWLOCK_ELISION_EXTRA))) {
+        private enum enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA = `enum __PTHREAD_RWLOCK_ELISION_EXTRA = 0 , { 0 , 0 , 0 , 0 , 0 , 0 , 0 };`;
+        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA); }))) {
+            mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA);
+        }
+    }
+
+
+
+
     static if(!is(typeof(MEMENTO_UNDERLYING_MALLOC))) {
         private enum enumMixinStr_MEMENTO_UNDERLYING_MALLOC = `enum MEMENTO_UNDERLYING_MALLOC = malloc;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_MALLOC); }))) {
             mixin(enumMixinStr_MEMENTO_UNDERLYING_MALLOC);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(_THREAD_SHARED_TYPES_H))) {
+        private enum enumMixinStr__THREAD_SHARED_TYPES_H = `enum _THREAD_SHARED_TYPES_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__THREAD_SHARED_TYPES_H); }))) {
+            mixin(enumMixinStr__THREAD_SHARED_TYPES_H);
         }
     }
 
@@ -17359,6 +18096,48 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_document_writer_mixin); })) {
         mixin(_dpp_impl_fz_new_derived_document_writer_mixin);
     }
+    static if(!is(typeof(FZ_VERSION_PATCH))) {
+        private enum enumMixinStr_FZ_VERSION_PATCH = `enum FZ_VERSION_PATCH = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_PATCH); }))) {
+            mixin(enumMixinStr_FZ_VERSION_PATCH);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_VERSION_MINOR))) {
+        private enum enumMixinStr_FZ_VERSION_MINOR = `enum FZ_VERSION_MINOR = 21;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_MINOR); }))) {
+            mixin(enumMixinStr_FZ_VERSION_MINOR);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_VERSION_MAJOR))) {
+        private enum enumMixinStr_FZ_VERSION_MAJOR = `enum FZ_VERSION_MAJOR = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_MAJOR); }))) {
+            mixin(enumMixinStr_FZ_VERSION_MAJOR);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_VERSION))) {
+        private enum enumMixinStr_FZ_VERSION = `enum FZ_VERSION = "1.21.0";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION); }))) {
+            mixin(enumMixinStr_FZ_VERSION);
+        }
+    }
+    enum _dpp_impl_TRACK_FN_mixin = ` auto TRACK_FN()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_TRACK_FN_mixin); })) {
+        mixin(_dpp_impl_TRACK_FN_mixin);
+    }
 
 
 
@@ -17371,6 +18150,12 @@ extern(C)
     }
 
 
+    enum _dpp_impl_TRACK_LABEL_mixin = ` auto TRACK_LABEL(A0)(A0 arg0) {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_TRACK_LABEL_mixin); })) {
+        mixin(_dpp_impl_TRACK_LABEL_mixin);
+    }
 
 
 
@@ -17393,82 +18178,6 @@ extern(C)
             mixin(enumMixinStr___TIME64_T_TYPE);
         }
     }
-
-
-
-
-    static if(!is(typeof(FZ_VERSION_PATCH))) {
-        private enum enumMixinStr_FZ_VERSION_PATCH = `enum FZ_VERSION_PATCH = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_PATCH); }))) {
-            mixin(enumMixinStr_FZ_VERSION_PATCH);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(FZ_VERSION_MINOR))) {
-        private enum enumMixinStr_FZ_VERSION_MINOR = `enum FZ_VERSION_MINOR = 19;`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_MINOR); }))) {
-            mixin(enumMixinStr_FZ_VERSION_MINOR);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(FZ_VERSION_MAJOR))) {
-        private enum enumMixinStr_FZ_VERSION_MAJOR = `enum FZ_VERSION_MAJOR = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_MAJOR); }))) {
-            mixin(enumMixinStr_FZ_VERSION_MAJOR);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(FZ_VERSION))) {
-        private enum enumMixinStr_FZ_VERSION = `enum FZ_VERSION = "1.19.0";`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION); }))) {
-            mixin(enumMixinStr_FZ_VERSION);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__TIMESIZE))) {
-        private enum enumMixinStr___TIMESIZE = `enum __TIMESIZE = __WORDSIZE;`;
-        static if(is(typeof({ mixin(enumMixinStr___TIMESIZE); }))) {
-            mixin(enumMixinStr___TIMESIZE);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_BITS_TYPES_H))) {
-        private enum enumMixinStr__BITS_TYPES_H = `enum _BITS_TYPES_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_TYPES_H); }))) {
-            mixin(enumMixinStr__BITS_TYPES_H);
-        }
-    }
-    enum _dpp_impl_TRACK_FN_mixin = ` auto TRACK_FN()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_TRACK_FN_mixin); })) {
-        mixin(_dpp_impl_TRACK_FN_mixin);
-    }
-
-
-    enum _dpp_impl_TRACK_LABEL_mixin = ` auto TRACK_LABEL(A0)(A0 arg0) {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_TRACK_LABEL_mixin); })) {
-        mixin(_dpp_impl_TRACK_LABEL_mixin);
-    }
-
-
 
 
     enum _dpp_impl_FZ_LANG_TAG3_mixin = ` auto FZ_LANG_TAG3(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
@@ -17495,6 +18204,26 @@ extern(C)
         private enum enumMixinStr_FZ_POINTER_ALIGN_MOD = `enum FZ_POINTER_ALIGN_MOD = 4;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_POINTER_ALIGN_MOD); }))) {
             mixin(enumMixinStr_FZ_POINTER_ALIGN_MOD);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__TIMESIZE))) {
+        private enum enumMixinStr___TIMESIZE = `enum __TIMESIZE = __WORDSIZE;`;
+        static if(is(typeof({ mixin(enumMixinStr___TIMESIZE); }))) {
+            mixin(enumMixinStr___TIMESIZE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_TYPES_H))) {
+        private enum enumMixinStr__BITS_TYPES_H = `enum _BITS_TYPES_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_TYPES_H); }))) {
+            mixin(enumMixinStr__BITS_TYPES_H);
         }
     }
 
@@ -17543,6 +18272,16 @@ extern(C)
         private enum enumMixinStr_FZ_RESTRICT = `enum FZ_RESTRICT = __restrict;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_RESTRICT); }))) {
             mixin(enumMixinStr_FZ_RESTRICT);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(fz_forceinline))) {
+        private enum enumMixinStr_fz_forceinline = `enum fz_forceinline = inline;`;
+        static if(is(typeof({ mixin(enumMixinStr_fz_forceinline); }))) {
+            mixin(enumMixinStr_fz_forceinline);
         }
     }
 
@@ -17647,6 +18386,48 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_nelem_mixin); })) {
         mixin(_dpp_impl_nelem_mixin);
     }
+    static if(!is(typeof(FZ_REPLACEMENT_CHARACTER))) {
+        private enum enumMixinStr_FZ_REPLACEMENT_CHARACTER = `enum FZ_REPLACEMENT_CHARACTER = 0xFFFD;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER); }))) {
+            mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER);
+        }
+    }
+    enum _dpp_impl_FZ_LOG_DUMP_STORE_mixin = ` auto FZ_LOG_DUMP_STORE(, REST...)(, REST rest) {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin); })) {
+        mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_LOG_STORE_mixin = ` auto FZ_LOG_STORE(, REST...)(, REST rest) {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_LOG_STORE_mixin); })) {
+        mixin(_dpp_impl_FZ_LOG_STORE_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_INIT_KEY_STORABLE_mixin = ` auto FZ_INIT_KEY_STORABLE(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
+        return do { fz_key_storable * KS = & ( arg0 ) . key_storable ; KS . store_key_refs = 0 ; FZ_INIT_STORABLE ( KS , arg1 , arg2 ) ; } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_INIT_KEY_STORABLE_mixin); })) {
+        mixin(_dpp_impl_FZ_INIT_KEY_STORABLE_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_INIT_STORABLE_mixin = ` auto FZ_INIT_STORABLE(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
+        return do { fz_storable * S = & ( arg0 ) . storable ; S . refs = ( arg1 ) ; S . drop = ( arg2 ) ; } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_INIT_STORABLE_mixin); })) {
+        mixin(_dpp_impl_FZ_INIT_STORABLE_mixin);
+    }
+
+
+
+
+
+
     static if(!is(typeof(__S16_TYPE))) {
         private enum enumMixinStr___S16_TYPE = `enum __S16_TYPE = short int;`;
         static if(is(typeof({ mixin(enumMixinStr___S16_TYPE); }))) {
@@ -17703,22 +18484,6 @@ extern(C)
             mixin(enumMixinStr___ULONGWORD_TYPE);
         }
     }
-
-
-
-
-    static if(!is(typeof(FZ_REPLACEMENT_CHARACTER))) {
-        private enum enumMixinStr_FZ_REPLACEMENT_CHARACTER = `enum FZ_REPLACEMENT_CHARACTER = 0xFFFD;`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER); }))) {
-            mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER);
-        }
-    }
-
-
-
-
-
-
     static if(!is(typeof(__SQUAD_TYPE))) {
         private enum enumMixinStr___SQUAD_TYPE = `enum __SQUAD_TYPE = long int;`;
         static if(is(typeof({ mixin(enumMixinStr___SQUAD_TYPE); }))) {
@@ -17805,40 +18570,28 @@ extern(C)
             mixin(enumMixinStr___STD_TYPE);
         }
     }
-
-
-
-
-    enum _dpp_impl_FZ_LOG_DUMP_STORE_mixin = ` auto FZ_LOG_DUMP_STORE(, REST...)(, REST rest) {
-        return do { } while ( 0 );
+    enum _dpp_impl_fz_new_derived_outline_iter_mixin = ` auto fz_new_derived_outline_iter(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
+        return ( cast( arg1 * ) ( fz_new_outline_iterator_of_size ( ctx , ( arg1 ) .sizeof , arg2 ) ) );
     }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin); })) {
-        mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin);
+    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_outline_iter_mixin); })) {
+        mixin(_dpp_impl_fz_new_derived_outline_iter_mixin);
     }
 
 
-    enum _dpp_impl_FZ_LOG_STORE_mixin = ` auto FZ_LOG_STORE(, REST...)(, REST rest) {
-        return do { } while ( 0 );
+
+
+
+
+    enum _dpp_impl_fz_new_derived_link_mixin = ` auto fz_new_derived_link(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
+        return ( cast( arg1 * ) ( fz_new_link_of_size ( arg0 , ( arg1 ) .sizeof , arg2 , arg3 ) ) );
     }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_LOG_STORE_mixin); })) {
-        mixin(_dpp_impl_FZ_LOG_STORE_mixin);
+    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_link_mixin); })) {
+        mixin(_dpp_impl_fz_new_derived_link_mixin);
     }
 
 
-    enum _dpp_impl_FZ_INIT_KEY_STORABLE_mixin = ` auto FZ_INIT_KEY_STORABLE(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return do { fz_key_storable * KS = & ( arg0 ) . key_storable ; KS . store_key_refs = 0 ; FZ_INIT_STORABLE ( KS , arg1 , arg2 ) ; } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_INIT_KEY_STORABLE_mixin); })) {
-        mixin(_dpp_impl_FZ_INIT_KEY_STORABLE_mixin);
-    }
 
 
-    enum _dpp_impl_FZ_INIT_STORABLE_mixin = ` auto FZ_INIT_STORABLE(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return do { fz_storable * S = & ( arg0 ) . storable ; S . refs = ( arg1 ) ; S . drop = ( arg2 ) ; } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_INIT_STORABLE_mixin); })) {
-        mixin(_dpp_impl_FZ_INIT_STORABLE_mixin);
-    }
     enum _dpp_impl_fz_new_derived_image_mixin = ` auto fz_new_derived_image(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15)(A0 arg0, A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15) {
         return ( cast( arg12 * ) ( fz_new_image_of_size ( arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 , arg8 , arg9 , arg10 , arg11 , ( arg12 ) .sizeof , arg13 , arg14 , arg15 ) ) );
     }`;
@@ -17913,6 +18666,26 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_FZ_EXPAND_mixin); })) {
         mixin(_dpp_impl_FZ_EXPAND_mixin);
     }
+    static if(!is(typeof(FZ_META_INFO_MODIFICATIONDATE))) {
+        private enum enumMixinStr_FZ_META_INFO_MODIFICATIONDATE = `enum FZ_META_INFO_MODIFICATIONDATE = "info:ModDate";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_MODIFICATIONDATE); }))) {
+            mixin(enumMixinStr_FZ_META_INFO_MODIFICATIONDATE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_META_INFO_CREATIONDATE))) {
+        private enum enumMixinStr_FZ_META_INFO_CREATIONDATE = `enum FZ_META_INFO_CREATIONDATE = "info:CreationDate";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_CREATIONDATE); }))) {
+            mixin(enumMixinStr_FZ_META_INFO_CREATIONDATE);
+        }
+    }
+
+
+
+
     static if(!is(typeof(FZ_META_INFO_PRODUCER))) {
         private enum enumMixinStr_FZ_META_INFO_PRODUCER = `enum FZ_META_INFO_PRODUCER = "info:Producer";`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_PRODUCER); }))) {
@@ -17933,10 +18706,20 @@ extern(C)
 
 
 
-    static if(!is(typeof(FZ_META_INFO_TITLE))) {
-        private enum enumMixinStr_FZ_META_INFO_TITLE = `enum FZ_META_INFO_TITLE = "info:Title";`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_TITLE); }))) {
-            mixin(enumMixinStr_FZ_META_INFO_TITLE);
+    static if(!is(typeof(FZ_META_INFO_KEYWORDS))) {
+        private enum enumMixinStr_FZ_META_INFO_KEYWORDS = `enum FZ_META_INFO_KEYWORDS = "info:Keywords";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_KEYWORDS); }))) {
+            mixin(enumMixinStr_FZ_META_INFO_KEYWORDS);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_META_INFO_SUBJECT))) {
+        private enum enumMixinStr_FZ_META_INFO_SUBJECT = `enum FZ_META_INFO_SUBJECT = "info:Subject";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_SUBJECT); }))) {
+            mixin(enumMixinStr_FZ_META_INFO_SUBJECT);
         }
     }
 
@@ -17947,6 +18730,26 @@ extern(C)
         private enum enumMixinStr_FZ_META_INFO_AUTHOR = `enum FZ_META_INFO_AUTHOR = "info:Author";`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_AUTHOR); }))) {
             mixin(enumMixinStr_FZ_META_INFO_AUTHOR);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_META_INFO_TITLE))) {
+        private enum enumMixinStr_FZ_META_INFO_TITLE = `enum FZ_META_INFO_TITLE = "info:Title";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO_TITLE); }))) {
+            mixin(enumMixinStr_FZ_META_INFO_TITLE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_META_INFO))) {
+        private enum enumMixinStr_FZ_META_INFO = `enum FZ_META_INFO = "info:";`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_META_INFO); }))) {
+            mixin(enumMixinStr_FZ_META_INFO);
         }
     }
 
@@ -18023,6 +18826,16 @@ extern(C)
 
 
 
+
+
+    static if(!is(typeof(FZ_JMPBUF_ALIGN))) {
+        private enum enumMixinStr_FZ_JMPBUF_ALIGN = `enum FZ_JMPBUF_ALIGN = 32;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_JMPBUF_ALIGN); }))) {
+            mixin(enumMixinStr_FZ_JMPBUF_ALIGN);
+        }
+    }
+
+
     enum _dpp_impl_fz_realloc_array_mixin = ` auto fz_realloc_array(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
         return ( cast( arg3 * ) ( fz_realloc ( arg0 , arg1 , ( arg2 ) * ( arg3 ) .sizeof ) ) );
     }`;
@@ -18056,7 +18869,7 @@ extern(C)
 
 
     enum _dpp_impl_fz_new_context_mixin = ` auto fz_new_context(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return fz_new_context_imp ( arg0 , arg1 , arg2 , "1.19.0" );
+        return fz_new_context_imp ( arg0 , arg1 , arg2 , "1.21.0" );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_fz_new_context_mixin); })) {
         mixin(_dpp_impl_fz_new_context_mixin);
