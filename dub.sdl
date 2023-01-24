@@ -6,5 +6,5 @@ libs "mupdf" "mupdf-third" platform="posix"
 importPaths "source"
 
 configuration "library" {
-	targetType "sourceLibrary"
+	targetType "library"
 }
