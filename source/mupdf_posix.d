@@ -110,102 +110,102 @@ extern(C)
         real __clang_max_align_nonce2;
     }
 
-    alias fsfilcnt_t = c_ulong;
+    alias fsfilcnt_t = __fsfilcnt_t;
 
-    alias fsblkcnt_t = c_ulong;
+    alias fsblkcnt_t = __fsblkcnt_t;
 
-    alias blkcnt_t = c_long;
+    alias blkcnt_t = __blkcnt_t;
 
-    alias blksize_t = c_long;
+    alias blksize_t = __blksize_t;
 
     alias register_t = c_long;
 
-    alias u_int64_t = c_ulong;
+    alias u_int64_t = __uint64_t;
 
-    alias u_int32_t = uint;
+    alias u_int32_t = __uint32_t;
 
-    alias u_int16_t = ushort;
+    alias u_int16_t = __uint16_t;
 
-    alias u_int8_t = ubyte;
+    alias u_int8_t = __uint8_t;
 
-    alias key_t = int;
+    alias key_t = __key_t;
 
-    alias caddr_t = char*;
+    alias caddr_t = __caddr_t;
 
-    alias daddr_t = int;
+    alias daddr_t = __daddr_t;
 
-    alias id_t = uint;
+    alias id_t = __id_t;
 
-    alias pid_t = int;
+    alias pid_t = __pid_t;
 
-    alias uid_t = uint;
+    alias uid_t = __uid_t;
 
-    alias nlink_t = c_ulong;
+    alias nlink_t = __nlink_t;
 
-    alias mode_t = uint;
+    alias mode_t = __mode_t;
 
-    alias gid_t = uint;
+    alias gid_t = __gid_t;
 
-    alias dev_t = c_ulong;
+    alias dev_t = __dev_t;
 
-    alias ino_t = c_ulong;
+    alias ino_t = __ino_t;
 
-    alias loff_t = c_long;
+    alias loff_t = __loff_t;
 
     alias fsid_t = __fsid_t;
 
-    alias u_quad_t = c_ulong;
+    alias u_quad_t = __u_quad_t;
 
-    alias quad_t = c_long;
+    alias quad_t = __quad_t;
 
-    alias u_long = c_ulong;
+    alias u_long = __u_long;
 
-    alias u_int = uint;
+    alias u_int = __u_int;
 
-    alias u_short = ushort;
+    alias u_short = __u_short;
 
-    alias u_char = ubyte;
+    alias u_char = __u_char;
 
     int pselect(int, fd_set*, fd_set*, fd_set*, const(timespec)*, const(__sigset_t)*) @nogc nothrow;
 
     int select(int, fd_set*, fd_set*, fd_set*, timeval*) @nogc nothrow;
 
-    alias fd_mask = c_long;
+    alias fd_mask = __fd_mask;
 
     struct fd_set
     {
 
-        c_long[16] __fds_bits;
+        __fd_mask[16] __fds_bits;
     }
 
     alias __fd_mask = c_long;
 
-    alias suseconds_t = c_long;
+    alias suseconds_t = __suseconds_t;
 
-    alias timer_t = void*;
+    alias timer_t = __timer_t;
 
-    alias time_t = c_long;
+    alias time_t = __time_t;
 
     struct timeval
     {
 
-        c_long tv_sec;
+        __time_t tv_sec;
 
-        c_long tv_usec;
+        __suseconds_t tv_usec;
     }
 
     struct timespec
     {
 
-        c_long tv_sec;
+        __time_t tv_sec;
 
-        c_long tv_nsec;
+        __syscall_slong_t tv_nsec;
     }
 
     struct __jmp_buf_tag
     {
 
-        c_long[8] __jmpbuf;
+        __jmp_buf __jmpbuf;
 
         int __mask_was_saved;
 
@@ -219,9 +219,9 @@ extern(C)
 
     alias sigset_t = __sigset_t;
 
-    alias clockid_t = int;
+    alias clockid_t = __clockid_t;
 
-    alias clock_t = c_long;
+    alias clock_t = __clock_t;
 
     struct __sigset_t
     {
@@ -248,7 +248,7 @@ extern(C)
     struct _G_fpos_t
     {
 
-        c_long __pos;
+        __off_t __pos;
 
         __mbstate_t __state;
     }
@@ -258,7 +258,7 @@ extern(C)
     struct _G_fpos64_t
     {
 
-        c_long __pos;
+        __off64_t __pos;
 
         __mbstate_t __state;
     }
@@ -302,7 +302,7 @@ extern(C)
 
         int _flags2;
 
-        c_long _old_offset;
+        __off_t _old_offset;
 
         ushort _cur_column;
 
@@ -310,9 +310,9 @@ extern(C)
 
         char[1] _shortbuf;
 
-        void* _lock;
+        _IO_lock_t* _lock;
 
-        c_long _offset;
+        __off64_t _offset;
 
         _IO_codecvt* _codecvt;
 
@@ -322,7 +322,7 @@ extern(C)
 
         void* _freeres_buf;
 
-        c_ulong __pad5;
+        size_t __pad5;
 
         int _mode;
 
@@ -339,7 +339,7 @@ extern(C)
 
     alias __caddr_t = char*;
 
-    alias __loff_t = c_long;
+    alias __loff_t = __off64_t;
 
     alias __syscall_ulong_t = c_ulong;
 
@@ -350,6 +350,22 @@ extern(C)
     alias __fsword_t = c_long;
 
     alias __fsfilcnt64_t = c_ulong;
+
+    alias __fsfilcnt_t = c_ulong;
+
+    alias __fsblkcnt64_t = c_ulong;
+
+    alias __fsblkcnt_t = c_ulong;
+
+    alias __blkcnt64_t = c_long;
+
+    alias __blkcnt_t = c_long;
+
+    alias __blksize_t = c_long;
+
+    alias __timer_t = void*;
+
+    alias __clockid_t = int;
     /**
 	Implementation details: Subject to change.
 */
@@ -585,7 +601,7 @@ extern(C)
 	The data will be copied into a buffer, and so the caller
 	may free it as soon as this returns.
 */
-    void fz_tree_archive_add_data(fz_context*, fz_archive*, const(char)*, const(void)*, c_ulong) @nogc nothrow;
+    void fz_tree_archive_add_data(fz_context*, fz_archive*, const(char)*, const(void)*, size_t) @nogc nothrow;
     /**
 	Create a new multi archive (initially empty).
 */
@@ -602,18 +618,20 @@ extern(C)
 
     fz_archive* fz_new_archive_of_size(fz_context*, fz_stream*, int) @nogc nothrow;
 
+    alias __key_t = int;
+
     struct fz_band_writer
     {
 
-        void function(fz_context*, fz_band_writer*) drop;
+        fz_drop_band_writer_fn drop;
 
-        void function(fz_context*, fz_band_writer*) close;
+        fz_close_band_writer_fn close;
 
-        void function(fz_context*, fz_band_writer*, fz_colorspace*) header;
+        fz_write_header_fn header;
 
-        void function(fz_context*, fz_band_writer*, int, int, int, const(ubyte)*) band;
+        fz_write_band_fn band;
 
-        void function(fz_context*, fz_band_writer*) trailer;
+        fz_write_trailer_fn trailer;
 
         fz_output* out_;
 
@@ -687,13 +705,9 @@ extern(C)
     alias fz_close_band_writer_fn = void function(fz_context*, fz_band_writer*);
     alias fz_drop_band_writer_fn = void function(fz_context*, fz_band_writer*);
 
-    fz_band_writer* fz_new_band_writer_of_size(fz_context*, c_ulong, fz_output*) @nogc nothrow;
+    fz_band_writer* fz_new_band_writer_of_size(fz_context*, size_t, fz_output*) @nogc nothrow;
 
-    alias __fsfilcnt_t = c_ulong;
-
-    alias fz_bidi_direction = _Anonymous_1;
-
-    enum _Anonymous_1
+    enum fz_bidi_direction
     {
 
         FZ_BIDI_LTR = 0,
@@ -702,21 +716,19 @@ extern(C)
 
         FZ_BIDI_NEUTRAL = 2,
     }
-    enum FZ_BIDI_LTR = _Anonymous_1.FZ_BIDI_LTR;
-    enum FZ_BIDI_RTL = _Anonymous_1.FZ_BIDI_RTL;
-    enum FZ_BIDI_NEUTRAL = _Anonymous_1.FZ_BIDI_NEUTRAL;
+    enum FZ_BIDI_LTR = fz_bidi_direction.FZ_BIDI_LTR;
+    enum FZ_BIDI_RTL = fz_bidi_direction.FZ_BIDI_RTL;
+    enum FZ_BIDI_NEUTRAL = fz_bidi_direction.FZ_BIDI_NEUTRAL;
 
-    alias fz_bidi_flags = _Anonymous_2;
-
-    enum _Anonymous_2
+    enum fz_bidi_flags
     {
 
         FZ_BIDI_CLASSIFY_WHITE_SPACE = 1,
 
         FZ_BIDI_REPLACE_TAB = 2,
     }
-    enum FZ_BIDI_CLASSIFY_WHITE_SPACE = _Anonymous_2.FZ_BIDI_CLASSIFY_WHITE_SPACE;
-    enum FZ_BIDI_REPLACE_TAB = _Anonymous_2.FZ_BIDI_REPLACE_TAB;
+    enum FZ_BIDI_CLASSIFY_WHITE_SPACE = fz_bidi_flags.FZ_BIDI_CLASSIFY_WHITE_SPACE;
+    enum FZ_BIDI_REPLACE_TAB = fz_bidi_flags.FZ_BIDI_REPLACE_TAB;
     alias fz_bidi_fragment_fn = void function(const(uint)*, c_ulong, int, int, void*);
     /**
 	Partitions the given Unicode sequence into one or more
@@ -738,7 +750,9 @@ extern(C)
 	@param[in] arg	data to be passed to the callback function
 	@param[in] flags     flags to control operation (see fz_bidi_flags above)
 */
-    void fz_bidi_fragment_text(fz_context*, const(uint)*, c_ulong, fz_bidi_direction*, void function(const(uint)*, c_ulong, int, int, void*), void*, int) @nogc nothrow;
+    void fz_bidi_fragment_text(fz_context*, const(uint32_t)*, size_t, fz_bidi_direction*, fz_bidi_fragment_fn, void*, int) @nogc nothrow;
+
+    alias __daddr_t = int;
     /**
 	Bitmaps have 1 bit per component. Only used for creating
 	halftoned versions of contone buffers, and saving out. Samples
@@ -870,8 +884,6 @@ extern(C)
 	Never throws exceptions.
 */
     void fz_drop_halftone(fz_context*, fz_halftone*) @nogc nothrow;
-
-    alias __fsblkcnt64_t = c_ulong;
     /**
 	fz_buffer is a wrapper around a dynamically allocated array of
 	bytes.
@@ -890,9 +902,9 @@ extern(C)
 
         ubyte* data;
 
-        c_ulong cap;
+        size_t cap;
 
-        c_ulong len;
+        size_t len;
 
         int unused_bits;
 
@@ -919,14 +931,14 @@ extern(C)
 
 	Returns the current size of the data in bytes.
 */
-    c_ulong fz_buffer_storage(fz_context*, fz_buffer*, ubyte**) @nogc nothrow;
+    size_t fz_buffer_storage(fz_context*, fz_buffer*, ubyte**) @nogc nothrow;
     /**
 	Ensure that a buffer's data ends in a
 	0 byte, and return a pointer to it.
 */
     const(char)* fz_string_from_buffer(fz_context*, fz_buffer*) @nogc nothrow;
 
-    fz_buffer* fz_new_buffer(fz_context*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_new_buffer(fz_context*, size_t) @nogc nothrow;
     /**
 	Create a new buffer with existing data.
 
@@ -940,19 +952,19 @@ extern(C)
 	Returns pointer to new buffer. Throws exception on allocation
 	failure.
 */
-    fz_buffer* fz_new_buffer_from_data(fz_context*, ubyte*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_new_buffer_from_data(fz_context*, ubyte*, size_t) @nogc nothrow;
     /**
 	Like fz_new_buffer, but does not take ownership.
 */
-    fz_buffer* fz_new_buffer_from_shared_data(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_new_buffer_from_shared_data(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	Create a new buffer containing a copy of the passed data.
 */
-    fz_buffer* fz_new_buffer_from_copied_data(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_new_buffer_from_copied_data(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	Create a new buffer with data decoded from a base64 input string.
 */
-    fz_buffer* fz_new_buffer_from_base64(fz_context*, const(char)*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_new_buffer_from_base64(fz_context*, const(char)*, size_t) @nogc nothrow;
     /**
 	Ensure that a buffer has a given capacity,
 	truncating data if required.
@@ -961,7 +973,7 @@ extern(C)
 	size of the buffer contents is smaller than capacity, it is
 	truncated.
 */
-    void fz_resize_buffer(fz_context*, fz_buffer*, c_ulong) @nogc nothrow;
+    void fz_resize_buffer(fz_context*, fz_buffer*, size_t) @nogc nothrow;
     /**
 	Make some space within a buffer (i.e. ensure that
 	capacity > size).
@@ -988,7 +1000,7 @@ extern(C)
     /**
 	Write a base64 encoded data block, optionally with periodic newlines.
 */
-    void fz_append_base64(fz_context*, fz_buffer*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    void fz_append_base64(fz_context*, fz_buffer*, const(ubyte)*, size_t, int) @nogc nothrow;
     /**
 	Append a base64 encoded fz_buffer, optionally with periodic newlines.
 */
@@ -998,7 +1010,7 @@ extern(C)
 
 	The buffer will automatically grow as required.
 */
-    void fz_append_data(fz_context*, fz_buffer*, const(void)*, c_ulong) @nogc nothrow;
+    void fz_append_data(fz_context*, fz_buffer*, const(void)*, size_t) @nogc nothrow;
 
     void fz_append_string(fz_context*, fz_buffer*, const(char)*) @nogc nothrow;
 
@@ -1035,7 +1047,7 @@ extern(C)
 	fz_append_vprintf: Format and append data to buffer using
 	printf-like formatting with varargs (see fz_vsnprintf).
 */
-    void fz_append_vprintf(fz_context*, fz_buffer*, const(char)*, va_list*) @nogc nothrow;
+    void fz_append_vprintf(fz_context*, fz_buffer*, const(char)*, va_list) @nogc nothrow;
     /**
 	Zero-terminate buffer in order to use as a C string.
 
@@ -1069,7 +1081,7 @@ extern(C)
 
 	Returns length of stream.
 */
-    c_ulong fz_buffer_extract(fz_context*, fz_buffer*, ubyte**) @nogc nothrow;
+    size_t fz_buffer_extract(fz_context*, fz_buffer*, ubyte**) @nogc nothrow;
     struct fz_icc_profile;
 
     struct fz_colorspace
@@ -1085,10 +1097,10 @@ extern(C)
 
         char* name;
 
-        static union _Anonymous_3
+        static union _Anonymous_1
         {
 
-            static struct _Anonymous_4
+            static struct _Anonymous_2
             {
 
                 fz_buffer* buffer;
@@ -1098,9 +1110,9 @@ extern(C)
                 fz_icc_profile* profile;
             }
 
-            _Anonymous_4 icc;
+            _Anonymous_2 icc;
 
-            static struct _Anonymous_5
+            static struct _Anonymous_3
             {
 
                 fz_colorspace* base;
@@ -1110,9 +1122,9 @@ extern(C)
                 ubyte* lookup;
             }
 
-            _Anonymous_5 indexed;
+            _Anonymous_3 indexed;
 
-            static struct _Anonymous_6
+            static struct _Anonymous_4
             {
 
                 fz_colorspace* base;
@@ -1126,10 +1138,10 @@ extern(C)
                 char*[32] colorant;
             }
 
-            _Anonymous_6 separation;
+            _Anonymous_4 separation;
         }
 
-        _Anonymous_3 u;
+        _Anonymous_1 u;
     }
     /**
 	Pixmaps represent a set of pixels for a 2 dimensional region of
@@ -1197,7 +1209,7 @@ extern(C)
 
         ubyte flags;
 
-        c_long stride;
+        ptrdiff_t stride;
 
         fz_separations* seps;
 
@@ -1212,7 +1224,7 @@ extern(C)
         fz_pixmap* underlying;
     }
 
-    enum _Anonymous_7
+    enum _Anonymous_5
     {
 
         FZ_RI_PERCEPTUAL = 0,
@@ -1223,21 +1235,21 @@ extern(C)
 
         FZ_RI_ABSOLUTE_COLORIMETRIC = 3,
     }
-    enum FZ_RI_PERCEPTUAL = _Anonymous_7.FZ_RI_PERCEPTUAL;
-    enum FZ_RI_RELATIVE_COLORIMETRIC = _Anonymous_7.FZ_RI_RELATIVE_COLORIMETRIC;
-    enum FZ_RI_SATURATION = _Anonymous_7.FZ_RI_SATURATION;
-    enum FZ_RI_ABSOLUTE_COLORIMETRIC = _Anonymous_7.FZ_RI_ABSOLUTE_COLORIMETRIC;
+    enum FZ_RI_PERCEPTUAL = _Anonymous_5.FZ_RI_PERCEPTUAL;
+    enum FZ_RI_RELATIVE_COLORIMETRIC = _Anonymous_5.FZ_RI_RELATIVE_COLORIMETRIC;
+    enum FZ_RI_SATURATION = _Anonymous_5.FZ_RI_SATURATION;
+    enum FZ_RI_ABSOLUTE_COLORIMETRIC = _Anonymous_5.FZ_RI_ABSOLUTE_COLORIMETRIC;
 
     struct fz_color_params
     {
 
-        ubyte ri;
+        uint8_t ri;
 
-        ubyte bp;
+        uint8_t bp;
 
-        ubyte op;
+        uint8_t op;
 
-        ubyte opm;
+        uint8_t opm;
     }
 
     extern __gshared const(fz_color_params) fz_default_color_params;
@@ -1260,12 +1272,12 @@ extern(C)
 	(both stack and heap space), but not hugely. Speed should
 	(largely) be determined by the number of colors actually used.
 */
-    enum _Anonymous_8
+    enum _Anonymous_6
     {
 
         FZ_MAX_COLORS = 32,
     }
-    enum FZ_MAX_COLORS = _Anonymous_8.FZ_MAX_COLORS;
+    enum FZ_MAX_COLORS = _Anonymous_6.FZ_MAX_COLORS;
 
     enum fz_colorspace_type
     {
@@ -1295,7 +1307,7 @@ extern(C)
     enum FZ_COLORSPACE_INDEXED = fz_colorspace_type.FZ_COLORSPACE_INDEXED;
     enum FZ_COLORSPACE_SEPARATION = fz_colorspace_type.FZ_COLORSPACE_SEPARATION;
 
-    enum _Anonymous_9
+    enum _Anonymous_7
     {
 
         FZ_COLORSPACE_IS_DEVICE = 1,
@@ -1308,11 +1320,11 @@ extern(C)
 
         FZ_COLORSPACE_HAS_CMYK_AND_SPOTS = 12,
     }
-    enum FZ_COLORSPACE_IS_DEVICE = _Anonymous_9.FZ_COLORSPACE_IS_DEVICE;
-    enum FZ_COLORSPACE_IS_ICC = _Anonymous_9.FZ_COLORSPACE_IS_ICC;
-    enum FZ_COLORSPACE_HAS_CMYK = _Anonymous_9.FZ_COLORSPACE_HAS_CMYK;
-    enum FZ_COLORSPACE_HAS_SPOTS = _Anonymous_9.FZ_COLORSPACE_HAS_SPOTS;
-    enum FZ_COLORSPACE_HAS_CMYK_AND_SPOTS = _Anonymous_9.FZ_COLORSPACE_HAS_CMYK_AND_SPOTS;
+    enum FZ_COLORSPACE_IS_DEVICE = _Anonymous_7.FZ_COLORSPACE_IS_DEVICE;
+    enum FZ_COLORSPACE_IS_ICC = _Anonymous_7.FZ_COLORSPACE_IS_ICC;
+    enum FZ_COLORSPACE_HAS_CMYK = _Anonymous_7.FZ_COLORSPACE_HAS_CMYK;
+    enum FZ_COLORSPACE_HAS_SPOTS = _Anonymous_7.FZ_COLORSPACE_HAS_SPOTS;
+    enum FZ_COLORSPACE_HAS_CMYK_AND_SPOTS = _Anonymous_7.FZ_COLORSPACE_HAS_CMYK_AND_SPOTS;
     /**
 	Creates a new colorspace instance and returns a reference.
 
@@ -1572,9 +1584,9 @@ extern(C)
 
     void fz_drop_colorspace_imp(fz_context*, fz_storable*) @nogc nothrow;
 
-    alias fz_deflate_level = _Anonymous_10;
+    alias __suseconds64_t = c_long;
 
-    enum _Anonymous_10
+    enum fz_deflate_level
     {
 
         FZ_DEFLATE_NONE = 0,
@@ -1585,22 +1597,22 @@ extern(C)
 
         FZ_DEFLATE_DEFAULT = -1,
     }
-    enum FZ_DEFLATE_NONE = _Anonymous_10.FZ_DEFLATE_NONE;
-    enum FZ_DEFLATE_BEST_SPEED = _Anonymous_10.FZ_DEFLATE_BEST_SPEED;
-    enum FZ_DEFLATE_BEST = _Anonymous_10.FZ_DEFLATE_BEST;
-    enum FZ_DEFLATE_DEFAULT = _Anonymous_10.FZ_DEFLATE_DEFAULT;
+    enum FZ_DEFLATE_NONE = fz_deflate_level.FZ_DEFLATE_NONE;
+    enum FZ_DEFLATE_BEST_SPEED = fz_deflate_level.FZ_DEFLATE_BEST_SPEED;
+    enum FZ_DEFLATE_BEST = fz_deflate_level.FZ_DEFLATE_BEST;
+    enum FZ_DEFLATE_DEFAULT = fz_deflate_level.FZ_DEFLATE_DEFAULT;
     /**
 	Returns the upper bound on the
 	size of flated data of length size.
  */
-    c_ulong fz_deflate_bound(fz_context*, c_ulong) @nogc nothrow;
+    size_t fz_deflate_bound(fz_context*, size_t) @nogc nothrow;
     /**
 	Compress source_length bytes of data starting
 	at source, into a buffer of length *destLen, starting at dest.
 	*compressed_length will be updated on exit to contain the size
 	actually used.
  */
-    void fz_deflate(fz_context*, ubyte*, c_ulong*, const(ubyte)*, c_ulong, fz_deflate_level) @nogc nothrow;
+    void fz_deflate(fz_context*, ubyte*, size_t*, const(ubyte)*, size_t, fz_deflate_level) @nogc nothrow;
     /**
 	Compress source_length bytes of data starting
 	at source, into a new memory block malloced for that purpose.
@@ -1610,7 +1622,7 @@ extern(C)
 	considerably larger than is actually required. The caller is
 	free to fz_realloc it down if it wants to.
 */
-    ubyte* fz_new_deflated_data(fz_context*, c_ulong*, const(ubyte)*, c_ulong, fz_deflate_level) @nogc nothrow;
+    ubyte* fz_new_deflated_data(fz_context*, size_t*, const(ubyte)*, size_t, fz_deflate_level) @nogc nothrow;
     /**
 	Compress the contents of a fz_buffer into a
 	new block malloced for that purpose. *compressed_length is
@@ -1620,7 +1632,7 @@ extern(C)
 	than is actually required. The caller is free to fz_realloc it
 	down if it wants to.
 */
-    ubyte* fz_new_deflated_data_from_buffer(fz_context*, c_ulong*, fz_buffer*, fz_deflate_level) @nogc nothrow;
+    ubyte* fz_new_deflated_data_from_buffer(fz_context*, size_t*, fz_buffer*, fz_deflate_level) @nogc nothrow;
     /**
 	Compress bitmap data as CCITT Group 3 1D fax image.
 	Creates a stream assuming the default PDF parameters,
@@ -1633,8 +1645,6 @@ extern(C)
 	K=-1 and the number of columns.
 */
     fz_buffer* fz_compress_ccitt_fax_g4(fz_context*, const(ubyte)*, int, int) @nogc nothrow;
-
-    alias __fsblkcnt_t = c_ulong;
     /**
 	Compression parameters used for buffers of compressed data;
 	typically for the source data for images.
@@ -1644,26 +1654,26 @@ extern(C)
 
         int type;
 
-        static union _Anonymous_11
+        static union _Anonymous_8
         {
 
-            static struct _Anonymous_12
+            static struct _Anonymous_9
             {
 
                 int color_transform;
             }
 
-            _Anonymous_12 jpeg;
+            _Anonymous_9 jpeg;
 
-            static struct _Anonymous_13
+            static struct _Anonymous_10
             {
 
                 int smask_in_data;
             }
 
-            _Anonymous_13 jpx;
+            _Anonymous_10 jpx;
 
-            static struct _Anonymous_14
+            static struct _Anonymous_11
             {
 
                 fz_jbig2_globals* globals;
@@ -1671,9 +1681,9 @@ extern(C)
                 int embedded;
             }
 
-            _Anonymous_14 jbig2;
+            _Anonymous_11 jbig2;
 
-            static struct _Anonymous_15
+            static struct _Anonymous_12
             {
 
                 int columns;
@@ -1693,9 +1703,9 @@ extern(C)
                 int damaged_rows_before_error;
             }
 
-            _Anonymous_15 fax;
+            _Anonymous_12 fax;
 
-            static struct _Anonymous_16
+            static struct _Anonymous_13
             {
 
                 int columns;
@@ -1707,9 +1717,9 @@ extern(C)
                 int bpc;
             }
 
-            _Anonymous_16 flate;
+            _Anonymous_13 flate;
 
-            static struct _Anonymous_17
+            static struct _Anonymous_14
             {
 
                 int columns;
@@ -1723,10 +1733,10 @@ extern(C)
                 int early_change;
             }
 
-            _Anonymous_17 lzw;
+            _Anonymous_14 lzw;
         }
 
-        _Anonymous_11 u;
+        _Anonymous_8 u;
     }
     /**
 	Buffers of compressed data; typically for the source data
@@ -1745,7 +1755,7 @@ extern(C)
 
 	Never throws exceptions.
 */
-    c_ulong fz_compressed_buffer_size(fz_compressed_buffer*) @nogc nothrow;
+    size_t fz_compressed_buffer_size(fz_compressed_buffer*) @nogc nothrow;
     /**
 	Open a stream to read the decompressed version of a buffer.
 */
@@ -1772,7 +1782,7 @@ extern(C)
 */
     int fz_recognize_image_format(fz_context*, ubyte*) @nogc nothrow;
 
-    enum _Anonymous_18
+    enum _Anonymous_15
     {
 
         FZ_IMAGE_UNKNOWN = 0,
@@ -1805,21 +1815,21 @@ extern(C)
 
         FZ_IMAGE_TIFF = 14,
     }
-    enum FZ_IMAGE_UNKNOWN = _Anonymous_18.FZ_IMAGE_UNKNOWN;
-    enum FZ_IMAGE_RAW = _Anonymous_18.FZ_IMAGE_RAW;
-    enum FZ_IMAGE_FAX = _Anonymous_18.FZ_IMAGE_FAX;
-    enum FZ_IMAGE_FLATE = _Anonymous_18.FZ_IMAGE_FLATE;
-    enum FZ_IMAGE_LZW = _Anonymous_18.FZ_IMAGE_LZW;
-    enum FZ_IMAGE_RLD = _Anonymous_18.FZ_IMAGE_RLD;
-    enum FZ_IMAGE_BMP = _Anonymous_18.FZ_IMAGE_BMP;
-    enum FZ_IMAGE_GIF = _Anonymous_18.FZ_IMAGE_GIF;
-    enum FZ_IMAGE_JBIG2 = _Anonymous_18.FZ_IMAGE_JBIG2;
-    enum FZ_IMAGE_JPEG = _Anonymous_18.FZ_IMAGE_JPEG;
-    enum FZ_IMAGE_JPX = _Anonymous_18.FZ_IMAGE_JPX;
-    enum FZ_IMAGE_JXR = _Anonymous_18.FZ_IMAGE_JXR;
-    enum FZ_IMAGE_PNG = _Anonymous_18.FZ_IMAGE_PNG;
-    enum FZ_IMAGE_PNM = _Anonymous_18.FZ_IMAGE_PNM;
-    enum FZ_IMAGE_TIFF = _Anonymous_18.FZ_IMAGE_TIFF;
+    enum FZ_IMAGE_UNKNOWN = _Anonymous_15.FZ_IMAGE_UNKNOWN;
+    enum FZ_IMAGE_RAW = _Anonymous_15.FZ_IMAGE_RAW;
+    enum FZ_IMAGE_FAX = _Anonymous_15.FZ_IMAGE_FAX;
+    enum FZ_IMAGE_FLATE = _Anonymous_15.FZ_IMAGE_FLATE;
+    enum FZ_IMAGE_LZW = _Anonymous_15.FZ_IMAGE_LZW;
+    enum FZ_IMAGE_RLD = _Anonymous_15.FZ_IMAGE_RLD;
+    enum FZ_IMAGE_BMP = _Anonymous_15.FZ_IMAGE_BMP;
+    enum FZ_IMAGE_GIF = _Anonymous_15.FZ_IMAGE_GIF;
+    enum FZ_IMAGE_JBIG2 = _Anonymous_15.FZ_IMAGE_JBIG2;
+    enum FZ_IMAGE_JPEG = _Anonymous_15.FZ_IMAGE_JPEG;
+    enum FZ_IMAGE_JPX = _Anonymous_15.FZ_IMAGE_JPX;
+    enum FZ_IMAGE_JXR = _Anonymous_15.FZ_IMAGE_JXR;
+    enum FZ_IMAGE_PNG = _Anonymous_15.FZ_IMAGE_PNG;
+    enum FZ_IMAGE_PNM = _Anonymous_15.FZ_IMAGE_PNM;
+    enum FZ_IMAGE_TIFF = _Anonymous_15.FZ_IMAGE_TIFF;
     /**
 	Drop a reference to a compressed buffer. Destroys the buffer
 	and frees any storage/other references held by it.
@@ -1828,17 +1838,19 @@ extern(C)
 */
     void fz_drop_compressed_buffer(fz_context*, fz_compressed_buffer*) @nogc nothrow;
 
-    alias __blkcnt64_t = c_long;
+    alias __suseconds_t = c_long;
 
-    alias __blkcnt_t = c_long;
+    alias __useconds_t = uint;
 
-    alias __blksize_t = c_long;
+    alias __time_t = c_long;
 
-    alias __timer_t = void*;
+    alias __id_t = uint;
 
-    alias __clockid_t = int;
+    alias __rlim64_t = c_ulong;
 
-    alias __key_t = int;
+    alias __rlim_t = c_ulong;
+
+    alias __clock_t = c_long;
     struct fz_font_context;
     struct fz_colorspace_context;
     struct fz_style_context;
@@ -1852,19 +1864,19 @@ extern(C)
 
         void* state;
 
-        void function(fz_context*, void*, const(void)*, c_ulong) write;
+        fz_output_write_fn write;
 
-        void function(fz_context*, void*, c_long, int) seek;
+        fz_output_seek_fn seek;
 
-        c_long function(fz_context*, void*) tell;
+        fz_output_tell_fn tell;
 
-        void function(fz_context*, void*) close;
+        fz_output_close_fn close;
 
-        void function(fz_context*, void*) drop;
+        fz_output_drop_fn drop;
 
-        fz_stream* function(fz_context*, void*) as_stream;
+        fz_stream_from_output_fn as_stream;
 
-        void function(fz_context*, void*) truncate;
+        fz_truncate_fn truncate;
 
         char* bp;
 
@@ -1892,7 +1904,7 @@ extern(C)
 
         fz_aa_context aa;
 
-        ushort[7] seed48;
+        uint16_t[7] seed48;
 
         int icc_enabled;
 
@@ -1922,24 +1934,26 @@ extern(C)
 
         void* user;
 
-        void* function(void*, c_ulong) malloc;
+        void* function(void*, size_t) malloc;
 
-        void* function(void*, void*, c_ulong) realloc;
+        void* function(void*, void*, size_t) realloc;
 
         void function(void*, void*) free;
     }
 
-    alias __daddr_t = int;
+    struct __fsid_t
+    {
 
-    alias __suseconds64_t = c_long;
+        int[2] __val;
+    }
 
-    void fz_vthrow(fz_context*, int, const(char)*, va_list*) @nogc nothrow;
+    void fz_vthrow(fz_context*, int, const(char)*, va_list) @nogc nothrow;
 
     void fz_throw(fz_context*, int, const(char)*) @nogc nothrow;
 
     void fz_rethrow(fz_context*) @nogc nothrow;
 
-    void fz_vwarn(fz_context*, const(char)*, va_list*) @nogc nothrow;
+    void fz_vwarn(fz_context*, const(char)*, va_list) @nogc nothrow;
 
     void fz_warn(fz_context*, const(char)*, ...) @nogc nothrow;
 
@@ -1953,7 +1967,7 @@ extern(C)
 
     void fz_end_throw_on_repair(fz_context*) @nogc nothrow;
 
-    enum _Anonymous_19
+    enum _Anonymous_16
     {
 
         FZ_ERROR_NONE = 0,
@@ -1974,15 +1988,15 @@ extern(C)
 
         FZ_ERROR_COUNT = 8,
     }
-    enum FZ_ERROR_NONE = _Anonymous_19.FZ_ERROR_NONE;
-    enum FZ_ERROR_MEMORY = _Anonymous_19.FZ_ERROR_MEMORY;
-    enum FZ_ERROR_GENERIC = _Anonymous_19.FZ_ERROR_GENERIC;
-    enum FZ_ERROR_SYNTAX = _Anonymous_19.FZ_ERROR_SYNTAX;
-    enum FZ_ERROR_MINOR = _Anonymous_19.FZ_ERROR_MINOR;
-    enum FZ_ERROR_TRYLATER = _Anonymous_19.FZ_ERROR_TRYLATER;
-    enum FZ_ERROR_ABORT = _Anonymous_19.FZ_ERROR_ABORT;
-    enum FZ_ERROR_REPAIRED = _Anonymous_19.FZ_ERROR_REPAIRED;
-    enum FZ_ERROR_COUNT = _Anonymous_19.FZ_ERROR_COUNT;
+    enum FZ_ERROR_NONE = _Anonymous_16.FZ_ERROR_NONE;
+    enum FZ_ERROR_MEMORY = _Anonymous_16.FZ_ERROR_MEMORY;
+    enum FZ_ERROR_GENERIC = _Anonymous_16.FZ_ERROR_GENERIC;
+    enum FZ_ERROR_SYNTAX = _Anonymous_16.FZ_ERROR_SYNTAX;
+    enum FZ_ERROR_MINOR = _Anonymous_16.FZ_ERROR_MINOR;
+    enum FZ_ERROR_TRYLATER = _Anonymous_16.FZ_ERROR_TRYLATER;
+    enum FZ_ERROR_ABORT = _Anonymous_16.FZ_ERROR_ABORT;
+    enum FZ_ERROR_REPAIRED = _Anonymous_16.FZ_ERROR_REPAIRED;
+    enum FZ_ERROR_COUNT = _Anonymous_16.FZ_ERROR_COUNT;
     /**
 	Flush any repeated warnings.
 
@@ -2023,7 +2037,7 @@ extern(C)
         void function(void*, int) unlock;
     }
 
-    enum _Anonymous_20
+    enum _Anonymous_17
     {
 
         FZ_LOCK_ALLOC = 0,
@@ -2034,10 +2048,12 @@ extern(C)
 
         FZ_LOCK_MAX = 3,
     }
-    enum FZ_LOCK_ALLOC = _Anonymous_20.FZ_LOCK_ALLOC;
-    enum FZ_LOCK_FREETYPE = _Anonymous_20.FZ_LOCK_FREETYPE;
-    enum FZ_LOCK_GLYPHCACHE = _Anonymous_20.FZ_LOCK_GLYPHCACHE;
-    enum FZ_LOCK_MAX = _Anonymous_20.FZ_LOCK_MAX;
+    enum FZ_LOCK_ALLOC = _Anonymous_17.FZ_LOCK_ALLOC;
+    enum FZ_LOCK_FREETYPE = _Anonymous_17.FZ_LOCK_FREETYPE;
+    enum FZ_LOCK_GLYPHCACHE = _Anonymous_17.FZ_LOCK_GLYPHCACHE;
+    enum FZ_LOCK_MAX = _Anonymous_17.FZ_LOCK_MAX;
+
+    alias __pid_t = int;
 
     void fz_assert_lock_held(fz_context*, int) @nogc nothrow;
 
@@ -2055,15 +2071,15 @@ extern(C)
 	FZ_STORE_DEFAULT: A reasonable upper bound on the size, for
 	devices that are not memory constrained.
 */
-    enum _Anonymous_21
+    enum _Anonymous_18
     {
 
         FZ_STORE_UNLIMITED = 0,
 
         FZ_STORE_DEFAULT = 268435456,
     }
-    enum FZ_STORE_UNLIMITED = _Anonymous_21.FZ_STORE_UNLIMITED;
-    enum FZ_STORE_DEFAULT = _Anonymous_21.FZ_STORE_DEFAULT;
+    enum FZ_STORE_UNLIMITED = _Anonymous_18.FZ_STORE_UNLIMITED;
+    enum FZ_STORE_DEFAULT = _Anonymous_18.FZ_STORE_DEFAULT;
     /**
 	Make a clone of an existing context.
 
@@ -2131,28 +2147,28 @@ extern(C)
 
 	The callback must not throw exceptions!
 */
-    void fz_set_error_callback(fz_context*, void function(void*, const(char)*), void*) @nogc nothrow;
+    void fz_set_error_callback(fz_context*, fz_error_cb, void*) @nogc nothrow;
     /**
 	Retrieve the currently set error callback, or NULL if none
 	has been set. Optionally, if user is non-NULL, the user pointer
 	given when the warning callback was set is also passed back to
 	the caller.
 */
-    void function(void*, const(char)*) fz_error_callback(fz_context*, void**) @nogc nothrow;
+    fz_error_cb fz_error_callback(fz_context*, void**) @nogc nothrow;
     /**
 	Set the warning callback. This will be called as part of the
 	exception handling.
 
 	The callback must not throw exceptions!
 */
-    void fz_set_warning_callback(fz_context*, void function(void*, const(char)*), void*) @nogc nothrow;
+    void fz_set_warning_callback(fz_context*, fz_warning_cb, void*) @nogc nothrow;
     /**
 	Retrieve the currently set warning callback, or NULL if none
 	has been set. Optionally, if user is non-NULL, the user pointer
 	given when the warning callback was set is also passed back to
 	the caller.
 */
-    void function(void*, const(char)*) fz_warning_callback(fz_context*, void**) @nogc nothrow;
+    fz_warning_cb fz_warning_callback(fz_context*, void**) @nogc nothrow;
     alias fz_tune_image_decode_fn = void function(void*, int, int, int, fz_irect*);
     alias fz_tune_image_scale_fn = int function(void*, int, int, int, int);
     /**
@@ -2163,7 +2179,7 @@ extern(C)
 
 	arg: Opaque argument to be passed to tuning function.
 */
-    void fz_tune_image_decode(fz_context*, void function(void*, int, int, int, fz_irect*), void*) @nogc nothrow;
+    void fz_tune_image_decode(fz_context*, fz_tune_image_decode_fn, void*) @nogc nothrow;
     /**
 	Set the tuning function to use for
 	image scaling.
@@ -2172,7 +2188,7 @@ extern(C)
 
 	arg: Opaque argument to be passed to tuning function.
 */
-    void fz_tune_image_scale(fz_context*, int function(void*, int, int, int, int), void*) @nogc nothrow;
+    void fz_tune_image_scale(fz_context*, fz_tune_image_scale_fn, void*) @nogc nothrow;
     /**
 	Get the number of bits of antialiasing we are
 	using (for graphics). Between 0 and 8.
@@ -2251,9 +2267,7 @@ extern(C)
 */
     void fz_disable_icc(fz_context*) @nogc nothrow;
 
-    alias __suseconds_t = c_long;
-
-    alias __useconds_t = uint;
+    alias __off64_t = c_long;
     /**
 	Allocate uninitialized memory of a given size.
 	Does NOT clear the memory!
@@ -2262,14 +2276,14 @@ extern(C)
 
 	Throws exception in the event of failure to allocate.
 */
-    void* fz_malloc(fz_context*, c_ulong) @nogc nothrow;
+    void* fz_malloc(fz_context*, size_t) @nogc nothrow;
     /**
 	Allocate array of memory of count entries of size bytes.
 	Clears the memory to zero.
 
 	Throws exception in the event of failure to allocate.
 */
-    void* fz_calloc(fz_context*, c_ulong, c_ulong) @nogc nothrow;
+    void* fz_calloc(fz_context*, size_t, size_t) @nogc nothrow;
     /**
 	Reallocates a block of memory to given size. Existing contents
 	up to min(old_size,new_size) are maintained. The rest of the
@@ -2281,7 +2295,7 @@ extern(C)
 
 	Throws exception in the event of failure to allocate.
 */
-    void* fz_realloc(fz_context*, void*, c_ulong) @nogc nothrow;
+    void* fz_realloc(fz_context*, void*, size_t) @nogc nothrow;
     /**
 	Free a previously allocated block of memory.
 
@@ -2294,17 +2308,17 @@ extern(C)
 	fz_malloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
-    void* fz_malloc_no_throw(fz_context*, c_ulong) @nogc nothrow;
+    void* fz_malloc_no_throw(fz_context*, size_t) @nogc nothrow;
     /**
 	fz_calloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
-    void* fz_calloc_no_throw(fz_context*, c_ulong, c_ulong) @nogc nothrow;
+    void* fz_calloc_no_throw(fz_context*, size_t, size_t) @nogc nothrow;
     /**
 	fz_realloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
-    void* fz_realloc_no_throw(fz_context*, void*, c_ulong) @nogc nothrow;
+    void* fz_realloc_no_throw(fz_context*, void*, size_t) @nogc nothrow;
     /**
 	Portable strdup implementation, using fz allocators.
 */
@@ -2312,11 +2326,11 @@ extern(C)
     /**
 	Fill block with len bytes of pseudo-randomness.
 */
-    void fz_memrnd(fz_context*, ubyte*, int) @nogc nothrow;
+    void fz_memrnd(fz_context*, uint8_t*, int) @nogc nothrow;
 
     void fz_var_imp(void*) @nogc nothrow;
 
-    __jmp_buf_tag** fz_push_try(fz_context*) @nogc nothrow;
+    fz_jmp_buf* fz_push_try(fz_context*) @nogc nothrow;
 
     int fz_do_try(fz_context*) @nogc nothrow;
 
@@ -2324,10 +2338,12 @@ extern(C)
 
     int fz_do_catch(fz_context*) @nogc nothrow;
 
+    alias __off_t = c_long;
+
     struct fz_error_stack_slot
     {
 
-        __jmp_buf_tag[1] buffer;
+        fz_jmp_buf buffer;
 
         int state;
 
@@ -2384,7 +2400,7 @@ extern(C)
         float min_line_width;
     }
 
-    fz_context* fz_new_context_imp(const(fz_alloc_context)*, const(fz_locks_context)*, c_ulong, const(char)*) @nogc nothrow;
+    fz_context* fz_new_context_imp(const(fz_alloc_context)*, const(fz_locks_context)*, size_t, const(char)*) @nogc nothrow;
     /**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
@@ -2392,17 +2408,17 @@ extern(C)
     struct fz_md5
     {
 
-        uint lo;
+        uint32_t lo;
 
-        uint hi;
+        uint32_t hi;
 
-        uint a;
+        uint32_t a;
 
-        uint b;
+        uint32_t b;
 
-        uint c;
+        uint32_t c;
 
-        uint d;
+        uint32_t d;
 
         ubyte[64] buffer;
     }
@@ -2420,14 +2436,14 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_md5_update(fz_md5*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_md5_update(fz_md5*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	MD5 block update operation. Continues an MD5 message-digest
 	operation, processing an int64, and updating the context.
 
 	Never throws an exception.
 */
-    void fz_md5_update_int64(fz_md5*, c_long) @nogc nothrow;
+    void fz_md5_update_int64(fz_md5*, int64_t) @nogc nothrow;
     /**
 	MD5 finalization. Ends an MD5 message-digest operation, writing
 	the message digest and zeroizing the context.
@@ -2446,7 +2462,7 @@ extern(C)
 
         uint[2] count;
 
-        static union _Anonymous_22
+        static union _Anonymous_19
         {
 
             ubyte[64] u8;
@@ -2454,7 +2470,7 @@ extern(C)
             uint[16] u32;
         }
 
-        _Anonymous_22 buffer;
+        _Anonymous_19 buffer;
     }
     /**
 	SHA256 initialization. Begins an SHA256 operation, initialising
@@ -2470,7 +2486,7 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_sha256_update(fz_sha256*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_sha256_update(fz_sha256*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	MD5 finalization. Ends an MD5 message-digest operation, writing
 	the message digest and zeroizing the context.
@@ -2485,19 +2501,19 @@ extern(C)
     struct fz_sha512
     {
 
-        c_ulong[8] state;
+        uint64_t[8] state;
 
         uint[2] count;
 
-        static union _Anonymous_23
+        static union _Anonymous_20
         {
 
             ubyte[128] u8;
 
-            c_ulong[16] u64;
+            uint64_t[16] u64;
         }
 
-        _Anonymous_23 buffer;
+        _Anonymous_20 buffer;
     }
     /**
 	SHA512 initialization. Begins an SHA512 operation, initialising
@@ -2513,7 +2529,7 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_sha512_update(fz_sha512*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_sha512_update(fz_sha512*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	SHA512 finalization. Ends an SHA512 message-digest operation,
 	writing the message digest and zeroizing the context.
@@ -2529,7 +2545,7 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_sha384_init(fz_sha512*) @nogc nothrow;
+    void fz_sha384_init(fz_sha384*) @nogc nothrow;
     /**
 	SHA384 block update operation. Continues an SHA384 message-
 	digest operation, processing another message block, and updating
@@ -2537,14 +2553,14 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_sha384_update(fz_sha512*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_sha384_update(fz_sha384*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	SHA384 finalization. Ends an SHA384 message-digest operation,
 	writing the message digest and zeroizing the context.
 
 	Never throws an exception.
 */
-    void fz_sha384_final(fz_sha512*, ubyte*) @nogc nothrow;
+    void fz_sha384_final(fz_sha384*, ubyte*) @nogc nothrow;
     /**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
@@ -2564,14 +2580,14 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_arc4_init(fz_arc4*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_arc4_init(fz_arc4*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	RC4 block encrypt operation; encrypt src into dst (both of
 	length len) updating the RC4 state as we go.
 
 	Never throws an exception.
 */
-    void fz_arc4_encrypt(fz_arc4*, ubyte*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void fz_arc4_encrypt(fz_arc4*, ubyte*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	RC4 finalization. Zero the context.
 
@@ -2587,12 +2603,10 @@ extern(C)
 
         int nr;
 
-        uint* rk;
+        uint32_t* rk;
 
-        uint[68] buf;
+        uint32_t[68] buf;
     }
-
-    alias __time_t = c_long;
     /**
 	AES encryption intialisation. Fills in the supplied context
 	and prepares for encryption using the given key.
@@ -2619,9 +2633,11 @@ extern(C)
 
 	Never throws an exception.
 */
-    void fz_aes_crypt_cbc(fz_aes*, int, c_ulong, ubyte*, const(ubyte)*, ubyte*) @nogc nothrow;
+    void fz_aes_crypt_cbc(fz_aes*, int, size_t, ubyte*, const(ubyte)*, ubyte*) @nogc nothrow;
 
-    enum _Anonymous_24
+    alias __nlink_t = c_ulong;
+
+    enum _Anonymous_21
     {
 
         FZ_DEVFLAG_MASK = 1,
@@ -2650,21 +2666,21 @@ extern(C)
 
         FZ_DEVFLAG_GRIDFIT_AS_TILED = 4096,
     }
-    enum FZ_DEVFLAG_MASK = _Anonymous_24.FZ_DEVFLAG_MASK;
-    enum FZ_DEVFLAG_COLOR = _Anonymous_24.FZ_DEVFLAG_COLOR;
-    enum FZ_DEVFLAG_UNCACHEABLE = _Anonymous_24.FZ_DEVFLAG_UNCACHEABLE;
-    enum FZ_DEVFLAG_FILLCOLOR_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
-    enum FZ_DEVFLAG_STROKECOLOR_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
-    enum FZ_DEVFLAG_STARTCAP_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_STARTCAP_UNDEFINED;
-    enum FZ_DEVFLAG_DASHCAP_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_DASHCAP_UNDEFINED;
-    enum FZ_DEVFLAG_ENDCAP_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_ENDCAP_UNDEFINED;
-    enum FZ_DEVFLAG_LINEJOIN_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_LINEJOIN_UNDEFINED;
-    enum FZ_DEVFLAG_MITERLIMIT_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
-    enum FZ_DEVFLAG_LINEWIDTH_UNDEFINED = _Anonymous_24.FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
-    enum FZ_DEVFLAG_BBOX_DEFINED = _Anonymous_24.FZ_DEVFLAG_BBOX_DEFINED;
-    enum FZ_DEVFLAG_GRIDFIT_AS_TILED = _Anonymous_24.FZ_DEVFLAG_GRIDFIT_AS_TILED;
+    enum FZ_DEVFLAG_MASK = _Anonymous_21.FZ_DEVFLAG_MASK;
+    enum FZ_DEVFLAG_COLOR = _Anonymous_21.FZ_DEVFLAG_COLOR;
+    enum FZ_DEVFLAG_UNCACHEABLE = _Anonymous_21.FZ_DEVFLAG_UNCACHEABLE;
+    enum FZ_DEVFLAG_FILLCOLOR_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
+    enum FZ_DEVFLAG_STROKECOLOR_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
+    enum FZ_DEVFLAG_STARTCAP_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_STARTCAP_UNDEFINED;
+    enum FZ_DEVFLAG_DASHCAP_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_DASHCAP_UNDEFINED;
+    enum FZ_DEVFLAG_ENDCAP_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_ENDCAP_UNDEFINED;
+    enum FZ_DEVFLAG_LINEJOIN_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_LINEJOIN_UNDEFINED;
+    enum FZ_DEVFLAG_MITERLIMIT_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_MITERLIMIT_UNDEFINED;
+    enum FZ_DEVFLAG_LINEWIDTH_UNDEFINED = _Anonymous_21.FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
+    enum FZ_DEVFLAG_BBOX_DEFINED = _Anonymous_21.FZ_DEVFLAG_BBOX_DEFINED;
+    enum FZ_DEVFLAG_GRIDFIT_AS_TILED = _Anonymous_21.FZ_DEVFLAG_GRIDFIT_AS_TILED;
 
-    enum _Anonymous_25
+    enum _Anonymous_22
     {
 
         FZ_BLEND_NORMAL = 0,
@@ -2705,25 +2721,25 @@ extern(C)
 
         FZ_BLEND_KNOCKOUT = 32,
     }
-    enum FZ_BLEND_NORMAL = _Anonymous_25.FZ_BLEND_NORMAL;
-    enum FZ_BLEND_MULTIPLY = _Anonymous_25.FZ_BLEND_MULTIPLY;
-    enum FZ_BLEND_SCREEN = _Anonymous_25.FZ_BLEND_SCREEN;
-    enum FZ_BLEND_OVERLAY = _Anonymous_25.FZ_BLEND_OVERLAY;
-    enum FZ_BLEND_DARKEN = _Anonymous_25.FZ_BLEND_DARKEN;
-    enum FZ_BLEND_LIGHTEN = _Anonymous_25.FZ_BLEND_LIGHTEN;
-    enum FZ_BLEND_COLOR_DODGE = _Anonymous_25.FZ_BLEND_COLOR_DODGE;
-    enum FZ_BLEND_COLOR_BURN = _Anonymous_25.FZ_BLEND_COLOR_BURN;
-    enum FZ_BLEND_HARD_LIGHT = _Anonymous_25.FZ_BLEND_HARD_LIGHT;
-    enum FZ_BLEND_SOFT_LIGHT = _Anonymous_25.FZ_BLEND_SOFT_LIGHT;
-    enum FZ_BLEND_DIFFERENCE = _Anonymous_25.FZ_BLEND_DIFFERENCE;
-    enum FZ_BLEND_EXCLUSION = _Anonymous_25.FZ_BLEND_EXCLUSION;
-    enum FZ_BLEND_HUE = _Anonymous_25.FZ_BLEND_HUE;
-    enum FZ_BLEND_SATURATION = _Anonymous_25.FZ_BLEND_SATURATION;
-    enum FZ_BLEND_COLOR = _Anonymous_25.FZ_BLEND_COLOR;
-    enum FZ_BLEND_LUMINOSITY = _Anonymous_25.FZ_BLEND_LUMINOSITY;
-    enum FZ_BLEND_MODEMASK = _Anonymous_25.FZ_BLEND_MODEMASK;
-    enum FZ_BLEND_ISOLATED = _Anonymous_25.FZ_BLEND_ISOLATED;
-    enum FZ_BLEND_KNOCKOUT = _Anonymous_25.FZ_BLEND_KNOCKOUT;
+    enum FZ_BLEND_NORMAL = _Anonymous_22.FZ_BLEND_NORMAL;
+    enum FZ_BLEND_MULTIPLY = _Anonymous_22.FZ_BLEND_MULTIPLY;
+    enum FZ_BLEND_SCREEN = _Anonymous_22.FZ_BLEND_SCREEN;
+    enum FZ_BLEND_OVERLAY = _Anonymous_22.FZ_BLEND_OVERLAY;
+    enum FZ_BLEND_DARKEN = _Anonymous_22.FZ_BLEND_DARKEN;
+    enum FZ_BLEND_LIGHTEN = _Anonymous_22.FZ_BLEND_LIGHTEN;
+    enum FZ_BLEND_COLOR_DODGE = _Anonymous_22.FZ_BLEND_COLOR_DODGE;
+    enum FZ_BLEND_COLOR_BURN = _Anonymous_22.FZ_BLEND_COLOR_BURN;
+    enum FZ_BLEND_HARD_LIGHT = _Anonymous_22.FZ_BLEND_HARD_LIGHT;
+    enum FZ_BLEND_SOFT_LIGHT = _Anonymous_22.FZ_BLEND_SOFT_LIGHT;
+    enum FZ_BLEND_DIFFERENCE = _Anonymous_22.FZ_BLEND_DIFFERENCE;
+    enum FZ_BLEND_EXCLUSION = _Anonymous_22.FZ_BLEND_EXCLUSION;
+    enum FZ_BLEND_HUE = _Anonymous_22.FZ_BLEND_HUE;
+    enum FZ_BLEND_SATURATION = _Anonymous_22.FZ_BLEND_SATURATION;
+    enum FZ_BLEND_COLOR = _Anonymous_22.FZ_BLEND_COLOR;
+    enum FZ_BLEND_LUMINOSITY = _Anonymous_22.FZ_BLEND_LUMINOSITY;
+    enum FZ_BLEND_MODEMASK = _Anonymous_22.FZ_BLEND_MODEMASK;
+    enum FZ_BLEND_ISOLATED = _Anonymous_22.FZ_BLEND_ISOLATED;
+    enum FZ_BLEND_KNOCKOUT = _Anonymous_22.FZ_BLEND_KNOCKOUT;
     /**
 	Map from (case sensitive) blend mode string to enumeration.
 */
@@ -2748,7 +2764,7 @@ extern(C)
         int user;
     }
 
-    enum _Anonymous_26
+    enum _Anonymous_23
     {
 
         fz_device_container_stack_is_clip = 0,
@@ -2759,10 +2775,10 @@ extern(C)
 
         fz_device_container_stack_is_tile = 3,
     }
-    enum fz_device_container_stack_is_clip = _Anonymous_26.fz_device_container_stack_is_clip;
-    enum fz_device_container_stack_is_mask = _Anonymous_26.fz_device_container_stack_is_mask;
-    enum fz_device_container_stack_is_group = _Anonymous_26.fz_device_container_stack_is_group;
-    enum fz_device_container_stack_is_tile = _Anonymous_26.fz_device_container_stack_is_tile;
+    enum fz_device_container_stack_is_clip = _Anonymous_23.fz_device_container_stack_is_clip;
+    enum fz_device_container_stack_is_mask = _Anonymous_23.fz_device_container_stack_is_mask;
+    enum fz_device_container_stack_is_group = _Anonymous_23.fz_device_container_stack_is_group;
+    enum fz_device_container_stack_is_tile = _Anonymous_23.fz_device_container_stack_is_tile;
     /**
 	Device calls; graphics primitives and containers.
 */
@@ -2823,8 +2839,6 @@ extern(C)
 	typedef struct { fz_device base;  ...extras...} foo_device;
 */
     fz_device* fz_new_device_of_size(fz_context*, int) @nogc nothrow;
-
-    alias __id_t = uint;
     /**
 	Signal the end of input, and flush any buffered output.
 	This is NOT called implicitly on fz_drop_device. This
@@ -2860,15 +2874,15 @@ extern(C)
 */
     fz_rect fz_device_current_scissor(fz_context*, fz_device*) @nogc nothrow;
 
-    enum _Anonymous_27
+    enum _Anonymous_24
     {
 
         FZ_DONT_INTERPOLATE_IMAGES = 1,
 
         FZ_NO_CACHE = 2,
     }
-    enum FZ_DONT_INTERPOLATE_IMAGES = _Anonymous_27.FZ_DONT_INTERPOLATE_IMAGES;
-    enum FZ_NO_CACHE = _Anonymous_27.FZ_NO_CACHE;
+    enum FZ_DONT_INTERPOLATE_IMAGES = _Anonymous_24.FZ_DONT_INTERPOLATE_IMAGES;
+    enum FZ_NO_CACHE = _Anonymous_24.FZ_NO_CACHE;
     /**
 	Provide two-way communication between application and library.
 	Intended for multi-threaded applications where one thread is
@@ -2915,7 +2929,7 @@ extern(C)
 
         int progress;
 
-        c_ulong progress_max;
+        size_t progress_max;
 
         int errors;
 
@@ -2965,15 +2979,15 @@ extern(C)
 */
     fz_device* fz_new_test_device(fz_context*, int*, float, int, fz_device*) @nogc nothrow;
 
-    enum _Anonymous_28
+    enum _Anonymous_25
     {
 
         FZ_TEST_OPT_IMAGES = 1,
 
         FZ_TEST_OPT_SHADINGS = 2,
     }
-    enum FZ_TEST_OPT_IMAGES = _Anonymous_28.FZ_TEST_OPT_IMAGES;
-    enum FZ_TEST_OPT_SHADINGS = _Anonymous_28.FZ_TEST_OPT_SHADINGS;
+    enum FZ_TEST_OPT_IMAGES = _Anonymous_25.FZ_TEST_OPT_IMAGES;
+    enum FZ_TEST_OPT_SHADINGS = _Anonymous_25.FZ_TEST_OPT_SHADINGS;
     /**
 	Create a device to draw on a pixmap.
 
@@ -3168,22 +3182,24 @@ extern(C)
 */
     int fz_display_list_is_empty(fz_context*, const(fz_display_list)*) @nogc nothrow;
 
+    alias __mode_t = uint;
+
     struct fz_document_handler
     {
 
-        int function(fz_context*, const(char)*) recognize;
+        fz_document_recognize_fn recognize;
 
-        fz_document* function(fz_context*, const(char)*) open;
+        fz_document_open_fn open;
 
-        fz_document* function(fz_context*, fz_stream*) open_with_stream;
+        fz_document_open_with_stream_fn open_with_stream;
 
         const(char)** extensions;
 
         const(char)** mimetypes;
 
-        fz_document* function(fz_context*, const(char)*, const(char)*) open_accel;
+        fz_document_open_accel_fn open_accel;
 
-        fz_document* function(fz_context*, fz_stream*, fz_stream*) open_accel_with_stream;
+        fz_document_open_accel_with_stream_fn open_accel_with_stream;
     }
     /**
 	Structure definition is public so other classes can
@@ -3202,40 +3218,40 @@ extern(C)
 
         int incomplete;
 
-        void function(fz_context*, fz_page*) drop_page;
+        fz_page_drop_page_fn drop_page;
 
-        fz_rect function(fz_context*, fz_page*) bound_page;
+        fz_page_bound_page_fn bound_page;
 
-        void function(fz_context*, fz_page*, fz_device*, fz_matrix, fz_cookie*) run_page_contents;
+        fz_page_run_page_fn run_page_contents;
 
-        void function(fz_context*, fz_page*, fz_device*, fz_matrix, fz_cookie*) run_page_annots;
+        fz_page_run_page_fn run_page_annots;
 
-        void function(fz_context*, fz_page*, fz_device*, fz_matrix, fz_cookie*) run_page_widgets;
+        fz_page_run_page_fn run_page_widgets;
 
-        fz_link* function(fz_context*, fz_page*) load_links;
+        fz_page_load_links_fn load_links;
 
-        fz_transition* function(fz_context*, fz_page*, fz_transition*, float*) page_presentation;
+        fz_page_page_presentation_fn page_presentation;
 
-        void function(fz_context*, fz_page*, int, int) control_separation;
+        fz_page_control_separation_fn control_separation;
 
-        int function(fz_context*, fz_page*, int) separation_disabled;
+        fz_page_separation_disabled_fn separation_disabled;
 
-        fz_separations* function(fz_context*, fz_page*) separations;
+        fz_page_separations_fn separations;
 
-        int function(fz_context*, fz_page*) overprint;
+        fz_page_uses_overprint_fn overprint;
 
-        fz_link* function(fz_context*, fz_page*, fz_rect, const(char)*) create_link;
+        fz_page_create_link_fn create_link;
 
-        void function(fz_context*, fz_page*, fz_link*) delete_link;
+        fz_page_delete_link_fn delete_link;
 
         fz_page** prev;
 
         fz_page* next;
     }
 
-    alias fz_bookmark = c_long;
+    alias fz_bookmark = intptr_t;
 
-    enum _Anonymous_29
+    enum _Anonymous_26
     {
 
         FZ_LAYOUT_KINDLE_W = 260,
@@ -3286,34 +3302,32 @@ extern(C)
 
         FZ_DEFAULT_LAYOUT_EM = 11,
     }
-    enum FZ_LAYOUT_KINDLE_W = _Anonymous_29.FZ_LAYOUT_KINDLE_W;
-    enum FZ_LAYOUT_KINDLE_H = _Anonymous_29.FZ_LAYOUT_KINDLE_H;
-    enum FZ_LAYOUT_KINDLE_EM = _Anonymous_29.FZ_LAYOUT_KINDLE_EM;
-    enum FZ_LAYOUT_US_POCKET_W = _Anonymous_29.FZ_LAYOUT_US_POCKET_W;
-    enum FZ_LAYOUT_US_POCKET_H = _Anonymous_29.FZ_LAYOUT_US_POCKET_H;
-    enum FZ_LAYOUT_US_POCKET_EM = _Anonymous_29.FZ_LAYOUT_US_POCKET_EM;
-    enum FZ_LAYOUT_US_TRADE_W = _Anonymous_29.FZ_LAYOUT_US_TRADE_W;
-    enum FZ_LAYOUT_US_TRADE_H = _Anonymous_29.FZ_LAYOUT_US_TRADE_H;
-    enum FZ_LAYOUT_US_TRADE_EM = _Anonymous_29.FZ_LAYOUT_US_TRADE_EM;
-    enum FZ_LAYOUT_UK_A_FORMAT_W = _Anonymous_29.FZ_LAYOUT_UK_A_FORMAT_W;
-    enum FZ_LAYOUT_UK_A_FORMAT_H = _Anonymous_29.FZ_LAYOUT_UK_A_FORMAT_H;
-    enum FZ_LAYOUT_UK_A_FORMAT_EM = _Anonymous_29.FZ_LAYOUT_UK_A_FORMAT_EM;
-    enum FZ_LAYOUT_UK_B_FORMAT_W = _Anonymous_29.FZ_LAYOUT_UK_B_FORMAT_W;
-    enum FZ_LAYOUT_UK_B_FORMAT_H = _Anonymous_29.FZ_LAYOUT_UK_B_FORMAT_H;
-    enum FZ_LAYOUT_UK_B_FORMAT_EM = _Anonymous_29.FZ_LAYOUT_UK_B_FORMAT_EM;
-    enum FZ_LAYOUT_UK_C_FORMAT_W = _Anonymous_29.FZ_LAYOUT_UK_C_FORMAT_W;
-    enum FZ_LAYOUT_UK_C_FORMAT_H = _Anonymous_29.FZ_LAYOUT_UK_C_FORMAT_H;
-    enum FZ_LAYOUT_UK_C_FORMAT_EM = _Anonymous_29.FZ_LAYOUT_UK_C_FORMAT_EM;
-    enum FZ_LAYOUT_A5_W = _Anonymous_29.FZ_LAYOUT_A5_W;
-    enum FZ_LAYOUT_A5_H = _Anonymous_29.FZ_LAYOUT_A5_H;
-    enum FZ_LAYOUT_A5_EM = _Anonymous_29.FZ_LAYOUT_A5_EM;
-    enum FZ_DEFAULT_LAYOUT_W = _Anonymous_29.FZ_DEFAULT_LAYOUT_W;
-    enum FZ_DEFAULT_LAYOUT_H = _Anonymous_29.FZ_DEFAULT_LAYOUT_H;
-    enum FZ_DEFAULT_LAYOUT_EM = _Anonymous_29.FZ_DEFAULT_LAYOUT_EM;
+    enum FZ_LAYOUT_KINDLE_W = _Anonymous_26.FZ_LAYOUT_KINDLE_W;
+    enum FZ_LAYOUT_KINDLE_H = _Anonymous_26.FZ_LAYOUT_KINDLE_H;
+    enum FZ_LAYOUT_KINDLE_EM = _Anonymous_26.FZ_LAYOUT_KINDLE_EM;
+    enum FZ_LAYOUT_US_POCKET_W = _Anonymous_26.FZ_LAYOUT_US_POCKET_W;
+    enum FZ_LAYOUT_US_POCKET_H = _Anonymous_26.FZ_LAYOUT_US_POCKET_H;
+    enum FZ_LAYOUT_US_POCKET_EM = _Anonymous_26.FZ_LAYOUT_US_POCKET_EM;
+    enum FZ_LAYOUT_US_TRADE_W = _Anonymous_26.FZ_LAYOUT_US_TRADE_W;
+    enum FZ_LAYOUT_US_TRADE_H = _Anonymous_26.FZ_LAYOUT_US_TRADE_H;
+    enum FZ_LAYOUT_US_TRADE_EM = _Anonymous_26.FZ_LAYOUT_US_TRADE_EM;
+    enum FZ_LAYOUT_UK_A_FORMAT_W = _Anonymous_26.FZ_LAYOUT_UK_A_FORMAT_W;
+    enum FZ_LAYOUT_UK_A_FORMAT_H = _Anonymous_26.FZ_LAYOUT_UK_A_FORMAT_H;
+    enum FZ_LAYOUT_UK_A_FORMAT_EM = _Anonymous_26.FZ_LAYOUT_UK_A_FORMAT_EM;
+    enum FZ_LAYOUT_UK_B_FORMAT_W = _Anonymous_26.FZ_LAYOUT_UK_B_FORMAT_W;
+    enum FZ_LAYOUT_UK_B_FORMAT_H = _Anonymous_26.FZ_LAYOUT_UK_B_FORMAT_H;
+    enum FZ_LAYOUT_UK_B_FORMAT_EM = _Anonymous_26.FZ_LAYOUT_UK_B_FORMAT_EM;
+    enum FZ_LAYOUT_UK_C_FORMAT_W = _Anonymous_26.FZ_LAYOUT_UK_C_FORMAT_W;
+    enum FZ_LAYOUT_UK_C_FORMAT_H = _Anonymous_26.FZ_LAYOUT_UK_C_FORMAT_H;
+    enum FZ_LAYOUT_UK_C_FORMAT_EM = _Anonymous_26.FZ_LAYOUT_UK_C_FORMAT_EM;
+    enum FZ_LAYOUT_A5_W = _Anonymous_26.FZ_LAYOUT_A5_W;
+    enum FZ_LAYOUT_A5_H = _Anonymous_26.FZ_LAYOUT_A5_H;
+    enum FZ_LAYOUT_A5_EM = _Anonymous_26.FZ_LAYOUT_A5_EM;
+    enum FZ_DEFAULT_LAYOUT_W = _Anonymous_26.FZ_DEFAULT_LAYOUT_W;
+    enum FZ_DEFAULT_LAYOUT_H = _Anonymous_26.FZ_DEFAULT_LAYOUT_H;
+    enum FZ_DEFAULT_LAYOUT_EM = _Anonymous_26.FZ_DEFAULT_LAYOUT_EM;
 
-    alias fz_permission = _Anonymous_30;
-
-    enum _Anonymous_30
+    enum fz_permission
     {
 
         FZ_PERMISSION_PRINT = 112,
@@ -3324,10 +3338,10 @@ extern(C)
 
         FZ_PERMISSION_ANNOTATE = 110,
     }
-    enum FZ_PERMISSION_PRINT = _Anonymous_30.FZ_PERMISSION_PRINT;
-    enum FZ_PERMISSION_COPY = _Anonymous_30.FZ_PERMISSION_COPY;
-    enum FZ_PERMISSION_EDIT = _Anonymous_30.FZ_PERMISSION_EDIT;
-    enum FZ_PERMISSION_ANNOTATE = _Anonymous_30.FZ_PERMISSION_ANNOTATE;
+    enum FZ_PERMISSION_PRINT = fz_permission.FZ_PERMISSION_PRINT;
+    enum FZ_PERMISSION_COPY = fz_permission.FZ_PERMISSION_COPY;
+    enum FZ_PERMISSION_EDIT = fz_permission.FZ_PERMISSION_EDIT;
+    enum FZ_PERMISSION_ANNOTATE = fz_permission.FZ_PERMISSION_ANNOTATE;
     alias fz_document_drop_fn = void function(fz_context*, fz_document*);
     alias fz_document_needs_password_fn = int function(fz_context*, fz_document*);
     alias fz_document_authenticate_password_fn = int function(fz_context*, fz_document*, const(char)*);
@@ -3443,8 +3457,6 @@ extern(C)
 	fz_new_derived_document(ctx, foo_document)
 */
     void* fz_new_document_of_size(fz_context*, int) @nogc nothrow;
-
-    alias __rlim64_t = c_ulong;
     /**
 	Increment the document reference count. The same pointer is
 	returned.
@@ -3512,11 +3524,11 @@ extern(C)
 	the same location after the document has been laid out with
 	different parameters.
 */
-    c_long fz_make_bookmark(fz_context*, fz_document*, fz_location) @nogc nothrow;
+    fz_bookmark fz_make_bookmark(fz_context*, fz_document*, fz_location) @nogc nothrow;
     /**
 	Find a bookmark and return its page number.
 */
-    fz_location fz_lookup_bookmark(fz_context*, fz_document*, c_long) @nogc nothrow;
+    fz_location fz_lookup_bookmark(fz_context*, fz_document*, fz_bookmark) @nogc nothrow;
     /**
 	Return the number of pages in document
 
@@ -3746,15 +3758,13 @@ extern(C)
 */
     int fz_lookup_metadata(fz_context*, fz_document*, const(char)*, char*, int) @nogc nothrow;
 
-    alias __rlim_t = c_ulong;
+    alias __ino64_t = c_ulong;
 
-    alias __clock_t = c_long;
+    alias __ino_t = c_ulong;
 
-    struct __fsid_t
-    {
+    alias __gid_t = uint;
 
-        int[2] __val;
-    }
+    alias __uid_t = uint;
 
     void fz_set_metadata(fz_context*, fz_document*, const(char)*, const(char)*) @nogc nothrow;
     /**
@@ -3798,25 +3808,23 @@ extern(C)
 	Returns the first non-NULL value returned by the callback,
 	or NULL if the callback returned NULL for all opened pages.
 */
-    void* fz_process_opened_pages(fz_context*, fz_document*, void* function(fz_context*, fz_page*, void*), void*) @nogc nothrow;
+    void* fz_process_opened_pages(fz_context*, fz_document*, fz_process_opened_page_fn, void*) @nogc nothrow;
 
-    alias __pid_t = int;
-
-    alias __off64_t = c_long;
+    alias __dev_t = c_ulong;
     struct fz_jbig2_globals;
 
     struct fz_range
     {
 
-        c_long offset;
+        int64_t offset;
 
-        c_ulong length;
+        uint64_t length;
     }
     /**
 	The null filter reads a specified amount of data from the
 	substream.
 */
-    fz_stream* fz_open_null_filter(fz_context*, fz_stream*, c_ulong, c_long) @nogc nothrow;
+    fz_stream* fz_open_null_filter(fz_context*, fz_stream*, uint64_t, int64_t) @nogc nothrow;
     /**
 	The range filter copies data from specified ranges of the
 	chained stream.
@@ -3826,7 +3834,7 @@ extern(C)
 	The endstream filter reads a PDF substream, and starts to look
 	for an 'endstream' token after the specified length.
 */
-    fz_stream* fz_open_endstream_filter(fz_context*, fz_stream*, c_ulong, c_long) @nogc nothrow;
+    fz_stream* fz_open_endstream_filter(fz_context*, fz_stream*, uint64_t, int64_t) @nogc nothrow;
     /**
 	Concat filter concatenates several streams into one.
 */
@@ -4159,7 +4167,7 @@ extern(C)
 
         float** advance_cache;
 
-        ushort*[256] encoding_cache;
+        uint16_t*[256] encoding_cache;
 
         int has_digest;
 
@@ -4187,7 +4195,7 @@ extern(C)
 */
     fz_buffer** fz_font_t3_procs(fz_context*, fz_font*) @nogc nothrow;
 
-    enum _Anonymous_31
+    enum _Anonymous_27
     {
 
         FZ_ADOBE_CNS = 0,
@@ -4198,10 +4206,10 @@ extern(C)
 
         FZ_ADOBE_KOREA = 3,
     }
-    enum FZ_ADOBE_CNS = _Anonymous_31.FZ_ADOBE_CNS;
-    enum FZ_ADOBE_GB = _Anonymous_31.FZ_ADOBE_GB;
-    enum FZ_ADOBE_JAPAN = _Anonymous_31.FZ_ADOBE_JAPAN;
-    enum FZ_ADOBE_KOREA = _Anonymous_31.FZ_ADOBE_KOREA;
+    enum FZ_ADOBE_CNS = _Anonymous_27.FZ_ADOBE_CNS;
+    enum FZ_ADOBE_GB = _Anonymous_27.FZ_ADOBE_GB;
+    enum FZ_ADOBE_JAPAN = _Anonymous_27.FZ_ADOBE_JAPAN;
+    enum FZ_ADOBE_KOREA = _Anonymous_27.FZ_ADOBE_KOREA;
     /**
 	Every fz_font carries a set of flags
 	within it, in a fz_font_flags_t structure.
@@ -4318,7 +4326,7 @@ extern(C)
 
 	Only one set of hooks can be in use at a time.
 */
-    void fz_install_load_system_font_funcs(fz_context*, fz_font* function(fz_context*, const(char)*, int, int, int), fz_font* function(fz_context*, const(char)*, int, int), fz_font* function(fz_context*, int, int, int, int, int)) @nogc nothrow;
+    void fz_install_load_system_font_funcs(fz_context*, fz_load_system_font_fn, fz_load_system_cjk_font_fn, fz_load_system_fallback_font_fn) @nogc nothrow;
     /**
 	Attempt to load a given font from the system.
 
@@ -4716,9 +4724,11 @@ extern(C)
 */
     void fz_hb_unlock(fz_context*) @nogc nothrow;
 
-    alias __off_t = c_long;
+    alias __uintmax_t = c_ulong;
 
-    alias __nlink_t = c_ulong;
+    alias __intmax_t = c_long;
+
+    alias __u_quad_t = c_ulong;
     /**
 	Range checking atof
 */
@@ -4730,7 +4740,9 @@ extern(C)
     /**
 	64bit atoi that copes with NULL
 */
-    c_long fz_atoi64(const(char)*) @nogc nothrow;
+    int64_t fz_atoi64(const(char)*) @nogc nothrow;
+
+    alias __quad_t = c_long;
     /**
 	fz_point is a point in a two-dimensional space.
 */
@@ -4742,7 +4754,7 @@ extern(C)
         float y;
     }
 
-    alias __mode_t = uint;
+    alias __uint_least64_t = __uint64_t;
 
     struct fz_rect
     {
@@ -5203,6 +5215,8 @@ extern(C)
 	This may break down if quads are not 'well formed'.
 */
     int fz_is_quad_intersecting_quad(fz_quad, fz_quad) @nogc nothrow;
+
+    alias __int_least64_t = __int64_t;
     /**
 	Simple functions/variables for use in tools.
 */
@@ -5212,7 +5226,7 @@ extern(C)
 
     extern __gshared char* fz_optarg;
 
-    alias __ino64_t = c_ulong;
+    alias __uint_least32_t = __uint32_t;
     /**
 	Purge all the glyphs from the cache.
 */
@@ -5271,6 +5285,8 @@ extern(C)
 	should be considered "at risk" of removal from the API.
 */
     float fz_subpixel_adjust(fz_context*, fz_matrix*, fz_matrix*, ubyte*, ubyte*) @nogc nothrow;
+
+    alias __int_least32_t = __int32_t;
     struct fz_glyph;
     /**
 	Return the bounding box of the glyph in pixels.
@@ -5309,6 +5325,10 @@ extern(C)
 	ensuring that it eventually gets dropped.
 */
     fz_path* fz_outline_glyph(fz_context*, fz_font*, int, fz_matrix) @nogc nothrow;
+
+    alias __uint_least16_t = __uint16_t;
+
+    alias __int_least16_t = __int16_t;
     struct fz_hash_table;
     alias fz_hash_table_drop_fn = void function(fz_context*, void*);
     /**
@@ -5325,7 +5345,7 @@ extern(C)
 
 	drop_val: Function to use to destroy values on table drop.
 */
-    fz_hash_table* fz_new_hash_table(fz_context*, int, int, int, void function(fz_context*, void*)) @nogc nothrow;
+    fz_hash_table* fz_new_hash_table(fz_context*, int, int, int, fz_hash_table_drop_fn) @nogc nothrow;
     /**
 	Destroy the hash table.
 
@@ -5359,15 +5379,15 @@ extern(C)
     /**
 	Iterate over the entries in a hash table.
 */
-    void fz_hash_for_each(fz_context*, fz_hash_table*, void*, void function(fz_context*, void*, void*, int, void*)) @nogc nothrow;
+    void fz_hash_for_each(fz_context*, fz_hash_table*, void*, fz_hash_table_for_each_fn) @nogc nothrow;
     alias fz_hash_table_filter_fn = int function(fz_context*, void*, void*, int, void*);
     /**
 	Iterate over the entries in a hash table, removing all the ones where callback returns true.
 	Does NOT free the value of the entry, so the caller is expected to take care of this.
 */
-    void fz_hash_filter(fz_context*, fz_hash_table*, void*, int function(fz_context*, void*, void*, int, void*)) @nogc nothrow;
+    void fz_hash_filter(fz_context*, fz_hash_table*, void*, fz_hash_table_filter_fn) @nogc nothrow;
 
-    alias __ino_t = c_ulong;
+    alias __uint_least8_t = __uint8_t;
     /**
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
@@ -5384,9 +5404,9 @@ extern(C)
 
         int h;
 
-        ubyte n;
+        uint8_t n;
 
-        ubyte bpc;
+        uint8_t bpc;
         mixin(bitfields!(
 
             uint, "imagemask", 1,
@@ -5405,7 +5425,7 @@ extern(C)
             uint, "_padding_0", 1
         ));
 
-        ubyte orientation;
+        uint8_t orientation;
 
         fz_image* mask;
 
@@ -5415,11 +5435,11 @@ extern(C)
 
         fz_colorspace* colorspace;
 
-        void function(fz_context*, fz_image*) drop_image;
+        fz_drop_image_fn drop_image;
 
-        fz_pixmap* function(fz_context*, fz_image*, fz_irect*, int, int, int*) get_pixmap;
+        fz_image_get_pixmap_fn get_pixmap;
 
-        c_ulong function(fz_context*, fz_image*) get_size;
+        fz_image_get_size_fn get_size;
 
         int[64] colorkey;
 
@@ -5533,7 +5553,9 @@ extern(C)
 	with the first sizeof(fz_image) bytes initialised as appropriate
 	given the supplied parameters, and the other bytes set to zero.
 */
-    fz_image* fz_new_image_of_size(fz_context*, int, int, int, fz_colorspace*, int, int, int, int, float*, int*, fz_image*, c_ulong, fz_pixmap* function(fz_context*, fz_image*, fz_irect*, int, int, int*), c_ulong function(fz_context*, fz_image*), void function(fz_context*, fz_image*)) @nogc nothrow;
+    fz_image* fz_new_image_of_size(fz_context*, int, int, int, fz_colorspace*, int, int, int, int, float*, int*, fz_image*, size_t, fz_image_get_pixmap_fn, fz_image_get_size_fn, fz_drop_image_fn) @nogc nothrow;
+
+    alias __int_least8_t = __int8_t;
     /**
 	Create an image based on
 	the data in the supplied compressed buffer.
@@ -5628,7 +5650,7 @@ extern(C)
     /**
 	Return the size of the storage used by an image.
 */
-    c_ulong fz_image_size(fz_context*, fz_image*) @nogc nothrow;
+    size_t fz_image_size(fz_context*, fz_image*) @nogc nothrow;
     /**
 	Request the natural resolution
 	of an image.
@@ -5660,7 +5682,7 @@ extern(C)
 	7: flip on X, then rotate ccw by 180 degrees. (Exif = 4)
 	8: flip on X, then rotate ccw by 270 degrees. (Exif = 7)
 */
-    ubyte fz_image_orientation(fz_context*, fz_image*) @nogc nothrow;
+    uint8_t fz_image_orientation(fz_context*, fz_image*) @nogc nothrow;
 
     fz_matrix fz_image_orientation_matrix(fz_context*, fz_image*) @nogc nothrow;
     /**
@@ -5692,25 +5714,27 @@ extern(C)
     /**
 	Exposed for PDF.
 */
-    fz_pixmap* fz_load_jpx(fz_context*, const(ubyte)*, c_ulong, fz_colorspace*) @nogc nothrow;
+    fz_pixmap* fz_load_jpx(fz_context*, const(ubyte)*, size_t, fz_colorspace*) @nogc nothrow;
     /**
 	Exposed for CBZ.
 */
-    int fz_load_tiff_subimage_count(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    int fz_load_tiff_subimage_count(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
 
-    fz_pixmap* fz_load_tiff_subimage(fz_context*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    fz_pixmap* fz_load_tiff_subimage(fz_context*, const(ubyte)*, size_t, int) @nogc nothrow;
 
-    int fz_load_pnm_subimage_count(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    int fz_load_pnm_subimage_count(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
 
-    fz_pixmap* fz_load_pnm_subimage(fz_context*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    fz_pixmap* fz_load_pnm_subimage(fz_context*, const(ubyte)*, size_t, int) @nogc nothrow;
 
-    int fz_load_jbig2_subimage_count(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    int fz_load_jbig2_subimage_count(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
 
-    fz_pixmap* fz_load_jbig2_subimage(fz_context*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    fz_pixmap* fz_load_jbig2_subimage(fz_context*, const(ubyte)*, size_t, int) @nogc nothrow;
 
-    int fz_load_bmp_subimage_count(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    int fz_load_bmp_subimage_count(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
 
-    fz_pixmap* fz_load_bmp_subimage(fz_context*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    fz_pixmap* fz_load_bmp_subimage(fz_context*, const(ubyte)*, size_t, int) @nogc nothrow;
+
+    alias __uint64_t = c_ulong;
     /**
 	fz_link is a list of interactive links on a page.
 
@@ -5741,19 +5765,17 @@ extern(C)
 
         char* uri;
 
-        void function(fz_context*, fz_link*, fz_rect) set_rect_fn;
+        fz_link_set_rect_fn set_rect_fn;
 
-        void function(fz_context*, fz_link*, const(char)*) set_uri_fn;
+        fz_link_set_uri_fn set_uri_fn;
 
-        void function(fz_context*, fz_link*) drop;
+        fz_link_drop_link_fn drop;
     }
     alias fz_link_set_rect_fn = void function(fz_context*, fz_link*, fz_rect);
     alias fz_link_set_uri_fn = void function(fz_context*, fz_link*, const(char)*);
     alias fz_link_drop_link_fn = void function(fz_context*, fz_link*);
 
-    alias fz_link_dest_type = _Anonymous_32;
-
-    enum _Anonymous_32
+    enum fz_link_dest_type
     {
 
         FZ_LINK_DEST_FIT = 0,
@@ -5772,14 +5794,14 @@ extern(C)
 
         FZ_LINK_DEST_XYZ = 7,
     }
-    enum FZ_LINK_DEST_FIT = _Anonymous_32.FZ_LINK_DEST_FIT;
-    enum FZ_LINK_DEST_FIT_B = _Anonymous_32.FZ_LINK_DEST_FIT_B;
-    enum FZ_LINK_DEST_FIT_H = _Anonymous_32.FZ_LINK_DEST_FIT_H;
-    enum FZ_LINK_DEST_FIT_BH = _Anonymous_32.FZ_LINK_DEST_FIT_BH;
-    enum FZ_LINK_DEST_FIT_V = _Anonymous_32.FZ_LINK_DEST_FIT_V;
-    enum FZ_LINK_DEST_FIT_BV = _Anonymous_32.FZ_LINK_DEST_FIT_BV;
-    enum FZ_LINK_DEST_FIT_R = _Anonymous_32.FZ_LINK_DEST_FIT_R;
-    enum FZ_LINK_DEST_XYZ = _Anonymous_32.FZ_LINK_DEST_XYZ;
+    enum FZ_LINK_DEST_FIT = fz_link_dest_type.FZ_LINK_DEST_FIT;
+    enum FZ_LINK_DEST_FIT_B = fz_link_dest_type.FZ_LINK_DEST_FIT_B;
+    enum FZ_LINK_DEST_FIT_H = fz_link_dest_type.FZ_LINK_DEST_FIT_H;
+    enum FZ_LINK_DEST_FIT_BH = fz_link_dest_type.FZ_LINK_DEST_FIT_BH;
+    enum FZ_LINK_DEST_FIT_V = fz_link_dest_type.FZ_LINK_DEST_FIT_V;
+    enum FZ_LINK_DEST_FIT_BV = fz_link_dest_type.FZ_LINK_DEST_FIT_BV;
+    enum FZ_LINK_DEST_FIT_R = fz_link_dest_type.FZ_LINK_DEST_FIT_R;
+    enum FZ_LINK_DEST_XYZ = fz_link_dest_type.FZ_LINK_DEST_XYZ;
 
     struct fz_link_dest
     {
@@ -5814,7 +5836,7 @@ extern(C)
 */
     fz_link* fz_new_link_of_size(fz_context*, int, fz_rect, const(char)*) @nogc nothrow;
 
-    alias __gid_t = uint;
+    alias __int64_t = c_long;
     /**
 	Increment the reference count for a link. The same pointer is
 	returned.
@@ -5856,6 +5878,8 @@ extern(C)
 */
     fz_output* fz_new_log_for_module(fz_context*, const(char)*) @nogc nothrow;
 
+    alias __uint32_t = uint;
+
     struct fz_outline_item
     {
 
@@ -5869,23 +5893,23 @@ extern(C)
     struct fz_outline_iterator
     {
 
-        void function(fz_context*, fz_outline_iterator*) drop;
+        fz_outline_iterator_drop_fn drop;
 
-        fz_outline_item* function(fz_context*, fz_outline_iterator*) item;
+        fz_outline_iterator_item_fn item;
 
-        int function(fz_context*, fz_outline_iterator*) next;
+        fz_outline_iterator_next_fn next;
 
-        int function(fz_context*, fz_outline_iterator*) prev;
+        fz_outline_iterator_prev_fn prev;
 
-        int function(fz_context*, fz_outline_iterator*) up;
+        fz_outline_iterator_up_fn up;
 
-        int function(fz_context*, fz_outline_iterator*) down;
+        fz_outline_iterator_down_fn down;
 
-        int function(fz_context*, fz_outline_iterator*, fz_outline_item*) insert;
+        fz_outline_iterator_insert_fn insert;
 
-        void function(fz_context*, fz_outline_iterator*, fz_outline_item*) update;
+        fz_outline_iterator_update_fn update;
 
-        int function(fz_context*, fz_outline_iterator*) del;
+        fz_outline_iterator_delete_fn del;
 
         fz_document* doc;
     }
@@ -6009,21 +6033,23 @@ extern(C)
     alias fz_outline_iterator_update_fn = void function(fz_context*, fz_outline_iterator*, fz_outline_item*);
     alias fz_outline_iterator_drop_fn = void function(fz_context*, fz_outline_iterator*);
 
-    alias __uid_t = uint;
+    alias __int32_t = int;
 
-    fz_outline_iterator* fz_new_outline_iterator_of_size(fz_context*, c_ulong, fz_document*) @nogc nothrow;
+    fz_outline_iterator* fz_new_outline_iterator_of_size(fz_context*, size_t, fz_document*) @nogc nothrow;
 
     fz_outline_iterator* fz_outline_iterator_from_outline(fz_context*, fz_outline*) @nogc nothrow;
 
-    enum _Anonymous_33
+    alias __uint16_t = ushort;
+
+    enum _Anonymous_28
     {
 
         FZ_SVG_TEXT_AS_PATH = 0,
 
         FZ_SVG_TEXT_AS_TEXT = 1,
     }
-    enum FZ_SVG_TEXT_AS_PATH = _Anonymous_33.FZ_SVG_TEXT_AS_PATH;
-    enum FZ_SVG_TEXT_AS_TEXT = _Anonymous_33.FZ_SVG_TEXT_AS_TEXT;
+    enum FZ_SVG_TEXT_AS_PATH = _Anonymous_28.FZ_SVG_TEXT_AS_PATH;
+    enum FZ_SVG_TEXT_AS_TEXT = _Anonymous_28.FZ_SVG_TEXT_AS_TEXT;
     /**
 	Create a device that outputs (single page) SVG files to
 	the given output stream.
@@ -6051,7 +6077,7 @@ extern(C)
 */
     fz_device* fz_new_svg_device_with_id(fz_context*, fz_output*, float, float, int, int, int*) @nogc nothrow;
 
-    alias __dev_t = c_ulong;
+    alias __int16_t = short;
     alias fz_output_write_fn = void function(fz_context*, void*, const(void)*, c_ulong);
     alias fz_output_seek_fn = void function(fz_context*, void*, c_long, int);
     alias fz_output_tell_fn = c_long function(fz_context*, void*);
@@ -6070,7 +6096,7 @@ extern(C)
 	close: Cleanup function to destroy state when output closed.
 	May permissibly be null.
 */
-    fz_output* fz_new_output(fz_context*, int, void*, void function(fz_context*, void*, const(void)*, c_ulong), void function(fz_context*, void*), void function(fz_context*, void*)) @nogc nothrow;
+    fz_output* fz_new_output(fz_context*, int, void*, fz_output_write_fn, fz_output_close_fn, fz_output_drop_fn) @nogc nothrow;
     /**
 	Open an output stream that writes to a
 	given path.
@@ -6121,20 +6147,20 @@ extern(C)
     /**
 	va_list version of fz_write_printf.
 */
-    void fz_write_vprintf(fz_context*, fz_output*, const(char)*, va_list*) @nogc nothrow;
+    void fz_write_vprintf(fz_context*, fz_output*, const(char)*, va_list) @nogc nothrow;
     /**
 	Seek to the specified file position.
 	See fseek for arguments.
 
 	Throw an error on unseekable outputs.
 */
-    void fz_seek_output(fz_context*, fz_output*, c_long, int) @nogc nothrow;
+    void fz_seek_output(fz_context*, fz_output*, int64_t, int) @nogc nothrow;
     /**
 	Return the current file position.
 
 	Throw an error on untellable outputs.
 */
-    c_long fz_tell_output(fz_context*, fz_output*) @nogc nothrow;
+    int64_t fz_tell_output(fz_context*, fz_output*) @nogc nothrow;
     /**
 	Flush unwritten data.
 */
@@ -6173,7 +6199,7 @@ extern(C)
 	data: Pointer to data to write.
 	size: Size of data to write in bytes.
 */
-    void fz_write_data(fz_context*, fz_output*, const(void)*, c_ulong) @nogc nothrow;
+    void fz_write_data(fz_context*, fz_output*, const(void)*, size_t) @nogc nothrow;
 
     void fz_write_buffer(fz_context*, fz_output*, fz_buffer*) @nogc nothrow;
     /**
@@ -6214,7 +6240,7 @@ extern(C)
 	Write a base64 encoded data block, optionally with periodic
 	newlines.
 */
-    void fz_write_base64(fz_context*, fz_output*, const(ubyte)*, c_ulong, int) @nogc nothrow;
+    void fz_write_base64(fz_context*, fz_output*, const(ubyte)*, size_t, int) @nogc nothrow;
     /**
 	Write a base64 encoded fz_buffer, optionally with periodic
 	newlines.
@@ -6251,15 +6277,15 @@ extern(C)
 	emit: A function pointer called to emit output bytes as the
 	string is being formatted.
 */
-    void fz_format_string(fz_context*, void*, void function(fz_context*, void*, int), const(char)*, va_list*) @nogc nothrow;
+    void fz_format_string(fz_context*, void*, void function(fz_context*, void*, int), const(char)*, va_list) @nogc nothrow;
     /**
 	A vsnprintf work-alike, using our custom formatter.
 */
-    c_ulong fz_vsnprintf(char*, c_ulong, const(char)*, va_list*) @nogc nothrow;
+    size_t fz_vsnprintf(char*, size_t, const(char)*, va_list) @nogc nothrow;
     /**
 	The non va_list equivalent of fz_vsnprintf.
 */
-    c_ulong fz_snprintf(char*, c_ulong, const(char)*, ...) @nogc nothrow;
+    size_t fz_snprintf(char*, size_t, const(char)*, ...) @nogc nothrow;
     /**
 	Allocated sprintf.
 
@@ -6295,14 +6321,14 @@ extern(C)
 
     fz_output* fz_new_rle_output(fz_context*, fz_output*) @nogc nothrow;
 
-    fz_output* fz_new_arc4_output(fz_context*, fz_output*, ubyte*, c_ulong) @nogc nothrow;
+    fz_output* fz_new_arc4_output(fz_context*, fz_output*, ubyte*, size_t) @nogc nothrow;
 
     fz_output* fz_new_deflate_output(fz_context*, fz_output*, int, int) @nogc nothrow;
+
+    alias __uint8_t = ubyte;
     struct fz_path;
 
-    alias fz_linecap = _Anonymous_34;
-
-    enum _Anonymous_34
+    enum fz_linecap
     {
 
         FZ_LINECAP_BUTT = 0,
@@ -6313,14 +6339,12 @@ extern(C)
 
         FZ_LINECAP_TRIANGLE = 3,
     }
-    enum FZ_LINECAP_BUTT = _Anonymous_34.FZ_LINECAP_BUTT;
-    enum FZ_LINECAP_ROUND = _Anonymous_34.FZ_LINECAP_ROUND;
-    enum FZ_LINECAP_SQUARE = _Anonymous_34.FZ_LINECAP_SQUARE;
-    enum FZ_LINECAP_TRIANGLE = _Anonymous_34.FZ_LINECAP_TRIANGLE;
+    enum FZ_LINECAP_BUTT = fz_linecap.FZ_LINECAP_BUTT;
+    enum FZ_LINECAP_ROUND = fz_linecap.FZ_LINECAP_ROUND;
+    enum FZ_LINECAP_SQUARE = fz_linecap.FZ_LINECAP_SQUARE;
+    enum FZ_LINECAP_TRIANGLE = fz_linecap.FZ_LINECAP_TRIANGLE;
 
-    alias fz_linejoin = _Anonymous_35;
-
-    enum _Anonymous_35
+    enum fz_linejoin
     {
 
         FZ_LINEJOIN_MITER = 0,
@@ -6331,10 +6355,10 @@ extern(C)
 
         FZ_LINEJOIN_MITER_XPS = 3,
     }
-    enum FZ_LINEJOIN_MITER = _Anonymous_35.FZ_LINEJOIN_MITER;
-    enum FZ_LINEJOIN_ROUND = _Anonymous_35.FZ_LINEJOIN_ROUND;
-    enum FZ_LINEJOIN_BEVEL = _Anonymous_35.FZ_LINEJOIN_BEVEL;
-    enum FZ_LINEJOIN_MITER_XPS = _Anonymous_35.FZ_LINEJOIN_MITER_XPS;
+    enum FZ_LINEJOIN_MITER = fz_linejoin.FZ_LINEJOIN_MITER;
+    enum FZ_LINEJOIN_ROUND = fz_linejoin.FZ_LINEJOIN_ROUND;
+    enum FZ_LINEJOIN_BEVEL = fz_linejoin.FZ_LINEJOIN_BEVEL;
+    enum FZ_LINEJOIN_MITER_XPS = fz_linejoin.FZ_LINEJOIN_MITER_XPS;
 
     struct fz_stroke_state
     {
@@ -6475,7 +6499,7 @@ extern(C)
 	or 'flat' packed. Simply pack a path (if required), and then
 	forget about the details.
 */
-    c_ulong fz_pack_path(fz_context*, ubyte*, c_ulong, const(fz_path)*) @nogc nothrow;
+    size_t fz_pack_path(fz_context*, uint8_t*, size_t, const(fz_path)*) @nogc nothrow;
     /**
 	Clone the data for a path.
 
@@ -6723,6 +6747,8 @@ extern(C)
 	allocate.
 */
     fz_stroke_state* fz_clone_stroke_state(fz_context*, fz_stroke_state*) @nogc nothrow;
+
+    alias __int8_t = byte;
     struct fz_overprint;
     /**
 	Return the bounding box for a pixmap.
@@ -7022,15 +7048,15 @@ extern(C)
 
     fz_stream* fz_unpack_stream(fz_context*, fz_stream*, int, int, int, int, int, int, int) @nogc nothrow;
 
-    enum _Anonymous_36
+    enum _Anonymous_29
     {
 
         FZ_PIXMAP_FLAG_INTERPOLATE = 1,
 
         FZ_PIXMAP_FLAG_FREE_SAMPLES = 2,
     }
-    enum FZ_PIXMAP_FLAG_INTERPOLATE = _Anonymous_36.FZ_PIXMAP_FLAG_INTERPOLATE;
-    enum FZ_PIXMAP_FLAG_FREE_SAMPLES = _Anonymous_36.FZ_PIXMAP_FLAG_FREE_SAMPLES;
+    enum FZ_PIXMAP_FLAG_INTERPOLATE = _Anonymous_29.FZ_PIXMAP_FLAG_INTERPOLATE;
+    enum FZ_PIXMAP_FLAG_FREE_SAMPLES = _Anonymous_29.FZ_PIXMAP_FLAG_FREE_SAMPLES;
 
     fz_pixmap* fz_warp_pixmap(fz_context*, fz_pixmap*, const(fz_point)*, int, int) @nogc nothrow;
 
@@ -7039,6 +7065,8 @@ extern(C)
     fz_pixmap* fz_new_pixmap_from_alpha_channel(fz_context*, fz_pixmap*) @nogc nothrow;
 
     fz_pixmap* fz_new_pixmap_from_color_and_mask(fz_context*, fz_pixmap*, fz_pixmap*) @nogc nothrow;
+
+    alias __u_long = c_ulong;
     struct fz_pool;
     /**
 	Create a new pool to allocate from.
@@ -7047,7 +7075,7 @@ extern(C)
     /**
 	Allocate a block of size bytes from the pool.
 */
-    void* fz_pool_alloc(fz_context*, fz_pool*, c_ulong) @nogc nothrow;
+    void* fz_pool_alloc(fz_context*, fz_pool*, size_t) @nogc nothrow;
     /**
 	strdup equivalent allocating from the pool.
 */
@@ -7061,12 +7089,14 @@ extern(C)
 	so it will increase in 'lumps'.
 	from the pool, then the pool size may still be X
 */
-    c_ulong fz_pool_size(fz_context*, fz_pool*) @nogc nothrow;
+    size_t fz_pool_size(fz_context*, fz_pool*) @nogc nothrow;
     /**
 	Drop a pool, freeing and invalidating all storage returned from
 	the pool.
 */
     void fz_drop_pool(fz_context*, fz_pool*) @nogc nothrow;
+
+    alias __u_int = uint;
     /**
 	A fz_separation structure holds details of a set of separations
 	(such as might be used on within a page of the document).
@@ -7074,17 +7104,15 @@ extern(C)
 	The app might control the separations by enabling/disabling them,
 	and subsequent renders would take this into account.
 */
-    enum _Anonymous_37
+    enum _Anonymous_30
     {
 
         FZ_MAX_SEPARATIONS = 64,
     }
-    enum FZ_MAX_SEPARATIONS = _Anonymous_37.FZ_MAX_SEPARATIONS;
+    enum FZ_MAX_SEPARATIONS = _Anonymous_30.FZ_MAX_SEPARATIONS;
     struct fz_separations;
 
-    alias fz_separation_behavior = _Anonymous_38;
-
-    enum _Anonymous_38
+    enum fz_separation_behavior
     {
 
         FZ_SEPARATION_COMPOSITE = 0,
@@ -7093,9 +7121,9 @@ extern(C)
 
         FZ_SEPARATION_DISABLED = 2,
     }
-    enum FZ_SEPARATION_COMPOSITE = _Anonymous_38.FZ_SEPARATION_COMPOSITE;
-    enum FZ_SEPARATION_SPOT = _Anonymous_38.FZ_SEPARATION_SPOT;
-    enum FZ_SEPARATION_DISABLED = _Anonymous_38.FZ_SEPARATION_DISABLED;
+    enum FZ_SEPARATION_COMPOSITE = fz_separation_behavior.FZ_SEPARATION_COMPOSITE;
+    enum FZ_SEPARATION_SPOT = fz_separation_behavior.FZ_SEPARATION_SPOT;
+    enum FZ_SEPARATION_DISABLED = fz_separation_behavior.FZ_SEPARATION_DISABLED;
     /**
 	Create a new separations structure (initially empty)
 */
@@ -7125,7 +7153,7 @@ extern(C)
 
 	(old, deprecated)
 */
-    void fz_add_separation_equivalents(fz_context*, fz_separations*, uint, uint, const(char)*) @nogc nothrow;
+    void fz_add_separation_equivalents(fz_context*, fz_separations*, uint32_t, uint32_t, const(char)*) @nogc nothrow;
     /**
 	Control the rendering of a given separation.
 */
@@ -7159,10 +7187,12 @@ extern(C)
 	Get the equivalent separation color in a given colorspace.
 */
     void fz_separation_equivalent(fz_context*, const(fz_separations)*, int, fz_colorspace*, float*, fz_colorspace*, fz_color_params) @nogc nothrow;
+
+    alias __u_short = ushort;
     /**
  * The shading code uses gouraud shaded triangle meshes.
  */
-    enum _Anonymous_39
+    enum _Anonymous_31
     {
 
         FZ_FUNCTION_BASED = 1,
@@ -7179,13 +7209,13 @@ extern(C)
 
         FZ_MESH_TYPE7 = 7,
     }
-    enum FZ_FUNCTION_BASED = _Anonymous_39.FZ_FUNCTION_BASED;
-    enum FZ_LINEAR = _Anonymous_39.FZ_LINEAR;
-    enum FZ_RADIAL = _Anonymous_39.FZ_RADIAL;
-    enum FZ_MESH_TYPE4 = _Anonymous_39.FZ_MESH_TYPE4;
-    enum FZ_MESH_TYPE5 = _Anonymous_39.FZ_MESH_TYPE5;
-    enum FZ_MESH_TYPE6 = _Anonymous_39.FZ_MESH_TYPE6;
-    enum FZ_MESH_TYPE7 = _Anonymous_39.FZ_MESH_TYPE7;
+    enum FZ_FUNCTION_BASED = _Anonymous_31.FZ_FUNCTION_BASED;
+    enum FZ_LINEAR = _Anonymous_31.FZ_LINEAR;
+    enum FZ_RADIAL = _Anonymous_31.FZ_RADIAL;
+    enum FZ_MESH_TYPE4 = _Anonymous_31.FZ_MESH_TYPE4;
+    enum FZ_MESH_TYPE5 = _Anonymous_31.FZ_MESH_TYPE5;
+    enum FZ_MESH_TYPE6 = _Anonymous_31.FZ_MESH_TYPE6;
+    enum FZ_MESH_TYPE7 = _Anonymous_31.FZ_MESH_TYPE7;
     /**
 	Structure is public to allow derived classes. Do not
 	access the members directly.
@@ -7211,10 +7241,10 @@ extern(C)
 
         int type;
 
-        static union _Anonymous_40
+        static union _Anonymous_32
         {
 
-            static struct _Anonymous_41
+            static struct _Anonymous_33
             {
 
                 int[2] extend;
@@ -7222,9 +7252,9 @@ extern(C)
                 float[3][2] coords;
             }
 
-            _Anonymous_41 l_or_r;
+            _Anonymous_33 l_or_r;
 
-            static struct _Anonymous_42
+            static struct _Anonymous_34
             {
 
                 int vprow;
@@ -7248,9 +7278,9 @@ extern(C)
                 float[32] c1;
             }
 
-            _Anonymous_42 m;
+            _Anonymous_34 m;
 
-            static struct _Anonymous_43
+            static struct _Anonymous_35
             {
 
                 fz_matrix matrix;
@@ -7264,10 +7294,10 @@ extern(C)
                 float* fn_vals;
             }
 
-            _Anonymous_43 f;
+            _Anonymous_35 f;
         }
 
-        _Anonymous_40 u;
+        _Anonymous_32 u;
 
         fz_compressed_buffer* buffer;
     }
@@ -7357,7 +7387,7 @@ extern(C)
 	process_arg: An opaque argument passed through from caller
 	to callback functions.
 */
-    void fz_process_shade(fz_context*, fz_shade*, fz_matrix, fz_rect, void function(fz_context*, void*, fz_vertex*, const(float)*), void function(fz_context*, void*, fz_vertex*, fz_vertex*, fz_vertex*), void*) @nogc nothrow;
+    void fz_process_shade(fz_context*, fz_shade*, fz_matrix, fz_rect, fz_shade_prepare_fn, fz_shade_process_fn, void*) @nogc nothrow;
     /**
 	Internal function to destroy a
 	shade. Only exposed for use with the fz_store.
@@ -7366,7 +7396,7 @@ extern(C)
 */
     void fz_drop_shade_imp(fz_context*, fz_storable*) @nogc nothrow;
 
-    alias __uintmax_t = c_ulong;
+    alias __u_char = ubyte;
     /**
 	Any storable object should include an fz_storable structure
 	at the start (by convention at least) of their structure.
@@ -7377,7 +7407,7 @@ extern(C)
 
         int refs;
 
-        void function(fz_context*, fz_storable*) drop;
+        fz_store_drop_fn drop;
     }
     alias fz_store_drop_fn = void function(fz_context*, fz_storable*);
     /**
@@ -7392,8 +7422,6 @@ extern(C)
 
         short store_key_refs;
     }
-
-    alias __intmax_t = c_long;
     /**
 	Increment the reference count for a storable object.
 	Returns the same pointer.
@@ -7495,12 +7523,12 @@ extern(C)
     struct fz_store_hash
     {
 
-        void function(fz_context*, fz_storable*) drop;
+        fz_store_drop_fn drop;
 
-        static union _Anonymous_44
+        static union _Anonymous_36
         {
 
-            static struct _Anonymous_45
+            static struct _Anonymous_37
             {
 
                 const(void)* ptr;
@@ -7508,9 +7536,9 @@ extern(C)
                 int i;
             }
 
-            _Anonymous_45 pi;
+            _Anonymous_37 pi;
 
-            static struct _Anonymous_46
+            static struct _Anonymous_38
             {
 
                 const(void)* ptr;
@@ -7520,9 +7548,9 @@ extern(C)
                 fz_irect r;
             }
 
-            _Anonymous_46 pir;
+            _Anonymous_38 pir;
 
-            static struct _Anonymous_47
+            static struct _Anonymous_39
             {
 
                 int id;
@@ -7536,9 +7564,9 @@ extern(C)
                 void* ptr;
             }
 
-            _Anonymous_47 im;
+            _Anonymous_39 im;
 
-            static struct _Anonymous_48
+            static struct _Anonymous_40
             {
                 import std.bitmanip: bitfields;
 
@@ -7568,10 +7596,10 @@ extern(C)
                 ));
             }
 
-            _Anonymous_48 link;
+            _Anonymous_40 link;
         }
 
-        _Anonymous_44 u;
+        _Anonymous_36 u;
     }
     /**
 	Every type of object to be placed into the store defines an
@@ -7591,7 +7619,7 @@ extern(C)
 
         int function(fz_context*, void*, void*) cmp_key;
 
-        void function(fz_context*, char*, c_ulong, void*) format_key;
+        void function(fz_context*, char*, size_t, void*) format_key;
 
         int function(fz_context*, void*) needs_reap;
     }
@@ -7601,7 +7629,7 @@ extern(C)
 	max: The maximum size (in bytes) that the store is allowed to
 	grow to. FZ_STORE_UNLIMITED means no limit.
 */
-    void fz_new_store_context(fz_context*, c_ulong) @nogc nothrow;
+    void fz_new_store_context(fz_context*, size_t) @nogc nothrow;
     /**
 	Increment the reference count for the store context. Returns
 	the same pointer.
@@ -7635,7 +7663,7 @@ extern(C)
 
 	type: Functions used to manipulate the key.
 */
-    void* fz_store_item(fz_context*, void*, void*, c_ulong, const(fz_store_type)*) @nogc nothrow;
+    void* fz_store_item(fz_context*, void*, void*, size_t, const(fz_store_type)*) @nogc nothrow;
     /**
 	Find an item within the store.
 
@@ -7649,7 +7677,7 @@ extern(C)
 	Returns NULL for not found, otherwise returns a pointer to the
 	value indexed by key to which a reference has been taken.
 */
-    void* fz_find_item(fz_context*, void function(fz_context*, fz_storable*), void*, const(fz_store_type)*) @nogc nothrow;
+    void* fz_find_item(fz_context*, fz_store_drop_fn, void*, const(fz_store_type)*) @nogc nothrow;
     /**
 	Remove an item from the store.
 
@@ -7663,7 +7691,7 @@ extern(C)
 
 	type: Functions used to manipulate the key.
 */
-    void fz_remove_item(fz_context*, void function(fz_context*, fz_storable*), void*, const(fz_store_type)*) @nogc nothrow;
+    void fz_remove_item(fz_context*, fz_store_drop_fn, void*, const(fz_store_type)*) @nogc nothrow;
     /**
 	Evict every item from the store.
 */
@@ -7680,7 +7708,7 @@ extern(C)
 
 	Returns non zero if we managed to free any memory.
 */
-    int fz_store_scavenge(fz_context*, c_ulong, int*) @nogc nothrow;
+    int fz_store_scavenge(fz_context*, size_t, int*) @nogc nothrow;
     /**
 	External function for callers to use
 	to scavenge while trying allocations.
@@ -7691,7 +7719,7 @@ extern(C)
 
 	Returns non zero if we managed to free any memory.
 */
-    int fz_store_scavenge_external(fz_context*, c_ulong, int*) @nogc nothrow;
+    int fz_store_scavenge_external(fz_context*, size_t, int*) @nogc nothrow;
     /**
 	Evict items from the store until the total size of
 	the objects in the store is reduced to a given percentage of its
@@ -7710,7 +7738,7 @@ extern(C)
 
 	If the function returns 1 for an element, drop the element.
 */
-    void fz_filter_store(fz_context*, int function(fz_context*, void*, void*), void*, const(fz_store_type)*) @nogc nothrow;
+    void fz_filter_store(fz_context*, fz_store_filter_fn, void*, const(fz_store_type)*) @nogc nothrow;
     /**
 	Output debugging information for the current state of the store
 	to the given output channel.
@@ -7744,10 +7772,6 @@ extern(C)
 */
     void fz_defer_reap_end(fz_context*) @nogc nothrow;
 
-    alias __u_quad_t = c_ulong;
-
-    alias __quad_t = c_long;
-
     struct fz_write_story_position
     {
 
@@ -7768,28 +7792,26 @@ extern(C)
     alias fz_write_story_pagefn = void function(fz_context*, void*, int, fz_rect, fz_device*, int);
     alias fz_write_story_contentfn = void function(fz_context*, void*, const(fz_write_story_positions)*, fz_buffer*);
 
-    void fz_write_story(fz_context*, fz_document_writer*, fz_story_s*, int function(fz_context*, void*, int, fz_rect, fz_rect*, fz_matrix*, fz_rect*), void*, void function(fz_context*, void*, const(fz_write_story_position)*), void*, void function(fz_context*, void*, int, fz_rect, fz_device*, int), void*) @nogc nothrow;
+    void fz_write_story(fz_context*, fz_document_writer*, fz_story*, fz_write_story_rectfn, void*, fz_write_story_positionfn, void*, fz_write_story_pagefn, void*) @nogc nothrow;
 
-    void fz_write_stabilized_story(fz_context*, fz_document_writer*, const(char)*, float, void function(fz_context*, void*, const(fz_write_story_positions)*, fz_buffer*), void*, int function(fz_context*, void*, int, fz_rect, fz_rect*, fz_matrix*, fz_rect*), void*, void function(fz_context*, void*, int, fz_rect, fz_device*, int), void*, fz_archive*) @nogc nothrow;
-
-    alias __uint_least64_t = c_ulong;
+    void fz_write_stabilized_story(fz_context*, fz_document_writer*, const(char)*, float, fz_write_story_contentfn, void*, fz_write_story_rectfn, void*, fz_write_story_pagefn, void*, fz_archive*) @nogc nothrow;
 
     alias fz_story = fz_story_s;
     struct fz_story_s;
 
-    fz_story_s* fz_new_story(fz_context*, fz_buffer*, const(char)*, float, fz_archive*) @nogc nothrow;
+    fz_story* fz_new_story(fz_context*, fz_buffer*, const(char)*, float, fz_archive*) @nogc nothrow;
 
-    const(char)* fz_story_warnings(fz_context*, fz_story_s*) @nogc nothrow;
+    const(char)* fz_story_warnings(fz_context*, fz_story*) @nogc nothrow;
 
-    int fz_place_story(fz_context*, fz_story_s*, fz_rect, fz_rect*) @nogc nothrow;
+    int fz_place_story(fz_context*, fz_story*, fz_rect, fz_rect*) @nogc nothrow;
 
-    void fz_draw_story(fz_context*, fz_story_s*, fz_device*, fz_matrix) @nogc nothrow;
+    void fz_draw_story(fz_context*, fz_story*, fz_device*, fz_matrix) @nogc nothrow;
 
-    void fz_reset_story(fz_context*, fz_story_s*) @nogc nothrow;
+    void fz_reset_story(fz_context*, fz_story*) @nogc nothrow;
 
-    void fz_drop_story(fz_context*, fz_story_s*) @nogc nothrow;
+    void fz_drop_story(fz_context*, fz_story*) @nogc nothrow;
 
-    fz_xml* fz_story_document(fz_context*, fz_story_s*) @nogc nothrow;
+    fz_xml* fz_story_document(fz_context*, fz_story*) @nogc nothrow;
 
     struct fz_story_element_position
     {
@@ -7812,9 +7834,7 @@ extern(C)
     }
     alias fz_story_position_callback = void function(fz_context*, void*, const(fz_story_element_position)*);
 
-    void fz_story_positions(fz_context*, fz_story_s*, void function(fz_context*, void*, const(fz_story_element_position)*), void*) @nogc nothrow;
-
-    alias __int_least64_t = c_long;
+    void fz_story_positions(fz_context*, fz_story*, fz_story_position_callback, void*) @nogc nothrow;
     /**
 	Return true if the named file exists and is readable.
 */
@@ -7831,7 +7851,7 @@ extern(C)
 
         int progressive;
 
-        c_long pos;
+        int64_t pos;
 
         int avail;
 
@@ -7843,11 +7863,11 @@ extern(C)
 
         void* state;
 
-        int function(fz_context*, fz_stream*, c_ulong) next;
+        fz_stream_next_fn next;
 
-        void function(fz_context*, void*) drop;
+        fz_stream_drop_fn drop;
 
-        void function(fz_context*, fz_stream*, c_long, int) seek;
+        fz_stream_seek_fn seek;
     }
     /**
 	Open the named file and wrap it in a stream.
@@ -7871,7 +7891,7 @@ extern(C)
 	Returns pointer to newly created stream. May throw exceptions on
 	failure to allocate.
 */
-    fz_stream* fz_open_memory(fz_context*, const(ubyte)*, c_ulong) @nogc nothrow;
+    fz_stream* fz_open_memory(fz_context*, const(ubyte)*, size_t) @nogc nothrow;
     /**
 	Open a buffer as a stream.
 
@@ -7914,7 +7934,7 @@ extern(C)
     /**
 	return the current reading position within a stream
 */
-    c_long fz_tell(fz_context*, fz_stream*) @nogc nothrow;
+    int64_t fz_tell(fz_context*, fz_stream*) @nogc nothrow;
     /**
 	Seek within a stream.
 
@@ -7924,7 +7944,7 @@ extern(C)
 
 	whence: From where the offset is measured (see fseek).
 */
-    void fz_seek(fz_context*, fz_stream*, c_long, int) @nogc nothrow;
+    void fz_seek(fz_context*, fz_stream*, int64_t, int) @nogc nothrow;
     /**
 	Read from a stream into a given data block.
 
@@ -7936,7 +7956,7 @@ extern(C)
 
 	Returns the number of bytes read. May throw exceptions.
 */
-    c_ulong fz_read(fz_context*, fz_stream*, ubyte*, c_ulong) @nogc nothrow;
+    size_t fz_read(fz_context*, fz_stream*, ubyte*, size_t) @nogc nothrow;
     /**
 	Read from a stream discarding data.
 
@@ -7946,7 +7966,7 @@ extern(C)
 
 	Returns the number of bytes read. May throw exceptions.
 */
-    c_ulong fz_skip(fz_context*, fz_stream*, c_ulong) @nogc nothrow;
+    size_t fz_skip(fz_context*, fz_stream*, size_t) @nogc nothrow;
     /**
 	Read all of a stream into a buffer.
 
@@ -7957,7 +7977,7 @@ extern(C)
 	Returns a buffer created from reading from the stream. May throw
 	exceptions on failure to allocate.
 */
-    fz_buffer* fz_read_all(fz_context*, fz_stream*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_read_all(fz_context*, fz_stream*, size_t) @nogc nothrow;
     /**
 	Read all the contents of a file into a buffer.
 */
@@ -7970,33 +7990,33 @@ extern(C)
 
 	Throws an exception if EOF is encountered.
 */
-    ushort fz_read_uint16(fz_context*, fz_stream*) @nogc nothrow;
+    uint16_t fz_read_uint16(fz_context*, fz_stream*) @nogc nothrow;
 
-    uint fz_read_uint24(fz_context*, fz_stream*) @nogc nothrow;
+    uint32_t fz_read_uint24(fz_context*, fz_stream*) @nogc nothrow;
 
-    uint fz_read_uint32(fz_context*, fz_stream*) @nogc nothrow;
+    uint32_t fz_read_uint32(fz_context*, fz_stream*) @nogc nothrow;
 
-    c_ulong fz_read_uint64(fz_context*, fz_stream*) @nogc nothrow;
+    uint64_t fz_read_uint64(fz_context*, fz_stream*) @nogc nothrow;
 
-    ushort fz_read_uint16_le(fz_context*, fz_stream*) @nogc nothrow;
+    uint16_t fz_read_uint16_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    uint fz_read_uint24_le(fz_context*, fz_stream*) @nogc nothrow;
+    uint32_t fz_read_uint24_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    uint fz_read_uint32_le(fz_context*, fz_stream*) @nogc nothrow;
+    uint32_t fz_read_uint32_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    c_ulong fz_read_uint64_le(fz_context*, fz_stream*) @nogc nothrow;
+    uint64_t fz_read_uint64_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    short fz_read_int16(fz_context*, fz_stream*) @nogc nothrow;
+    int16_t fz_read_int16(fz_context*, fz_stream*) @nogc nothrow;
 
-    int fz_read_int32(fz_context*, fz_stream*) @nogc nothrow;
+    int32_t fz_read_int32(fz_context*, fz_stream*) @nogc nothrow;
 
-    c_long fz_read_int64(fz_context*, fz_stream*) @nogc nothrow;
+    int64_t fz_read_int64(fz_context*, fz_stream*) @nogc nothrow;
 
-    short fz_read_int16_le(fz_context*, fz_stream*) @nogc nothrow;
+    int16_t fz_read_int16_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    int fz_read_int32_le(fz_context*, fz_stream*) @nogc nothrow;
+    int32_t fz_read_int32_le(fz_context*, fz_stream*) @nogc nothrow;
 
-    c_long fz_read_int64_le(fz_context*, fz_stream*) @nogc nothrow;
+    int64_t fz_read_int64_le(fz_context*, fz_stream*) @nogc nothrow;
 
     float fz_read_float_le(fz_context*, fz_stream*) @nogc nothrow;
 
@@ -8024,7 +8044,7 @@ extern(C)
 	drop: Should clean up and free the internal state. May not
 	throw exceptions.
 */
-    fz_stream* fz_new_stream(fz_context*, void*, int function(fz_context*, fz_stream*, c_ulong), void function(fz_context*, void*)) @nogc nothrow;
+    fz_stream* fz_new_stream(fz_context*, void*, fz_stream_next_fn, fz_stream_drop_fn) @nogc nothrow;
     /**
 	Attempt to read a stream into a buffer. If truncated
 	is NULL behaves as fz_read_all, sets a truncated flag in case of
@@ -8041,7 +8061,7 @@ extern(C)
 
 	Returns a buffer created from reading from the stream.
 */
-    fz_buffer* fz_read_best(fz_context*, fz_stream*, c_ulong, int*, c_ulong) @nogc nothrow;
+    fz_buffer* fz_read_best(fz_context*, fz_stream*, size_t, int*, size_t) @nogc nothrow;
     /**
 	Read a line from stream into the buffer until either a
 	terminating newline or EOF, which it replaces with a null byte
@@ -8050,7 +8070,7 @@ extern(C)
 	Returns buf on success, and NULL when end of file occurs while
 	no characters have been read.
 */
-    char* fz_read_line(fz_context*, fz_stream*, char*, c_ulong) @nogc nothrow;
+    char* fz_read_line(fz_context*, fz_stream*, char*, size_t) @nogc nothrow;
     /**
 	Skip over a given string in a stream. Return 0 if successfully
 	skipped, non-zero otherwise. As many characters will be skipped
@@ -8065,16 +8085,12 @@ extern(C)
 	Create a stream from a FILE * that will not be closed
 	when the stream is dropped.
 */
-    fz_stream* fz_open_file_ptr_no_close(fz_context*, _IO_FILE*) @nogc nothrow;
-
-    alias __uint_least32_t = uint;
-
-    alias __int_least32_t = int;
+    fz_stream* fz_open_file_ptr_no_close(fz_context*, FILE*) @nogc nothrow;
     /**
 	Return strlen(s), if that is less than maxlen, or maxlen if
 	there is no null byte ('\0') among the first maxlen bytes.
 */
-    c_ulong fz_strnlen(const(char)*, c_ulong) @nogc nothrow;
+    size_t fz_strnlen(const(char)*, size_t) @nogc nothrow;
     /**
 	Given a pointer to a C string (or a pointer to NULL) break
 	it at the first occurrence of a delimiter char (from a given
@@ -8106,7 +8122,7 @@ extern(C)
 
 	Returns the length (excluding terminator) of src.
 */
-    c_ulong fz_strlcpy(char*, const(char)*, c_ulong) @nogc nothrow;
+    size_t fz_strlcpy(char*, const(char)*, size_t) @nogc nothrow;
     /**
 	Concatenate 2 strings, with a maximum length.
 
@@ -8119,15 +8135,15 @@ extern(C)
 	Returns the real length that a concatenated dst + src would have
 	been (not including terminator).
 */
-    c_ulong fz_strlcat(char*, const(char)*, c_ulong) @nogc nothrow;
+    size_t fz_strlcat(char*, const(char)*, size_t) @nogc nothrow;
     /**
 	Find the start of the first occurrence of the substring needle in haystack.
 */
-    void* fz_memmem(const(void)*, c_ulong, const(void)*, c_ulong) @nogc nothrow;
+    void* fz_memmem(const(void)*, size_t, const(void)*, size_t) @nogc nothrow;
     /**
 	extract the directory component from a path.
 */
-    void fz_dirname(char*, const(char)*, c_ulong) @nogc nothrow;
+    void fz_dirname(char*, const(char)*, size_t) @nogc nothrow;
     /**
 	Find the filename component in a path.
 */
@@ -8145,7 +8161,7 @@ extern(C)
 	filename extension. If the template does not have a filename
 	extension, the page number will be added to the end.
 */
-    void fz_format_output_path(fz_context*, char*, c_ulong, const(char)*, int) @nogc nothrow;
+    void fz_format_output_path(fz_context*, char*, size_t, const(char)*, int) @nogc nothrow;
     /**
 	rewrite path to the shortest string that names the same path.
 
@@ -8163,17 +8179,17 @@ extern(C)
 */
     int fz_strcasecmp(const(char)*, const(char)*) @nogc nothrow;
 
-    int fz_strncasecmp(const(char)*, const(char)*, c_ulong) @nogc nothrow;
+    int fz_strncasecmp(const(char)*, const(char)*, size_t) @nogc nothrow;
     /**
 	FZ_UTFMAX: Maximum number of bytes in a decoded rune (maximum
 	length returned by fz_chartorune).
 */
-    enum _Anonymous_49
+    enum _Anonymous_41
     {
 
         FZ_UTFMAX = 4,
     }
-    enum FZ_UTFMAX = _Anonymous_49.FZ_UTFMAX;
+    enum FZ_UTFMAX = _Anonymous_41.FZ_UTFMAX;
     /**
 	UTF8 decode a single rune from a sequence of chars.
 
@@ -8256,8 +8272,6 @@ extern(C)
     int fz_tolower(int) @nogc nothrow;
 
     int fz_toupper(int) @nogc nothrow;
-
-    alias __uint_least16_t = ushort;
     /**
 	Simple text layout (for use with annotation editing primarily).
 */
@@ -8375,10 +8389,10 @@ extern(C)
 
         fz_rect bbox;
 
-        static union _Anonymous_50
+        static union _Anonymous_42
         {
 
-            static struct _Anonymous_51
+            static struct _Anonymous_43
             {
 
                 fz_stext_line* first_line;
@@ -8386,9 +8400,9 @@ extern(C)
                 fz_stext_line* last_line;
             }
 
-            _Anonymous_51 t;
+            _Anonymous_43 t;
 
-            static struct _Anonymous_52
+            static struct _Anonymous_44
             {
 
                 fz_matrix transform;
@@ -8396,10 +8410,10 @@ extern(C)
                 fz_image* image;
             }
 
-            _Anonymous_52 i;
+            _Anonymous_44 i;
         }
 
-        _Anonymous_50 u;
+        _Anonymous_42 u;
 
         fz_stext_block* prev;
 
@@ -8436,7 +8450,7 @@ extern(C)
 	FZ_STEXT_MEDIABOX_CLIP: If this option is set, characters entirely
 	outside each page's mediabox will be ignored.
 */
-    enum _Anonymous_53
+    enum _Anonymous_45
     {
 
         FZ_STEXT_PRESERVE_LIGATURES = 1,
@@ -8453,13 +8467,13 @@ extern(C)
 
         FZ_STEXT_MEDIABOX_CLIP = 64,
     }
-    enum FZ_STEXT_PRESERVE_LIGATURES = _Anonymous_53.FZ_STEXT_PRESERVE_LIGATURES;
-    enum FZ_STEXT_PRESERVE_WHITESPACE = _Anonymous_53.FZ_STEXT_PRESERVE_WHITESPACE;
-    enum FZ_STEXT_PRESERVE_IMAGES = _Anonymous_53.FZ_STEXT_PRESERVE_IMAGES;
-    enum FZ_STEXT_INHIBIT_SPACES = _Anonymous_53.FZ_STEXT_INHIBIT_SPACES;
-    enum FZ_STEXT_DEHYPHENATE = _Anonymous_53.FZ_STEXT_DEHYPHENATE;
-    enum FZ_STEXT_PRESERVE_SPANS = _Anonymous_53.FZ_STEXT_PRESERVE_SPANS;
-    enum FZ_STEXT_MEDIABOX_CLIP = _Anonymous_53.FZ_STEXT_MEDIABOX_CLIP;
+    enum FZ_STEXT_PRESERVE_LIGATURES = _Anonymous_45.FZ_STEXT_PRESERVE_LIGATURES;
+    enum FZ_STEXT_PRESERVE_WHITESPACE = _Anonymous_45.FZ_STEXT_PRESERVE_WHITESPACE;
+    enum FZ_STEXT_PRESERVE_IMAGES = _Anonymous_45.FZ_STEXT_PRESERVE_IMAGES;
+    enum FZ_STEXT_INHIBIT_SPACES = _Anonymous_45.FZ_STEXT_INHIBIT_SPACES;
+    enum FZ_STEXT_DEHYPHENATE = _Anonymous_45.FZ_STEXT_DEHYPHENATE;
+    enum FZ_STEXT_PRESERVE_SPANS = _Anonymous_45.FZ_STEXT_PRESERVE_SPANS;
+    enum FZ_STEXT_MEDIABOX_CLIP = _Anonymous_45.FZ_STEXT_MEDIABOX_CLIP;
     /**
 	A text page is a list of blocks, together with an overall
 	bounding box.
@@ -8476,15 +8490,15 @@ extern(C)
         fz_stext_block* last_block;
     }
 
-    enum _Anonymous_54
+    enum _Anonymous_46
     {
 
         FZ_STEXT_BLOCK_TEXT = 0,
 
         FZ_STEXT_BLOCK_IMAGE = 1,
     }
-    enum FZ_STEXT_BLOCK_TEXT = _Anonymous_54.FZ_STEXT_BLOCK_TEXT;
-    enum FZ_STEXT_BLOCK_IMAGE = _Anonymous_54.FZ_STEXT_BLOCK_IMAGE;
+    enum FZ_STEXT_BLOCK_TEXT = _Anonymous_46.FZ_STEXT_BLOCK_TEXT;
+    enum FZ_STEXT_BLOCK_IMAGE = _Anonymous_46.FZ_STEXT_BLOCK_IMAGE;
 
     extern __gshared const(char)* fz_stext_options_usage;
     /**
@@ -8542,7 +8556,7 @@ extern(C)
 */
     int fz_highlight_selection(fz_context*, fz_stext_page*, fz_point, fz_point, fz_quad*, int) @nogc nothrow;
 
-    enum _Anonymous_55
+    enum _Anonymous_47
     {
 
         FZ_SELECT_CHARS = 0,
@@ -8551,9 +8565,9 @@ extern(C)
 
         FZ_SELECT_LINES = 2,
     }
-    enum FZ_SELECT_CHARS = _Anonymous_55.FZ_SELECT_CHARS;
-    enum FZ_SELECT_WORDS = _Anonymous_55.FZ_SELECT_WORDS;
-    enum FZ_SELECT_LINES = _Anonymous_55.FZ_SELECT_LINES;
+    enum FZ_SELECT_CHARS = _Anonymous_47.FZ_SELECT_CHARS;
+    enum FZ_SELECT_WORDS = _Anonymous_47.FZ_SELECT_WORDS;
+    enum FZ_SELECT_LINES = _Anonymous_47.FZ_SELECT_LINES;
 
     fz_quad fz_snap_selection(fz_context*, fz_stext_page*, fz_point*, fz_point*, int) @nogc nothrow;
     /**
@@ -8649,41 +8663,105 @@ extern(C)
 
     fz_document* fz_open_reflowed_document(fz_context*, fz_document*, const(fz_stext_options)*) @nogc nothrow;
 
-    alias __int_least16_t = short;
+    struct __once_flag
+    {
 
-    alias __uint_least8_t = ubyte;
+        int __data;
+    }
 
-    alias __int_least8_t = byte;
+    alias __thrd_t = c_ulong;
 
-    alias __uint64_t = c_ulong;
+    alias __tss_t = uint;
 
-    alias __int64_t = c_long;
+    struct __pthread_cond_s
+    {
 
-    alias __uint32_t = uint;
+        __atomic_wide_counter __wseq;
 
-    alias __int32_t = int;
+        __atomic_wide_counter __g1_start;
 
-    alias __uint16_t = ushort;
+        uint[2] __g_refs;
 
-    alias __int16_t = short;
+        uint[2] __g_size;
 
-    alias __uint8_t = ubyte;
+        uint __g1_orig_size;
 
-    alias fz_jmp_buf = __jmp_buf_tag[1];
+        uint __wrefs;
 
-    alias __int8_t = byte;
+        uint[2] __g_signals;
+    }
 
-    c_long fz_stat_ctime(const(char)*) @nogc nothrow;
+    struct __pthread_internal_slist
+    {
 
-    c_long fz_stat_mtime(const(char)*) @nogc nothrow;
+        __pthread_internal_slist* __next;
+    }
 
-    alias __u_long = c_ulong;
+    alias __pthread_slist_t = __pthread_internal_slist;
 
-    alias __u_int = uint;
+    struct __pthread_internal_list
+    {
 
-    alias __u_short = ushort;
+        __pthread_internal_list* __prev;
 
-    alias __u_char = ubyte;
+        __pthread_internal_list* __next;
+    }
+
+    alias fz_jmp_buf = sigjmp_buf;
+
+    alias __pthread_list_t = __pthread_internal_list;
+
+    int64_t fz_stat_ctime(const(char)*) @nogc nothrow;
+
+    int64_t fz_stat_mtime(const(char)*) @nogc nothrow;
+
+    struct __pthread_rwlock_arch_t
+    {
+
+        uint __readers;
+
+        uint __writers;
+
+        uint __wrphase_futex;
+
+        uint __writers_futex;
+
+        uint __pad3;
+
+        uint __pad4;
+
+        int __cur_writer;
+
+        int __shared;
+
+        byte __rwelision;
+
+        ubyte[7] __pad1;
+
+        c_ulong __pad2;
+
+        uint __flags;
+    }
+
+    struct __pthread_mutex_s
+    {
+
+        int __lock;
+
+        uint __count;
+
+        int __owner;
+
+        uint __nusers;
+
+        int __kind;
+
+        short __spins;
+
+        short __elision;
+
+        __pthread_list_t __list;
+    }
     /**
 	Text buffer.
 
@@ -8707,9 +8785,7 @@ extern(C)
         int ucs;
     }
 
-    alias fz_text_language = _Anonymous_56;
-
-    enum _Anonymous_56
+    enum fz_text_language
     {
 
         FZ_LANG_UNSET = 0,
@@ -8728,14 +8804,14 @@ extern(C)
 
         FZ_LANG_zh_Hant = 14822,
     }
-    enum FZ_LANG_UNSET = _Anonymous_56.FZ_LANG_UNSET;
-    enum FZ_LANG_ur = _Anonymous_56.FZ_LANG_ur;
-    enum FZ_LANG_urd = _Anonymous_56.FZ_LANG_urd;
-    enum FZ_LANG_ko = _Anonymous_56.FZ_LANG_ko;
-    enum FZ_LANG_ja = _Anonymous_56.FZ_LANG_ja;
-    enum FZ_LANG_zh = _Anonymous_56.FZ_LANG_zh;
-    enum FZ_LANG_zh_Hans = _Anonymous_56.FZ_LANG_zh_Hans;
-    enum FZ_LANG_zh_Hant = _Anonymous_56.FZ_LANG_zh_Hant;
+    enum FZ_LANG_UNSET = fz_text_language.FZ_LANG_UNSET;
+    enum FZ_LANG_ur = fz_text_language.FZ_LANG_ur;
+    enum FZ_LANG_urd = fz_text_language.FZ_LANG_urd;
+    enum FZ_LANG_ko = fz_text_language.FZ_LANG_ko;
+    enum FZ_LANG_ja = fz_text_language.FZ_LANG_ja;
+    enum FZ_LANG_zh = fz_text_language.FZ_LANG_zh;
+    enum FZ_LANG_zh_Hans = fz_text_language.FZ_LANG_zh_Hans;
+    enum FZ_LANG_zh_Hant = fz_text_language.FZ_LANG_zh_Hant;
 
     struct fz_text_span
     {
@@ -8887,7 +8963,11 @@ extern(C)
 */
     char* fz_string_from_text_language(char*, fz_text_language) @nogc nothrow;
 
-    enum _Anonymous_57
+    alias uint64_t = ulong;
+
+    alias uint32_t = uint;
+
+    enum _Anonymous_48
     {
 
         FZ_TRANSITION_NONE = 0,
@@ -8914,18 +8994,18 @@ extern(C)
 
         FZ_TRANSITION_FADE = 11,
     }
-    enum FZ_TRANSITION_NONE = _Anonymous_57.FZ_TRANSITION_NONE;
-    enum FZ_TRANSITION_SPLIT = _Anonymous_57.FZ_TRANSITION_SPLIT;
-    enum FZ_TRANSITION_BLINDS = _Anonymous_57.FZ_TRANSITION_BLINDS;
-    enum FZ_TRANSITION_BOX = _Anonymous_57.FZ_TRANSITION_BOX;
-    enum FZ_TRANSITION_WIPE = _Anonymous_57.FZ_TRANSITION_WIPE;
-    enum FZ_TRANSITION_DISSOLVE = _Anonymous_57.FZ_TRANSITION_DISSOLVE;
-    enum FZ_TRANSITION_GLITTER = _Anonymous_57.FZ_TRANSITION_GLITTER;
-    enum FZ_TRANSITION_FLY = _Anonymous_57.FZ_TRANSITION_FLY;
-    enum FZ_TRANSITION_PUSH = _Anonymous_57.FZ_TRANSITION_PUSH;
-    enum FZ_TRANSITION_COVER = _Anonymous_57.FZ_TRANSITION_COVER;
-    enum FZ_TRANSITION_UNCOVER = _Anonymous_57.FZ_TRANSITION_UNCOVER;
-    enum FZ_TRANSITION_FADE = _Anonymous_57.FZ_TRANSITION_FADE;
+    enum FZ_TRANSITION_NONE = _Anonymous_48.FZ_TRANSITION_NONE;
+    enum FZ_TRANSITION_SPLIT = _Anonymous_48.FZ_TRANSITION_SPLIT;
+    enum FZ_TRANSITION_BLINDS = _Anonymous_48.FZ_TRANSITION_BLINDS;
+    enum FZ_TRANSITION_BOX = _Anonymous_48.FZ_TRANSITION_BOX;
+    enum FZ_TRANSITION_WIPE = _Anonymous_48.FZ_TRANSITION_WIPE;
+    enum FZ_TRANSITION_DISSOLVE = _Anonymous_48.FZ_TRANSITION_DISSOLVE;
+    enum FZ_TRANSITION_GLITTER = _Anonymous_48.FZ_TRANSITION_GLITTER;
+    enum FZ_TRANSITION_FLY = _Anonymous_48.FZ_TRANSITION_FLY;
+    enum FZ_TRANSITION_PUSH = _Anonymous_48.FZ_TRANSITION_PUSH;
+    enum FZ_TRANSITION_COVER = _Anonymous_48.FZ_TRANSITION_COVER;
+    enum FZ_TRANSITION_UNCOVER = _Anonymous_48.FZ_TRANSITION_UNCOVER;
+    enum FZ_TRANSITION_FADE = _Anonymous_48.FZ_TRANSITION_FADE;
 
     struct fz_transition
     {
@@ -8959,11 +9039,7 @@ extern(C)
 */
     int fz_generate_transition(fz_context*, fz_pixmap*, fz_pixmap*, fz_pixmap*, int, fz_transition*) @nogc nothrow;
 
-    struct __once_flag
-    {
-
-        int __data;
-    }
+    alias uint16_t = __uint16_t;
     struct fz_tree;
     /**
 	Look for the value of a node in the tree with the given key.
@@ -8990,7 +9066,7 @@ extern(C)
 */
     void fz_drop_tree(fz_context*, fz_tree*, void function(fz_context*, void*)) @nogc nothrow;
 
-    alias __thrd_t = c_ulong;
+    alias uint8_t = __uint8_t;
     /**
 	Structure definition is public so other classes can
 	derive from it. Callers should not access the members
@@ -9002,41 +9078,41 @@ extern(C)
 
         int refs;
 
-        void function(fz_context*, fz_document*) drop_document;
+        fz_document_drop_fn drop_document;
 
-        int function(fz_context*, fz_document*) needs_password;
+        fz_document_needs_password_fn needs_password;
 
-        int function(fz_context*, fz_document*, const(char)*) authenticate_password;
+        fz_document_authenticate_password_fn authenticate_password;
 
-        int function(fz_context*, fz_document*, fz_permission) has_permission;
+        fz_document_has_permission_fn has_permission;
 
-        fz_outline* function(fz_context*, fz_document*) load_outline;
+        fz_document_load_outline_fn load_outline;
 
-        fz_outline_iterator* function(fz_context*, fz_document*) outline_iterator;
+        fz_document_outline_iterator_fn outline_iterator;
 
-        void function(fz_context*, fz_document*, float, float, float) layout;
+        fz_document_layout_fn layout;
 
-        c_long function(fz_context*, fz_document*, fz_location) make_bookmark;
+        fz_document_make_bookmark_fn make_bookmark;
 
-        fz_location function(fz_context*, fz_document*, c_long) lookup_bookmark;
+        fz_document_lookup_bookmark_fn lookup_bookmark;
 
-        fz_link_dest function(fz_context*, fz_document*, const(char)*) resolve_link_dest;
+        fz_document_resolve_link_dest_fn resolve_link_dest;
 
-        char* function(fz_context*, fz_document*, fz_link_dest) format_link_uri;
+        fz_document_format_link_uri_fn format_link_uri;
 
-        int function(fz_context*, fz_document*) count_chapters;
+        fz_document_count_chapters_fn count_chapters;
 
-        int function(fz_context*, fz_document*, int) count_pages;
+        fz_document_count_pages_fn count_pages;
 
-        fz_page* function(fz_context*, fz_document*, int, int) load_page;
+        fz_document_load_page_fn load_page;
 
-        int function(fz_context*, fz_document*, const(char)*, char*, int) lookup_metadata;
+        fz_document_lookup_metadata_fn lookup_metadata;
 
-        int function(fz_context*, fz_document*, const(char)*, const(char)*) set_metadata;
+        fz_document_set_metadata_fn set_metadata;
 
-        fz_colorspace* function(fz_context*, fz_document*) get_output_intent;
+        fz_document_output_intent_fn get_output_intent;
 
-        void function(fz_context*, fz_document*, fz_output*) output_accelerator;
+        fz_document_output_accelerator_fn output_accelerator;
 
         int did_layout;
 
@@ -9058,8 +9134,6 @@ extern(C)
 
         int page;
     }
-
-    alias __tss_t = uint;
     /**
 	Create a display list.
 
@@ -9147,11 +9221,11 @@ extern(C)
     /**
 	Parse an SVG document into a display-list.
 */
-    fz_display_list* fz_new_display_list_from_svg_xml(fz_context*, fz_xml*, fz_xml*, const(char)*, fz_archive*, float*, float*) @nogc nothrow;
+    fz_display_list* fz_new_display_list_from_svg_xml(fz_context*, fz_xml_doc*, fz_xml*, const(char)*, fz_archive*, float*, float*) @nogc nothrow;
     /**
 	Create a scalable image from an SVG document.
 */
-    fz_image* fz_new_image_from_svg_xml(fz_context*, fz_xml*, fz_xml*, const(char)*, fz_archive*) @nogc nothrow;
+    fz_image* fz_new_image_from_svg_xml(fz_context*, fz_xml_doc*, fz_xml*, const(char)*, fz_archive*) @nogc nothrow;
     /**
 	Write image as a data URI (for HTML and SVG output).
 */
@@ -9176,31 +9250,15 @@ extern(C)
 */
     fz_buffer* fz_new_buffer_from_page_with_format(fz_context*, fz_page*, const(char)*, const(char)*, fz_matrix, fz_cookie*) @nogc nothrow;
 
-    struct __pthread_cond_s
-    {
+    alias int64_t = __int64_t;
 
-        __atomic_wide_counter __wseq;
+    alias int32_t = int;
 
-        __atomic_wide_counter __g1_start;
+    alias int16_t = __int16_t;
 
-        uint[2] __g_refs;
+    alias int8_t = __int8_t;
 
-        uint[2] __g_size;
-
-        uint __g1_orig_size;
-
-        uint __wrefs;
-
-        uint[2] __g_signals;
-    }
-
-    struct __pthread_internal_slist
-    {
-
-        __pthread_internal_slist* __next;
-    }
-
-    alias __pthread_slist_t = __pthread_internal_slist;
+    alias __jmp_buf = c_long[8];
     /**
 	PCL output
 */
@@ -9371,7 +9429,7 @@ extern(C)
     /**
 	Set the progress callback for a pdfocr bandwriter.
 */
-    void fz_pdfocr_band_writer_set_progress(fz_context*, fz_band_writer*, int function(fz_context*, void*, int, int), void*) @nogc nothrow;
+    void fz_pdfocr_band_writer_set_progress(fz_context*, fz_band_writer*, fz_pdfocr_progress_fn, void*) @nogc nothrow;
     /**
 	Write a (Greyscale or RGB) pixmap as pdfocr.
 */
@@ -9608,14 +9666,6 @@ extern(C)
 	Output the file header to a pwg stream, ready for pages to follow it.
 */
     void fz_write_pwg_file_header(fz_context*, fz_output*) @nogc nothrow;
-
-    struct __pthread_internal_list
-    {
-
-        __pthread_internal_list* __prev;
-
-        __pthread_internal_list* __next;
-    }
     /**
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
@@ -9623,13 +9673,13 @@ extern(C)
     struct fz_document_writer
     {
 
-        fz_device* function(fz_context*, fz_document_writer*, fz_rect) begin_page;
+        fz_document_writer_begin_page_fn begin_page;
 
-        void function(fz_context*, fz_document_writer*, fz_device*) end_page;
+        fz_document_writer_end_page_fn end_page;
 
-        void function(fz_context*, fz_document_writer*) close_writer;
+        fz_document_writer_close_writer_fn close_writer;
 
-        void function(fz_context*, fz_document_writer*) drop_writer;
+        fz_document_writer_drop_writer_fn drop_writer;
 
         fz_device* dev;
     }
@@ -9637,8 +9687,6 @@ extern(C)
     alias fz_document_writer_end_page_fn = void function(fz_context*, fz_document_writer*, fz_device*);
     alias fz_document_writer_close_writer_fn = void function(fz_context*, fz_document_writer*);
     alias fz_document_writer_drop_writer_fn = void function(fz_context*, fz_document_writer*);
-
-    alias __pthread_list_t = __pthread_internal_list;
     /**
 	Look for a given option (key) in the opts string. Return 1 if
 	it has it, and update *val to point to the value within opts.
@@ -9660,7 +9708,7 @@ extern(C)
 	fit. If val is maxlen or greater bytes in size, it will be left
 	unterminated.
 */
-    c_ulong fz_copy_option(fz_context*, const(char)*, char*, c_ulong) @nogc nothrow;
+    size_t fz_copy_option(fz_context*, const(char)*, char*, size_t) @nogc nothrow;
     /**
 	Create a new fz_document_writer, for a
 	file of the given type.
@@ -9730,7 +9778,7 @@ extern(C)
 
     fz_document_writer* fz_new_pdfocr_writer_with_output(fz_context*, fz_output*, const(char)*) @nogc nothrow;
 
-    void fz_pdfocr_writer_set_progress(fz_context*, fz_document_writer*, int function(fz_context*, void*, int, int), void*) @nogc nothrow;
+    void fz_pdfocr_writer_set_progress(fz_context*, fz_document_writer*, fz_pdfocr_progress_fn, void*) @nogc nothrow;
 
     fz_document_writer* fz_new_png_pixmap_writer(fz_context*, const(char)*, const(char)*) @nogc nothrow;
 
@@ -9802,7 +9850,7 @@ extern(C)
 	structure's function pointers populated correctly, and the extra
 	space zero initialised.
 */
-    fz_document_writer* fz_new_document_writer_of_size(fz_context*, c_ulong, fz_device* function(fz_context*, fz_document_writer*, fz_rect), void function(fz_context*, fz_document_writer*, fz_device*), void function(fz_context*, fz_document_writer*), void function(fz_context*, fz_document_writer*)) @nogc nothrow;
+    fz_document_writer* fz_new_document_writer_of_size(fz_context*, size_t, fz_document_writer_begin_page_fn, fz_document_writer_end_page_fn, fz_document_writer_close_writer_fn, fz_document_writer_drop_writer_fn) @nogc nothrow;
     struct fz_xml;
 
     alias fz_xml_doc = fz_xml;
@@ -9835,7 +9883,7 @@ extern(C)
     /**
 	Return the topmost XML node of a document.
 */
-    fz_xml* fz_xml_root(fz_xml*) @nogc nothrow;
+    fz_xml* fz_xml_root(fz_xml_doc*) @nogc nothrow;
     /**
 	Return previous sibling of XML node.
 */
@@ -10066,52 +10114,30 @@ extern(C)
 */
     const(char)* fz_dom_get_attribute(fz_context*, fz_xml*, int, const(char)**) @nogc nothrow;
 
-    struct __pthread_rwlock_arch_t
+    union pthread_barrierattr_t
     {
 
-        uint __readers;
+        char[4] __size;
 
-        uint __writers;
-
-        uint __wrphase_futex;
-
-        uint __writers_futex;
-
-        uint __pad3;
-
-        uint __pad4;
-
-        int __cur_writer;
-
-        int __shared;
-
-        byte __rwelision;
-
-        ubyte[7] __pad1;
-
-        c_ulong __pad2;
-
-        uint __flags;
+        int __align;
     }
 
-    struct __pthread_mutex_s
+    union pthread_barrier_t
     {
 
-        int __lock;
+        char[32] __size;
 
-        uint __count;
+        c_long __align;
+    }
 
-        int __owner;
+    alias pthread_spinlock_t = int;
 
-        uint __nusers;
+    union pthread_rwlockattr_t
+    {
 
-        int __kind;
+        char[8] __size;
 
-        short __spins;
-
-        short __elision;
-
-        __pthread_internal_list __list;
+        c_long __align;
     }
     pragma(mangle, "Memento_checkBlock")
     int Memento_checkBlock_(void*) @nogc nothrow;
@@ -10144,7 +10170,7 @@ extern(C)
     pragma(mangle, "Memento_listNewBlocks")
     void Memento_listNewBlocks_() @nogc nothrow;
     pragma(mangle, "Memento_setMax")
-    c_ulong Memento_setMax_(c_ulong) @nogc nothrow;
+    size_t Memento_setMax_(size_t) @nogc nothrow;
     pragma(mangle, "Memento_stats")
     void Memento_stats_() @nogc nothrow;
     pragma(mangle, "Memento_label")
@@ -10156,19 +10182,19 @@ extern(C)
     pragma(mangle, "Memento_setIgnoreNewDelete")
     int Memento_setIgnoreNewDelete_(int) @nogc nothrow;
 
-    void* Memento_malloc(c_ulong) @nogc nothrow;
+    void* Memento_malloc(size_t) @nogc nothrow;
 
-    void* Memento_realloc(void*, c_ulong) @nogc nothrow;
+    void* Memento_realloc(void*, size_t) @nogc nothrow;
 
     void Memento_free(void*) @nogc nothrow;
 
-    void* Memento_calloc(c_ulong, c_ulong) @nogc nothrow;
+    void* Memento_calloc(size_t, size_t) @nogc nothrow;
 
     char* Memento_strdup(const(char)*) @nogc nothrow;
 
     int Memento_asprintf(char**, const(char)*, ...) @nogc nothrow;
 
-    int Memento_vasprintf(char**, const(char)*, va_list*) @nogc nothrow;
+    int Memento_vasprintf(char**, const(char)*, va_list) @nogc nothrow;
     pragma(mangle, "Memento_info")
     void Memento_info_(void*) @nogc nothrow;
     pragma(mangle, "Memento_listBlockInfo")
@@ -10216,57 +10242,13 @@ extern(C)
     pragma(mangle, "Memento_bt")
     void Memento_bt_() @nogc nothrow;
 
-    void* Memento_cpp_new(c_ulong) @nogc nothrow;
+    void* Memento_cpp_new(size_t) @nogc nothrow;
 
     void Memento_cpp_delete(void*) @nogc nothrow;
 
-    void* Memento_cpp_new_array(c_ulong) @nogc nothrow;
+    void* Memento_cpp_new_array(size_t) @nogc nothrow;
 
     void Memento_cpp_delete_array(void*) @nogc nothrow;
-
-    alias uint64_t = ulong;
-
-    alias uint32_t = uint;
-
-    alias uint16_t = ushort;
-
-    alias uint8_t = ubyte;
-
-    alias int64_t = c_long;
-
-    alias int32_t = int;
-
-    alias int16_t = short;
-
-    alias int8_t = byte;
-
-    alias __jmp_buf = c_long[8];
-
-    union pthread_barrierattr_t
-    {
-
-        char[4] __size;
-
-        int __align;
-    }
-
-    union pthread_barrier_t
-    {
-
-        char[32] __size;
-
-        c_long __align;
-    }
-
-    alias pthread_spinlock_t = int;
-
-    union pthread_rwlockattr_t
-    {
-
-        char[8] __size;
-
-        c_long __align;
-    }
 
     union pthread_rwlock_t
     {
@@ -10423,7 +10405,7 @@ extern(C)
 
     pdf_annot_type pdf_annot_type_from_string(fz_context*, const(char)*) @nogc nothrow;
 
-    enum _Anonymous_58
+    enum _Anonymous_49
     {
 
         PDF_ANNOT_IS_INVISIBLE = 1,
@@ -10446,16 +10428,16 @@ extern(C)
 
         PDF_ANNOT_IS_LOCKED_CONTENTS = 512,
     }
-    enum PDF_ANNOT_IS_INVISIBLE = _Anonymous_58.PDF_ANNOT_IS_INVISIBLE;
-    enum PDF_ANNOT_IS_HIDDEN = _Anonymous_58.PDF_ANNOT_IS_HIDDEN;
-    enum PDF_ANNOT_IS_PRINT = _Anonymous_58.PDF_ANNOT_IS_PRINT;
-    enum PDF_ANNOT_IS_NO_ZOOM = _Anonymous_58.PDF_ANNOT_IS_NO_ZOOM;
-    enum PDF_ANNOT_IS_NO_ROTATE = _Anonymous_58.PDF_ANNOT_IS_NO_ROTATE;
-    enum PDF_ANNOT_IS_NO_VIEW = _Anonymous_58.PDF_ANNOT_IS_NO_VIEW;
-    enum PDF_ANNOT_IS_READ_ONLY = _Anonymous_58.PDF_ANNOT_IS_READ_ONLY;
-    enum PDF_ANNOT_IS_LOCKED = _Anonymous_58.PDF_ANNOT_IS_LOCKED;
-    enum PDF_ANNOT_IS_TOGGLE_NO_VIEW = _Anonymous_58.PDF_ANNOT_IS_TOGGLE_NO_VIEW;
-    enum PDF_ANNOT_IS_LOCKED_CONTENTS = _Anonymous_58.PDF_ANNOT_IS_LOCKED_CONTENTS;
+    enum PDF_ANNOT_IS_INVISIBLE = _Anonymous_49.PDF_ANNOT_IS_INVISIBLE;
+    enum PDF_ANNOT_IS_HIDDEN = _Anonymous_49.PDF_ANNOT_IS_HIDDEN;
+    enum PDF_ANNOT_IS_PRINT = _Anonymous_49.PDF_ANNOT_IS_PRINT;
+    enum PDF_ANNOT_IS_NO_ZOOM = _Anonymous_49.PDF_ANNOT_IS_NO_ZOOM;
+    enum PDF_ANNOT_IS_NO_ROTATE = _Anonymous_49.PDF_ANNOT_IS_NO_ROTATE;
+    enum PDF_ANNOT_IS_NO_VIEW = _Anonymous_49.PDF_ANNOT_IS_NO_VIEW;
+    enum PDF_ANNOT_IS_READ_ONLY = _Anonymous_49.PDF_ANNOT_IS_READ_ONLY;
+    enum PDF_ANNOT_IS_LOCKED = _Anonymous_49.PDF_ANNOT_IS_LOCKED;
+    enum PDF_ANNOT_IS_TOGGLE_NO_VIEW = _Anonymous_49.PDF_ANNOT_IS_TOGGLE_NO_VIEW;
+    enum PDF_ANNOT_IS_LOCKED_CONTENTS = _Anonymous_49.PDF_ANNOT_IS_LOCKED_CONTENTS;
 
     enum pdf_line_ending
     {
@@ -10491,7 +10473,7 @@ extern(C)
     enum PDF_ANNOT_LE_R_CLOSED_ARROW = pdf_line_ending.PDF_ANNOT_LE_R_CLOSED_ARROW;
     enum PDF_ANNOT_LE_SLASH = pdf_line_ending.PDF_ANNOT_LE_SLASH;
 
-    enum _Anonymous_59
+    enum _Anonymous_50
     {
 
         PDF_ANNOT_Q_LEFT = 0,
@@ -10500,9 +10482,9 @@ extern(C)
 
         PDF_ANNOT_Q_RIGHT = 2,
     }
-    enum PDF_ANNOT_Q_LEFT = _Anonymous_59.PDF_ANNOT_Q_LEFT;
-    enum PDF_ANNOT_Q_CENTER = _Anonymous_59.PDF_ANNOT_Q_CENTER;
-    enum PDF_ANNOT_Q_RIGHT = _Anonymous_59.PDF_ANNOT_Q_RIGHT;
+    enum PDF_ANNOT_Q_LEFT = _Anonymous_50.PDF_ANNOT_Q_LEFT;
+    enum PDF_ANNOT_Q_CENTER = _Anonymous_50.PDF_ANNOT_Q_CENTER;
+    enum PDF_ANNOT_Q_RIGHT = _Anonymous_50.PDF_ANNOT_Q_RIGHT;
 
     pdf_line_ending pdf_line_ending_from_name(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -10692,13 +10674,13 @@ extern(C)
 
     void pdf_set_annot_author(fz_context*, pdf_annot*, const(char)*) @nogc nothrow;
 
-    c_long pdf_annot_modification_date(fz_context*, pdf_annot*) @nogc nothrow;
+    int64_t pdf_annot_modification_date(fz_context*, pdf_annot*) @nogc nothrow;
 
-    void pdf_set_annot_modification_date(fz_context*, pdf_annot*, c_long) @nogc nothrow;
+    void pdf_set_annot_modification_date(fz_context*, pdf_annot*, int64_t) @nogc nothrow;
 
-    c_long pdf_annot_creation_date(fz_context*, pdf_annot*) @nogc nothrow;
+    int64_t pdf_annot_creation_date(fz_context*, pdf_annot*) @nogc nothrow;
 
-    void pdf_set_annot_creation_date(fz_context*, pdf_annot*, c_long) @nogc nothrow;
+    void pdf_set_annot_creation_date(fz_context*, pdf_annot*, int64_t) @nogc nothrow;
 
     void pdf_parse_default_appearance(fz_context*, const(char)*, const(char)**, float*, int*, float*) @nogc nothrow;
 
@@ -10761,14 +10743,14 @@ extern(C)
 
         int size;
 
-        c_long created;
+        int64_t created;
 
-        c_long modified;
+        int64_t modified;
     }
 
     int pdf_is_embedded_file(fz_context*, pdf_obj*) @nogc nothrow;
 
-    pdf_obj* pdf_add_embedded_file(fz_context*, pdf_document*, const(char)*, const(char)*, fz_buffer*, c_long, c_long, int) @nogc nothrow;
+    pdf_obj* pdf_add_embedded_file(fz_context*, pdf_document*, const(char)*, const(char)*, fz_buffer*, int64_t, int64_t, int) @nogc nothrow;
 
     void pdf_get_embedded_file_params(fz_context*, pdf_obj*, pdf_embedded_file_params*) @nogc nothrow;
 
@@ -10858,7 +10840,7 @@ extern(C)
 
         int codespace_len;
 
-        static struct _Anonymous_60
+        static struct _Anonymous_51
         {
 
             int n;
@@ -10868,7 +10850,7 @@ extern(C)
             uint high;
         }
 
-        _Anonymous_60[40] codespace;
+        _Anonymous_51[40] codespace;
 
         int rlen;
 
@@ -10911,7 +10893,7 @@ extern(C)
 
     void pdf_drop_cmap_imp(fz_context*, fz_storable*) @nogc nothrow;
 
-    c_ulong pdf_cmap_size(fz_context*, pdf_cmap*) @nogc nothrow;
+    size_t pdf_cmap_size(fz_context*, pdf_cmap*) @nogc nothrow;
 
     int pdf_cmap_wmode(fz_context*, pdf_cmap*) @nogc nothrow;
 
@@ -10919,11 +10901,11 @@ extern(C)
 
     void pdf_set_usecmap(fz_context*, pdf_cmap*, pdf_cmap*) @nogc nothrow;
 
-    void pdf_add_codespace(fz_context*, pdf_cmap*, uint, uint, c_ulong) @nogc nothrow;
+    void pdf_add_codespace(fz_context*, pdf_cmap*, uint, uint, size_t) @nogc nothrow;
 
     void pdf_map_range_to_range(fz_context*, pdf_cmap*, uint, uint, int) @nogc nothrow;
 
-    void pdf_map_one_to_many(fz_context*, pdf_cmap*, uint, int*, c_ulong) @nogc nothrow;
+    void pdf_map_one_to_many(fz_context*, pdf_cmap*, uint, int*, size_t) @nogc nothrow;
 
     void pdf_sort_cmap(fz_context*, pdf_cmap*) @nogc nothrow;
 
@@ -10943,7 +10925,7 @@ extern(C)
 
     pdf_cmap* pdf_load_embedded_cmap(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
-    enum _Anonymous_61
+    enum _Anonymous_52
     {
 
         PDF_ENCRYPT_KEEP = 0,
@@ -10960,13 +10942,13 @@ extern(C)
 
         PDF_ENCRYPT_UNKNOWN = 6,
     }
-    enum PDF_ENCRYPT_KEEP = _Anonymous_61.PDF_ENCRYPT_KEEP;
-    enum PDF_ENCRYPT_NONE = _Anonymous_61.PDF_ENCRYPT_NONE;
-    enum PDF_ENCRYPT_RC4_40 = _Anonymous_61.PDF_ENCRYPT_RC4_40;
-    enum PDF_ENCRYPT_RC4_128 = _Anonymous_61.PDF_ENCRYPT_RC4_128;
-    enum PDF_ENCRYPT_AES_128 = _Anonymous_61.PDF_ENCRYPT_AES_128;
-    enum PDF_ENCRYPT_AES_256 = _Anonymous_61.PDF_ENCRYPT_AES_256;
-    enum PDF_ENCRYPT_UNKNOWN = _Anonymous_61.PDF_ENCRYPT_UNKNOWN;
+    enum PDF_ENCRYPT_KEEP = _Anonymous_52.PDF_ENCRYPT_KEEP;
+    enum PDF_ENCRYPT_NONE = _Anonymous_52.PDF_ENCRYPT_NONE;
+    enum PDF_ENCRYPT_RC4_40 = _Anonymous_52.PDF_ENCRYPT_RC4_40;
+    enum PDF_ENCRYPT_RC4_128 = _Anonymous_52.PDF_ENCRYPT_RC4_128;
+    enum PDF_ENCRYPT_AES_128 = _Anonymous_52.PDF_ENCRYPT_AES_128;
+    enum PDF_ENCRYPT_AES_256 = _Anonymous_52.PDF_ENCRYPT_AES_256;
+    enum PDF_ENCRYPT_UNKNOWN = _Anonymous_52.PDF_ENCRYPT_UNKNOWN;
 
     pdf_crypt* pdf_new_crypt(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
@@ -11006,9 +10988,9 @@ extern(C)
 
     void pdf_print_crypt(fz_context*, fz_output*, pdf_crypt*) @nogc nothrow;
 
-    void pdf_write_digest(fz_context*, fz_output*, pdf_obj*, pdf_obj*, c_ulong, c_ulong, pdf_pkcs7_signer*) @nogc nothrow;
+    void pdf_write_digest(fz_context*, fz_output*, pdf_obj*, pdf_obj*, size_t, size_t, pdf_pkcs7_signer*) @nogc nothrow;
 
-    enum _Anonymous_62
+    enum _Anonymous_53
     {
 
         PDF_PERM_PRINT = 4,
@@ -11027,14 +11009,14 @@ extern(C)
 
         PDF_PERM_PRINT_HQ = 2048,
     }
-    enum PDF_PERM_PRINT = _Anonymous_62.PDF_PERM_PRINT;
-    enum PDF_PERM_MODIFY = _Anonymous_62.PDF_PERM_MODIFY;
-    enum PDF_PERM_COPY = _Anonymous_62.PDF_PERM_COPY;
-    enum PDF_PERM_ANNOTATE = _Anonymous_62.PDF_PERM_ANNOTATE;
-    enum PDF_PERM_FORM = _Anonymous_62.PDF_PERM_FORM;
-    enum PDF_PERM_ACCESSIBILITY = _Anonymous_62.PDF_PERM_ACCESSIBILITY;
-    enum PDF_PERM_ASSEMBLE = _Anonymous_62.PDF_PERM_ASSEMBLE;
-    enum PDF_PERM_PRINT_HQ = _Anonymous_62.PDF_PERM_PRINT_HQ;
+    enum PDF_PERM_PRINT = _Anonymous_53.PDF_PERM_PRINT;
+    enum PDF_PERM_MODIFY = _Anonymous_53.PDF_PERM_MODIFY;
+    enum PDF_PERM_COPY = _Anonymous_53.PDF_PERM_COPY;
+    enum PDF_PERM_ANNOTATE = _Anonymous_53.PDF_PERM_ANNOTATE;
+    enum PDF_PERM_FORM = _Anonymous_53.PDF_PERM_FORM;
+    enum PDF_PERM_ACCESSIBILITY = _Anonymous_53.PDF_PERM_ACCESSIBILITY;
+    enum PDF_PERM_ASSEMBLE = _Anonymous_53.PDF_PERM_ASSEMBLE;
+    enum PDF_PERM_PRINT_HQ = _Anonymous_53.PDF_PERM_PRINT_HQ;
 
     int pdf_document_permissions(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -11044,11 +11026,11 @@ extern(C)
 
     int pdf_signature_incremental_change_since_signing(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
-    c_ulong pdf_signature_contents(fz_context*, pdf_document*, pdf_obj*, char**) @nogc nothrow;
+    size_t pdf_signature_contents(fz_context*, pdf_document*, pdf_obj*, char**) @nogc nothrow;
 
-    void pdf_encrypt_data(fz_context*, pdf_crypt*, int, int, void function(fz_context*, void*, const(ubyte)*, c_ulong), void*, const(ubyte)*, c_ulong) @nogc nothrow;
+    void pdf_encrypt_data(fz_context*, pdf_crypt*, int, int, void function(fz_context*, void*, const(ubyte)*, size_t), void*, const(ubyte)*, size_t) @nogc nothrow;
 
-    c_ulong pdf_encrypted_len(fz_context*, pdf_crypt*, int, int, c_ulong) @nogc nothrow;
+    size_t pdf_encrypted_len(fz_context*, pdf_crypt*, int, int, size_t) @nogc nothrow;
 
     struct pdf_xref
     {
@@ -11065,7 +11047,7 @@ extern(C)
 
         pdf_unsaved_sig** unsaved_sigs_end;
 
-        c_long end_ofs;
+        int64_t end_ofs;
     }
     struct pdf_ocg_descriptor;
 
@@ -11095,26 +11077,26 @@ extern(C)
     struct pdf_annot;
     struct pdf_js;
 
-    enum _Anonymous_63
+    enum _Anonymous_54
     {
 
         PDF_LEXBUF_SMALL = 256,
 
         PDF_LEXBUF_LARGE = 65536,
     }
-    enum PDF_LEXBUF_SMALL = _Anonymous_63.PDF_LEXBUF_SMALL;
-    enum PDF_LEXBUF_LARGE = _Anonymous_63.PDF_LEXBUF_LARGE;
+    enum PDF_LEXBUF_SMALL = _Anonymous_54.PDF_LEXBUF_SMALL;
+    enum PDF_LEXBUF_LARGE = _Anonymous_54.PDF_LEXBUF_LARGE;
 
     struct pdf_lexbuf
     {
 
-        c_ulong size;
+        size_t size;
 
-        c_ulong base_size;
+        size_t base_size;
 
-        c_ulong len;
+        size_t len;
 
-        c_long i;
+        int64_t i;
 
         float f;
 
@@ -11142,15 +11124,15 @@ extern(C)
     struct pdf_js_console
     {
 
-        void function(pdf_js_console*, void*) drop;
+        pdf_js_console_drop_cb drop;
 
-        void function(void*) show;
+        pdf_js_console_show_cb show;
 
-        void function(void*) hide;
+        pdf_js_console_hide_cb hide;
 
-        void function(void*) clear;
+        pdf_js_console_clear_cb clear;
 
-        void function(void*, const(char)*) write;
+        pdf_js_console_write_cb write;
     }
     alias pdf_js_console_drop_cb = void function(pdf_js_console*, void*);
     alias pdf_js_console_show_cb = void function(void*);
@@ -11220,9 +11202,7 @@ extern(C)
 
     void pdf_toggle_layer_config_ui(fz_context*, pdf_document*, int) @nogc nothrow;
 
-    alias pdf_layer_config_ui_type = _Anonymous_64;
-
-    enum _Anonymous_64
+    enum pdf_layer_config_ui_type
     {
 
         PDF_LAYER_UI_LABEL = 0,
@@ -11231,9 +11211,9 @@ extern(C)
 
         PDF_LAYER_UI_RADIOBOX = 2,
     }
-    enum PDF_LAYER_UI_LABEL = _Anonymous_64.PDF_LAYER_UI_LABEL;
-    enum PDF_LAYER_UI_CHECKBOX = _Anonymous_64.PDF_LAYER_UI_CHECKBOX;
-    enum PDF_LAYER_UI_RADIOBOX = _Anonymous_64.PDF_LAYER_UI_RADIOBOX;
+    enum PDF_LAYER_UI_LABEL = pdf_layer_config_ui_type.PDF_LAYER_UI_LABEL;
+    enum PDF_LAYER_UI_CHECKBOX = pdf_layer_config_ui_type.PDF_LAYER_UI_CHECKBOX;
+    enum PDF_LAYER_UI_RADIOBOX = pdf_layer_config_ui_type.PDF_LAYER_UI_RADIOBOX;
 
     struct pdf_layer_config_ui
     {
@@ -11260,15 +11240,15 @@ extern(C)
     struct pdf_pkcs7_signer
     {
 
-        pdf_pkcs7_signer* function(fz_context*, pdf_pkcs7_signer*) keep;
+        pdf_pkcs7_keep_signer_fn keep;
 
-        void function(fz_context*, pdf_pkcs7_signer*) drop;
+        pdf_pkcs7_drop_signer_fn drop;
 
-        pdf_pkcs7_distinguished_name* function(fz_context*, pdf_pkcs7_signer*) get_signing_name;
+        pdf_pkcs7_get_signing_name_fn get_signing_name;
 
-        c_ulong function(fz_context*, pdf_pkcs7_signer*) max_digest_size;
+        pdf_pkcs7_max_digest_size_fn max_digest_size;
 
-        int function(fz_context*, pdf_pkcs7_signer*, fz_stream*, ubyte*, c_ulong) create_digest;
+        pdf_pkcs7_create_digest_fn create_digest;
     }
 
     struct pdf_unsaved_sig
@@ -11276,13 +11256,13 @@ extern(C)
 
         pdf_obj* field;
 
-        c_ulong byte_range_start;
+        size_t byte_range_start;
 
-        c_ulong byte_range_end;
+        size_t byte_range_end;
 
-        c_ulong contents_start;
+        size_t contents_start;
 
-        c_ulong contents_end;
+        size_t contents_end;
 
         pdf_pkcs7_signer* signer;
 
@@ -11302,9 +11282,9 @@ extern(C)
 
         int number;
 
-        c_long offset;
+        int64_t offset;
 
-        c_long index;
+        int64_t index;
     }
 
     struct pdf_hint_shared
@@ -11312,7 +11292,7 @@ extern(C)
 
         int number;
 
-        c_long offset;
+        int64_t offset;
     }
 
     pdf_document* pdf_create_document(fz_context*) @nogc nothrow;
@@ -11404,7 +11384,7 @@ extern(C)
 
     void pdf_write_snapshot(fz_context*, pdf_document*, fz_output*) @nogc nothrow;
 
-    char* pdf_format_write_options(fz_context*, char*, c_ulong, const(pdf_write_options)*) @nogc nothrow;
+    char* pdf_format_write_options(fz_context*, char*, size_t, const(pdf_write_options)*) @nogc nothrow;
 
     int pdf_can_be_saved_incrementally(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -11416,7 +11396,7 @@ extern(C)
 
     void pdf_read_journal(fz_context*, pdf_document*, fz_stream*) @nogc nothrow;
 
-    enum _Anonymous_65
+    enum _Anonymous_55
     {
 
         PDF_DOCUMENT_EVENT_ALERT = 0,
@@ -11431,14 +11411,14 @@ extern(C)
 
         PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = 5,
     }
-    enum PDF_DOCUMENT_EVENT_ALERT = _Anonymous_65.PDF_DOCUMENT_EVENT_ALERT;
-    enum PDF_DOCUMENT_EVENT_PRINT = _Anonymous_65.PDF_DOCUMENT_EVENT_PRINT;
-    enum PDF_DOCUMENT_EVENT_LAUNCH_URL = _Anonymous_65.PDF_DOCUMENT_EVENT_LAUNCH_URL;
-    enum PDF_DOCUMENT_EVENT_MAIL_DOC = _Anonymous_65.PDF_DOCUMENT_EVENT_MAIL_DOC;
-    enum PDF_DOCUMENT_EVENT_SUBMIT = _Anonymous_65.PDF_DOCUMENT_EVENT_SUBMIT;
-    enum PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = _Anonymous_65.PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM;
+    enum PDF_DOCUMENT_EVENT_ALERT = _Anonymous_55.PDF_DOCUMENT_EVENT_ALERT;
+    enum PDF_DOCUMENT_EVENT_PRINT = _Anonymous_55.PDF_DOCUMENT_EVENT_PRINT;
+    enum PDF_DOCUMENT_EVENT_LAUNCH_URL = _Anonymous_55.PDF_DOCUMENT_EVENT_LAUNCH_URL;
+    enum PDF_DOCUMENT_EVENT_MAIL_DOC = _Anonymous_55.PDF_DOCUMENT_EVENT_MAIL_DOC;
+    enum PDF_DOCUMENT_EVENT_SUBMIT = _Anonymous_55.PDF_DOCUMENT_EVENT_SUBMIT;
+    enum PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM = _Anonymous_55.PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM;
 
-    void pdf_set_doc_event_callback(fz_context*, pdf_document*, void function(fz_context*, pdf_document*, pdf_doc_event*, void*), void function(fz_context*, void*), void*) @nogc nothrow;
+    void pdf_set_doc_event_callback(fz_context*, pdf_document*, pdf_doc_event_cb, pdf_free_doc_event_data_cb, void*) @nogc nothrow;
 
     void* pdf_get_doc_event_callback_data(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -11466,7 +11446,7 @@ extern(C)
         int button_pressed;
     }
 
-    enum _Anonymous_66
+    enum _Anonymous_56
     {
 
         PDF_ALERT_ICON_ERROR = 0,
@@ -11477,12 +11457,12 @@ extern(C)
 
         PDF_ALERT_ICON_STATUS = 3,
     }
-    enum PDF_ALERT_ICON_ERROR = _Anonymous_66.PDF_ALERT_ICON_ERROR;
-    enum PDF_ALERT_ICON_WARNING = _Anonymous_66.PDF_ALERT_ICON_WARNING;
-    enum PDF_ALERT_ICON_QUESTION = _Anonymous_66.PDF_ALERT_ICON_QUESTION;
-    enum PDF_ALERT_ICON_STATUS = _Anonymous_66.PDF_ALERT_ICON_STATUS;
+    enum PDF_ALERT_ICON_ERROR = _Anonymous_56.PDF_ALERT_ICON_ERROR;
+    enum PDF_ALERT_ICON_WARNING = _Anonymous_56.PDF_ALERT_ICON_WARNING;
+    enum PDF_ALERT_ICON_QUESTION = _Anonymous_56.PDF_ALERT_ICON_QUESTION;
+    enum PDF_ALERT_ICON_STATUS = _Anonymous_56.PDF_ALERT_ICON_STATUS;
 
-    enum _Anonymous_67
+    enum _Anonymous_57
     {
 
         PDF_ALERT_BUTTON_GROUP_OK = 0,
@@ -11493,12 +11473,12 @@ extern(C)
 
         PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = 3,
     }
-    enum PDF_ALERT_BUTTON_GROUP_OK = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_OK;
-    enum PDF_ALERT_BUTTON_GROUP_OK_CANCEL = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_OK_CANCEL;
-    enum PDF_ALERT_BUTTON_GROUP_YES_NO = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_YES_NO;
-    enum PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = _Anonymous_67.PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL;
+    enum PDF_ALERT_BUTTON_GROUP_OK = _Anonymous_57.PDF_ALERT_BUTTON_GROUP_OK;
+    enum PDF_ALERT_BUTTON_GROUP_OK_CANCEL = _Anonymous_57.PDF_ALERT_BUTTON_GROUP_OK_CANCEL;
+    enum PDF_ALERT_BUTTON_GROUP_YES_NO = _Anonymous_57.PDF_ALERT_BUTTON_GROUP_YES_NO;
+    enum PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL = _Anonymous_57.PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL;
 
-    enum _Anonymous_68
+    enum _Anonymous_58
     {
 
         PDF_ALERT_BUTTON_NONE = 0,
@@ -11511,11 +11491,11 @@ extern(C)
 
         PDF_ALERT_BUTTON_YES = 4,
     }
-    enum PDF_ALERT_BUTTON_NONE = _Anonymous_68.PDF_ALERT_BUTTON_NONE;
-    enum PDF_ALERT_BUTTON_OK = _Anonymous_68.PDF_ALERT_BUTTON_OK;
-    enum PDF_ALERT_BUTTON_CANCEL = _Anonymous_68.PDF_ALERT_BUTTON_CANCEL;
-    enum PDF_ALERT_BUTTON_NO = _Anonymous_68.PDF_ALERT_BUTTON_NO;
-    enum PDF_ALERT_BUTTON_YES = _Anonymous_68.PDF_ALERT_BUTTON_YES;
+    enum PDF_ALERT_BUTTON_NONE = _Anonymous_58.PDF_ALERT_BUTTON_NONE;
+    enum PDF_ALERT_BUTTON_OK = _Anonymous_58.PDF_ALERT_BUTTON_OK;
+    enum PDF_ALERT_BUTTON_CANCEL = _Anonymous_58.PDF_ALERT_BUTTON_CANCEL;
+    enum PDF_ALERT_BUTTON_NO = _Anonymous_58.PDF_ALERT_BUTTON_NO;
+    enum PDF_ALERT_BUTTON_YES = _Anonymous_58.PDF_ALERT_BUTTON_YES;
 
     pdf_alert_event* pdf_access_alert_event(fz_context*, pdf_doc_event*) @nogc nothrow;
 
@@ -11559,7 +11539,7 @@ extern(C)
 
     void pdf_event_issue_mail_doc(fz_context*, pdf_document*, pdf_mail_doc_event*) @nogc nothrow;
 
-    enum _Anonymous_69
+    enum _Anonymous_59
     {
 
         PDF_FD_FIXED_PITCH = 1,
@@ -11580,15 +11560,15 @@ extern(C)
 
         PDF_FD_FORCE_BOLD = 262144,
     }
-    enum PDF_FD_FIXED_PITCH = _Anonymous_69.PDF_FD_FIXED_PITCH;
-    enum PDF_FD_SERIF = _Anonymous_69.PDF_FD_SERIF;
-    enum PDF_FD_SYMBOLIC = _Anonymous_69.PDF_FD_SYMBOLIC;
-    enum PDF_FD_SCRIPT = _Anonymous_69.PDF_FD_SCRIPT;
-    enum PDF_FD_NONSYMBOLIC = _Anonymous_69.PDF_FD_NONSYMBOLIC;
-    enum PDF_FD_ITALIC = _Anonymous_69.PDF_FD_ITALIC;
-    enum PDF_FD_ALL_CAP = _Anonymous_69.PDF_FD_ALL_CAP;
-    enum PDF_FD_SMALL_CAP = _Anonymous_69.PDF_FD_SMALL_CAP;
-    enum PDF_FD_FORCE_BOLD = _Anonymous_69.PDF_FD_FORCE_BOLD;
+    enum PDF_FD_FIXED_PITCH = _Anonymous_59.PDF_FD_FIXED_PITCH;
+    enum PDF_FD_SERIF = _Anonymous_59.PDF_FD_SERIF;
+    enum PDF_FD_SYMBOLIC = _Anonymous_59.PDF_FD_SYMBOLIC;
+    enum PDF_FD_SCRIPT = _Anonymous_59.PDF_FD_SCRIPT;
+    enum PDF_FD_NONSYMBOLIC = _Anonymous_59.PDF_FD_NONSYMBOLIC;
+    enum PDF_FD_ITALIC = _Anonymous_59.PDF_FD_ITALIC;
+    enum PDF_FD_ALL_CAP = _Anonymous_59.PDF_FD_ALL_CAP;
+    enum PDF_FD_SMALL_CAP = _Anonymous_59.PDF_FD_SMALL_CAP;
+    enum PDF_FD_FORCE_BOLD = _Anonymous_59.PDF_FD_FORCE_BOLD;
 
     void pdf_load_encoding(const(char)**, const(char)*) @nogc nothrow;
 
@@ -11621,7 +11601,7 @@ extern(C)
 
         fz_storable storable;
 
-        c_ulong size;
+        size_t size;
 
         fz_font* font;
 
@@ -11643,13 +11623,13 @@ extern(C)
 
         pdf_cmap* to_ttf_cmap;
 
-        c_ulong cid_to_gid_len;
+        size_t cid_to_gid_len;
 
         ushort* cid_to_gid;
 
         pdf_cmap* to_unicode;
 
-        c_ulong cid_to_ucs_len;
+        size_t cid_to_ucs_len;
 
         ushort* cid_to_ucs;
 
@@ -11811,7 +11791,7 @@ extern(C)
 
     int pdf_widget_is_readonly(fz_context*, pdf_annot*) @nogc nothrow;
 
-    enum _Anonymous_70
+    enum _Anonymous_60
     {
 
         PDF_FIELD_IS_READ_ONLY = 1,
@@ -11854,26 +11834,26 @@ extern(C)
 
         PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = 33554432,
     }
-    enum PDF_FIELD_IS_READ_ONLY = _Anonymous_70.PDF_FIELD_IS_READ_ONLY;
-    enum PDF_FIELD_IS_REQUIRED = _Anonymous_70.PDF_FIELD_IS_REQUIRED;
-    enum PDF_FIELD_IS_NO_EXPORT = _Anonymous_70.PDF_FIELD_IS_NO_EXPORT;
-    enum PDF_TX_FIELD_IS_MULTILINE = _Anonymous_70.PDF_TX_FIELD_IS_MULTILINE;
-    enum PDF_TX_FIELD_IS_PASSWORD = _Anonymous_70.PDF_TX_FIELD_IS_PASSWORD;
-    enum PDF_TX_FIELD_IS_FILE_SELECT = _Anonymous_70.PDF_TX_FIELD_IS_FILE_SELECT;
-    enum PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_70.PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK;
-    enum PDF_TX_FIELD_IS_DO_NOT_SCROLL = _Anonymous_70.PDF_TX_FIELD_IS_DO_NOT_SCROLL;
-    enum PDF_TX_FIELD_IS_COMB = _Anonymous_70.PDF_TX_FIELD_IS_COMB;
-    enum PDF_TX_FIELD_IS_RICH_TEXT = _Anonymous_70.PDF_TX_FIELD_IS_RICH_TEXT;
-    enum PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF = _Anonymous_70.PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF;
-    enum PDF_BTN_FIELD_IS_RADIO = _Anonymous_70.PDF_BTN_FIELD_IS_RADIO;
-    enum PDF_BTN_FIELD_IS_PUSHBUTTON = _Anonymous_70.PDF_BTN_FIELD_IS_PUSHBUTTON;
-    enum PDF_BTN_FIELD_IS_RADIOS_IN_UNISON = _Anonymous_70.PDF_BTN_FIELD_IS_RADIOS_IN_UNISON;
-    enum PDF_CH_FIELD_IS_COMBO = _Anonymous_70.PDF_CH_FIELD_IS_COMBO;
-    enum PDF_CH_FIELD_IS_EDIT = _Anonymous_70.PDF_CH_FIELD_IS_EDIT;
-    enum PDF_CH_FIELD_IS_SORT = _Anonymous_70.PDF_CH_FIELD_IS_SORT;
-    enum PDF_CH_FIELD_IS_MULTI_SELECT = _Anonymous_70.PDF_CH_FIELD_IS_MULTI_SELECT;
-    enum PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_70.PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK;
-    enum PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = _Anonymous_70.PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE;
+    enum PDF_FIELD_IS_READ_ONLY = _Anonymous_60.PDF_FIELD_IS_READ_ONLY;
+    enum PDF_FIELD_IS_REQUIRED = _Anonymous_60.PDF_FIELD_IS_REQUIRED;
+    enum PDF_FIELD_IS_NO_EXPORT = _Anonymous_60.PDF_FIELD_IS_NO_EXPORT;
+    enum PDF_TX_FIELD_IS_MULTILINE = _Anonymous_60.PDF_TX_FIELD_IS_MULTILINE;
+    enum PDF_TX_FIELD_IS_PASSWORD = _Anonymous_60.PDF_TX_FIELD_IS_PASSWORD;
+    enum PDF_TX_FIELD_IS_FILE_SELECT = _Anonymous_60.PDF_TX_FIELD_IS_FILE_SELECT;
+    enum PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_60.PDF_TX_FIELD_IS_DO_NOT_SPELL_CHECK;
+    enum PDF_TX_FIELD_IS_DO_NOT_SCROLL = _Anonymous_60.PDF_TX_FIELD_IS_DO_NOT_SCROLL;
+    enum PDF_TX_FIELD_IS_COMB = _Anonymous_60.PDF_TX_FIELD_IS_COMB;
+    enum PDF_TX_FIELD_IS_RICH_TEXT = _Anonymous_60.PDF_TX_FIELD_IS_RICH_TEXT;
+    enum PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF = _Anonymous_60.PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF;
+    enum PDF_BTN_FIELD_IS_RADIO = _Anonymous_60.PDF_BTN_FIELD_IS_RADIO;
+    enum PDF_BTN_FIELD_IS_PUSHBUTTON = _Anonymous_60.PDF_BTN_FIELD_IS_PUSHBUTTON;
+    enum PDF_BTN_FIELD_IS_RADIOS_IN_UNISON = _Anonymous_60.PDF_BTN_FIELD_IS_RADIOS_IN_UNISON;
+    enum PDF_CH_FIELD_IS_COMBO = _Anonymous_60.PDF_CH_FIELD_IS_COMBO;
+    enum PDF_CH_FIELD_IS_EDIT = _Anonymous_60.PDF_CH_FIELD_IS_EDIT;
+    enum PDF_CH_FIELD_IS_SORT = _Anonymous_60.PDF_CH_FIELD_IS_SORT;
+    enum PDF_CH_FIELD_IS_MULTI_SELECT = _Anonymous_60.PDF_CH_FIELD_IS_MULTI_SELECT;
+    enum PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK = _Anonymous_60.PDF_CH_FIELD_IS_DO_NOT_SPELL_CHECK;
+    enum PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE = _Anonymous_60.PDF_CH_FIELD_IS_COMMIT_ON_SEL_CHANGE;
 
     void pdf_calculate_form(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -11889,7 +11869,7 @@ extern(C)
 
     const(char)* pdf_field_value(fz_context*, pdf_obj*) @nogc nothrow;
 
-    void pdf_create_field_name(fz_context*, pdf_document*, const(char)*, char*, c_ulong) @nogc nothrow;
+    void pdf_create_field_name(fz_context*, pdf_document*, const(char)*, char*, size_t) @nogc nothrow;
 
     char* pdf_field_border_style(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -11931,9 +11911,7 @@ extern(C)
         char* c;
     }
 
-    alias pdf_signature_error = _Anonymous_71;
-
-    enum _Anonymous_71
+    enum pdf_signature_error
     {
 
         PDF_SIGNATURE_ERROR_OKAY = 0,
@@ -11952,14 +11930,14 @@ extern(C)
 
         PDF_SIGNATURE_ERROR_UNKNOWN = 7,
     }
-    enum PDF_SIGNATURE_ERROR_OKAY = _Anonymous_71.PDF_SIGNATURE_ERROR_OKAY;
-    enum PDF_SIGNATURE_ERROR_NO_SIGNATURES = _Anonymous_71.PDF_SIGNATURE_ERROR_NO_SIGNATURES;
-    enum PDF_SIGNATURE_ERROR_NO_CERTIFICATE = _Anonymous_71.PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
-    enum PDF_SIGNATURE_ERROR_DIGEST_FAILURE = _Anonymous_71.PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
-    enum PDF_SIGNATURE_ERROR_SELF_SIGNED = _Anonymous_71.PDF_SIGNATURE_ERROR_SELF_SIGNED;
-    enum PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN = _Anonymous_71.PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
-    enum PDF_SIGNATURE_ERROR_NOT_TRUSTED = _Anonymous_71.PDF_SIGNATURE_ERROR_NOT_TRUSTED;
-    enum PDF_SIGNATURE_ERROR_UNKNOWN = _Anonymous_71.PDF_SIGNATURE_ERROR_UNKNOWN;
+    enum PDF_SIGNATURE_ERROR_OKAY = pdf_signature_error.PDF_SIGNATURE_ERROR_OKAY;
+    enum PDF_SIGNATURE_ERROR_NO_SIGNATURES = pdf_signature_error.PDF_SIGNATURE_ERROR_NO_SIGNATURES;
+    enum PDF_SIGNATURE_ERROR_NO_CERTIFICATE = pdf_signature_error.PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
+    enum PDF_SIGNATURE_ERROR_DIGEST_FAILURE = pdf_signature_error.PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
+    enum PDF_SIGNATURE_ERROR_SELF_SIGNED = pdf_signature_error.PDF_SIGNATURE_ERROR_SELF_SIGNED;
+    enum PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN = pdf_signature_error.PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
+    enum PDF_SIGNATURE_ERROR_NOT_TRUSTED = pdf_signature_error.PDF_SIGNATURE_ERROR_NOT_TRUSTED;
+    enum PDF_SIGNATURE_ERROR_UNKNOWN = pdf_signature_error.PDF_SIGNATURE_ERROR_UNKNOWN;
     alias pdf_pkcs7_keep_signer_fn = pdf_pkcs7_signer* function(fz_context*, pdf_pkcs7_signer*);
     alias pdf_pkcs7_drop_signer_fn = void function(fz_context*, pdf_pkcs7_signer*);
     alias pdf_pkcs7_get_signing_name_fn = pdf_pkcs7_distinguished_name* function(fz_context*, pdf_pkcs7_signer*);
@@ -11969,13 +11947,13 @@ extern(C)
     struct pdf_pkcs7_verifier
     {
 
-        void function(fz_context*, pdf_pkcs7_verifier*) drop;
+        pdf_pkcs7_drop_verifier_fn drop;
 
-        pdf_signature_error function(fz_context*, pdf_pkcs7_verifier*, ubyte*, c_ulong) check_certificate;
+        pdf_pkcs7_check_certificate_fn check_certificate;
 
-        pdf_signature_error function(fz_context*, pdf_pkcs7_verifier*, fz_stream*, ubyte*, c_ulong) check_digest;
+        pdf_pkcs7_check_digest_fn check_digest;
 
-        pdf_pkcs7_distinguished_name* function(fz_context*, pdf_pkcs7_verifier*, ubyte*, c_ulong) get_signatory;
+        pdf_pkcs7_get_signatory_fn get_signatory;
     }
     alias pdf_pkcs7_drop_verifier_fn = void function(fz_context*, pdf_pkcs7_verifier*);
     alias pdf_pkcs7_check_certificate_fn = pdf_signature_error function(fz_context*, pdf_pkcs7_verifier*, ubyte*, c_ulong);
@@ -11984,7 +11962,7 @@ extern(C)
 
     int pdf_signature_is_signed(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
-    void pdf_signature_set_value(fz_context*, pdf_document*, pdf_obj*, pdf_pkcs7_signer*, c_long) @nogc nothrow;
+    void pdf_signature_set_value(fz_context*, pdf_document*, pdf_obj*, pdf_pkcs7_signer*, int64_t) @nogc nothrow;
 
     int pdf_count_signatures(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -11998,7 +11976,7 @@ extern(C)
 
     char* pdf_signature_format_distinguished_name(fz_context*, pdf_pkcs7_distinguished_name*) @nogc nothrow;
 
-    char* pdf_signature_info(fz_context*, const(char)*, pdf_pkcs7_distinguished_name*, const(char)*, const(char)*, c_long, int) @nogc nothrow;
+    char* pdf_signature_info(fz_context*, const(char)*, pdf_pkcs7_distinguished_name*, const(char)*, const(char)*, int64_t, int) @nogc nothrow;
 
     fz_display_list* pdf_signature_appearance_signed(fz_context*, fz_rect, fz_text_language, fz_image*, const(char)*, const(char)*, int) @nogc nothrow;
 
@@ -12014,9 +11992,9 @@ extern(C)
 
     void pdf_clear_signature(fz_context*, pdf_annot*) @nogc nothrow;
 
-    void pdf_sign_signature_with_appearance(fz_context*, pdf_annot*, pdf_pkcs7_signer*, c_long, fz_display_list*) @nogc nothrow;
+    void pdf_sign_signature_with_appearance(fz_context*, pdf_annot*, pdf_pkcs7_signer*, int64_t, fz_display_list*) @nogc nothrow;
 
-    enum _Anonymous_72
+    enum _Anonymous_61
     {
 
         PDF_SIGNATURE_SHOW_LABELS = 1,
@@ -12031,12 +12009,12 @@ extern(C)
 
         PDF_SIGNATURE_SHOW_LOGO = 32,
     }
-    enum PDF_SIGNATURE_SHOW_LABELS = _Anonymous_72.PDF_SIGNATURE_SHOW_LABELS;
-    enum PDF_SIGNATURE_SHOW_DN = _Anonymous_72.PDF_SIGNATURE_SHOW_DN;
-    enum PDF_SIGNATURE_SHOW_DATE = _Anonymous_72.PDF_SIGNATURE_SHOW_DATE;
-    enum PDF_SIGNATURE_SHOW_TEXT_NAME = _Anonymous_72.PDF_SIGNATURE_SHOW_TEXT_NAME;
-    enum PDF_SIGNATURE_SHOW_GRAPHIC_NAME = _Anonymous_72.PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
-    enum PDF_SIGNATURE_SHOW_LOGO = _Anonymous_72.PDF_SIGNATURE_SHOW_LOGO;
+    enum PDF_SIGNATURE_SHOW_LABELS = _Anonymous_61.PDF_SIGNATURE_SHOW_LABELS;
+    enum PDF_SIGNATURE_SHOW_DN = _Anonymous_61.PDF_SIGNATURE_SHOW_DN;
+    enum PDF_SIGNATURE_SHOW_DATE = _Anonymous_61.PDF_SIGNATURE_SHOW_DATE;
+    enum PDF_SIGNATURE_SHOW_TEXT_NAME = _Anonymous_61.PDF_SIGNATURE_SHOW_TEXT_NAME;
+    enum PDF_SIGNATURE_SHOW_GRAPHIC_NAME = _Anonymous_61.PDF_SIGNATURE_SHOW_GRAPHIC_NAME;
+    enum PDF_SIGNATURE_SHOW_LOGO = _Anonymous_61.PDF_SIGNATURE_SHOW_LOGO;
 
     void pdf_sign_signature(fz_context*, pdf_annot*, pdf_pkcs7_signer*, int, fz_image*, const(char)*, const(char)*) @nogc nothrow;
 
@@ -12044,7 +12022,7 @@ extern(C)
 
     fz_pixmap* pdf_preview_signature_as_pixmap(fz_context*, int, int, fz_text_language, pdf_pkcs7_signer*, int, fz_image*, const(char)*, const(char)*) @nogc nothrow;
 
-    int pdf_check_signature(fz_context*, pdf_pkcs7_verifier*, pdf_document*, pdf_obj*, char*, c_ulong) @nogc nothrow;
+    int pdf_check_signature(fz_context*, pdf_pkcs7_verifier*, pdf_document*, pdf_obj*, char*, size_t) @nogc nothrow;
 
     void pdf_drop_signer(fz_context*, pdf_pkcs7_signer*) @nogc nothrow;
 
@@ -12115,6 +12093,8 @@ extern(C)
     void pdf_annot_event_page_visible(fz_context*, pdf_annot*) @nogc nothrow;
 
     void pdf_annot_event_page_invisible(fz_context*, pdf_annot*) @nogc nothrow;
+
+    alias _Float64x = real;
     struct pdf_gstate;
 
     struct pdf_processor
@@ -12224,11 +12204,11 @@ extern(C)
 
         void function(fz_context*, pdf_processor*, pdf_obj*) op_TJ;
 
-        void function(fz_context*, pdf_processor*, char*, c_ulong) op_Tj;
+        void function(fz_context*, pdf_processor*, char*, size_t) op_Tj;
 
-        void function(fz_context*, pdf_processor*, char*, c_ulong) op_squote;
+        void function(fz_context*, pdf_processor*, char*, size_t) op_squote;
 
-        void function(fz_context*, pdf_processor*, float, float, char*, c_ulong) op_dquote;
+        void function(fz_context*, pdf_processor*, float, float, char*, size_t) op_dquote;
 
         void function(fz_context*, pdf_processor*, float, float) op_d0;
 
@@ -12332,7 +12312,7 @@ extern(C)
 
         char[256] string_;
 
-        c_ulong string_len;
+        size_t string_len;
 
         int top;
 
@@ -12472,9 +12452,9 @@ extern(C)
 
         int version_;
 
-        c_long startxref;
+        int64_t startxref;
 
-        c_long file_size;
+        int64_t file_size;
 
         pdf_crypt* crypt;
 
@@ -12526,7 +12506,7 @@ extern(C)
 
         int file_reading_linearly;
 
-        c_long file_length;
+        int64_t file_length;
 
         int linear_page_count;
 
@@ -12536,7 +12516,7 @@ extern(C)
 
         int linear_page1_obj_num;
 
-        c_long linear_pos;
+        int64_t linear_pos;
 
         int linear_page_num;
 
@@ -12554,7 +12534,7 @@ extern(C)
 
         int hint_obj_offsets_max;
 
-        c_long* hint_obj_offsets;
+        int64_t* hint_obj_offsets;
 
         int resources_localised;
 
@@ -12568,9 +12548,9 @@ extern(C)
 
         int resynth_required;
 
-        void function(fz_context*, pdf_document*, pdf_doc_event*, void*) event_cb;
+        pdf_doc_event_cb event_cb;
 
-        void function(fz_context*, void*) free_event_data_cb;
+        pdf_free_doc_event_data_cb free_event_data_cb;
 
         void* event_cb_data;
 
@@ -12582,13 +12562,13 @@ extern(C)
 
         int type3_lock;
 
-        static struct _Anonymous_73
+        static struct _Anonymous_62
         {
 
             fz_hash_table* fonts;
         }
 
-        _Anonymous_73 resources;
+        _Anonymous_62 resources;
 
         int orphans_max;
 
@@ -12596,7 +12576,7 @@ extern(C)
 
         pdf_obj** orphans;
 
-        fz_xml* xfa;
+        fz_xml_doc* xfa;
 
         pdf_journal* journal;
     }
@@ -12604,13 +12584,13 @@ extern(C)
     struct pdf_journal;
     struct pdf_obj;
 
-    pdf_obj* pdf_new_int(fz_context*, c_long) @nogc nothrow;
+    pdf_obj* pdf_new_int(fz_context*, int64_t) @nogc nothrow;
 
     pdf_obj* pdf_new_real(fz_context*, float) @nogc nothrow;
 
     pdf_obj* pdf_new_name(fz_context*, const(char)*) @nogc nothrow;
 
-    pdf_obj* pdf_new_string(fz_context*, const(char)*, c_ulong) @nogc nothrow;
+    pdf_obj* pdf_new_string(fz_context*, const(char)*, size_t) @nogc nothrow;
 
     pdf_obj* pdf_new_text_string(fz_context*, const(char)*) @nogc nothrow;
 
@@ -12624,7 +12604,7 @@ extern(C)
 
     pdf_obj* pdf_new_matrix(fz_context*, pdf_document*, fz_matrix) @nogc nothrow;
 
-    pdf_obj* pdf_new_date(fz_context*, pdf_document*, c_long) @nogc nothrow;
+    pdf_obj* pdf_new_date(fz_context*, pdf_document*, int64_t) @nogc nothrow;
 
     pdf_obj* pdf_copy_array(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -12663,6 +12643,8 @@ extern(C)
     int pdf_objcmp(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
     int pdf_objcmp_resolve(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
+
+    int pdf_objcmp_deep(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
     int pdf_name_eq(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
@@ -12732,7 +12714,7 @@ extern(C)
 
     int pdf_to_int(fz_context*, pdf_obj*) @nogc nothrow;
 
-    c_long pdf_to_int64(fz_context*, pdf_obj*) @nogc nothrow;
+    int64_t pdf_to_int64(fz_context*, pdf_obj*) @nogc nothrow;
 
     float pdf_to_real(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -12740,11 +12722,11 @@ extern(C)
 
     const(char)* pdf_to_text_string(fz_context*, pdf_obj*) @nogc nothrow;
 
-    const(char)* pdf_to_string(fz_context*, pdf_obj*, c_ulong*) @nogc nothrow;
+    const(char)* pdf_to_string(fz_context*, pdf_obj*, size_t*) @nogc nothrow;
 
     char* pdf_to_str_buf(fz_context*, pdf_obj*) @nogc nothrow;
 
-    c_ulong pdf_to_str_len(fz_context*, pdf_obj*) @nogc nothrow;
+    size_t pdf_to_str_len(fz_context*, pdf_obj*) @nogc nothrow;
 
     int pdf_to_num(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -12822,13 +12804,13 @@ extern(C)
 
     void pdf_dict_put_bool(fz_context*, pdf_obj*, pdf_obj*, int) @nogc nothrow;
 
-    void pdf_dict_put_int(fz_context*, pdf_obj*, pdf_obj*, c_long) @nogc nothrow;
+    void pdf_dict_put_int(fz_context*, pdf_obj*, pdf_obj*, int64_t) @nogc nothrow;
 
     void pdf_dict_put_real(fz_context*, pdf_obj*, pdf_obj*, double) @nogc nothrow;
 
     void pdf_dict_put_name(fz_context*, pdf_obj*, pdf_obj*, const(char)*) @nogc nothrow;
 
-    void pdf_dict_put_string(fz_context*, pdf_obj*, pdf_obj*, const(char)*, c_ulong) @nogc nothrow;
+    void pdf_dict_put_string(fz_context*, pdf_obj*, pdf_obj*, const(char)*, size_t) @nogc nothrow;
 
     void pdf_dict_put_text_string(fz_context*, pdf_obj*, pdf_obj*, const(char)*) @nogc nothrow;
 
@@ -12836,7 +12818,7 @@ extern(C)
 
     void pdf_dict_put_matrix(fz_context*, pdf_obj*, pdf_obj*, fz_matrix) @nogc nothrow;
 
-    void pdf_dict_put_date(fz_context*, pdf_obj*, pdf_obj*, c_long) @nogc nothrow;
+    void pdf_dict_put_date(fz_context*, pdf_obj*, pdf_obj*, int64_t) @nogc nothrow;
 
     pdf_obj* pdf_dict_put_array(fz_context*, pdf_obj*, pdf_obj*, int) @nogc nothrow;
 
@@ -12852,7 +12834,7 @@ extern(C)
 
     const(char)* pdf_dict_get_name(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
-    const(char)* pdf_dict_get_string(fz_context*, pdf_obj*, pdf_obj*, c_ulong*) @nogc nothrow;
+    const(char)* pdf_dict_get_string(fz_context*, pdf_obj*, pdf_obj*, size_t*) @nogc nothrow;
 
     const(char)* pdf_dict_get_text_string(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
@@ -12860,17 +12842,17 @@ extern(C)
 
     fz_matrix pdf_dict_get_matrix(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
-    c_long pdf_dict_get_date(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
+    int64_t pdf_dict_get_date(fz_context*, pdf_obj*, pdf_obj*) @nogc nothrow;
 
     void pdf_array_push_bool(fz_context*, pdf_obj*, int) @nogc nothrow;
 
-    void pdf_array_push_int(fz_context*, pdf_obj*, c_long) @nogc nothrow;
+    void pdf_array_push_int(fz_context*, pdf_obj*, int64_t) @nogc nothrow;
 
     void pdf_array_push_real(fz_context*, pdf_obj*, double) @nogc nothrow;
 
     void pdf_array_push_name(fz_context*, pdf_obj*, const(char)*) @nogc nothrow;
 
-    void pdf_array_push_string(fz_context*, pdf_obj*, const(char)*, c_ulong) @nogc nothrow;
+    void pdf_array_push_string(fz_context*, pdf_obj*, const(char)*, size_t) @nogc nothrow;
 
     void pdf_array_push_text_string(fz_context*, pdf_obj*, const(char)*) @nogc nothrow;
 
@@ -12886,7 +12868,7 @@ extern(C)
 
     const(char)* pdf_array_get_name(fz_context*, pdf_obj*, int) @nogc nothrow;
 
-    const(char)* pdf_array_get_string(fz_context*, pdf_obj*, int, c_ulong*) @nogc nothrow;
+    const(char)* pdf_array_get_string(fz_context*, pdf_obj*, int, size_t*) @nogc nothrow;
 
     const(char)* pdf_array_get_text_string(fz_context*, pdf_obj*, int) @nogc nothrow;
 
@@ -12900,7 +12882,7 @@ extern(C)
 
     int pdf_obj_parent_num(fz_context*, pdf_obj*) @nogc nothrow;
 
-    char* pdf_sprint_obj(fz_context*, char*, c_ulong, c_ulong*, pdf_obj*, int, int) @nogc nothrow;
+    char* pdf_sprint_obj(fz_context*, char*, size_t, size_t*, pdf_obj*, int, int) @nogc nothrow;
 
     void pdf_print_obj(fz_context*, fz_output*, pdf_obj*, int, int) @nogc nothrow;
 
@@ -12910,7 +12892,7 @@ extern(C)
 
     void pdf_debug_ref(fz_context*, pdf_obj*) @nogc nothrow;
 
-    char* pdf_new_utf8_from_pdf_string(fz_context*, const(char)*, c_ulong) @nogc nothrow;
+    char* pdf_new_utf8_from_pdf_string(fz_context*, const(char)*, size_t) @nogc nothrow;
 
     char* pdf_new_utf8_from_pdf_string_obj(fz_context*, pdf_obj*) @nogc nothrow;
 
@@ -12924,15 +12906,17 @@ extern(C)
 
     fz_matrix pdf_to_matrix(fz_context*, pdf_obj*) @nogc nothrow;
 
-    c_long pdf_to_date(fz_context*, pdf_obj*) @nogc nothrow;
+    int64_t pdf_to_date(fz_context*, pdf_obj*) @nogc nothrow;
 
     pdf_document* pdf_get_indirect_document(fz_context*, pdf_obj*) @nogc nothrow;
 
     pdf_document* pdf_get_bound_document(fz_context*, pdf_obj*) @nogc nothrow;
 
-    void pdf_set_int(fz_context*, pdf_obj*, c_long) @nogc nothrow;
+    void pdf_set_int(fz_context*, pdf_obj*, int64_t) @nogc nothrow;
 
-    enum _Anonymous_74
+    alias _Float32x = double;
+
+    enum _Anonymous_63
     {
 
         PDF_ENUM_NULL = 0,
@@ -13947,514 +13931,516 @@ extern(C)
 
         PDF_ENUM_LIMIT = 505,
     }
-    enum PDF_ENUM_NULL = _Anonymous_74.PDF_ENUM_NULL;
-    enum PDF_ENUM_TRUE = _Anonymous_74.PDF_ENUM_TRUE;
-    enum PDF_ENUM_FALSE = _Anonymous_74.PDF_ENUM_FALSE;
-    enum PDF_ENUM_NAME_1_2 = _Anonymous_74.PDF_ENUM_NAME_1_2;
-    enum PDF_ENUM_NAME_3D = _Anonymous_74.PDF_ENUM_NAME_3D;
-    enum PDF_ENUM_NAME_A = _Anonymous_74.PDF_ENUM_NAME_A;
-    enum PDF_ENUM_NAME_A85 = _Anonymous_74.PDF_ENUM_NAME_A85;
-    enum PDF_ENUM_NAME_AA = _Anonymous_74.PDF_ENUM_NAME_AA;
-    enum PDF_ENUM_NAME_AC = _Anonymous_74.PDF_ENUM_NAME_AC;
-    enum PDF_ENUM_NAME_AESV2 = _Anonymous_74.PDF_ENUM_NAME_AESV2;
-    enum PDF_ENUM_NAME_AESV3 = _Anonymous_74.PDF_ENUM_NAME_AESV3;
-    enum PDF_ENUM_NAME_AHx = _Anonymous_74.PDF_ENUM_NAME_AHx;
-    enum PDF_ENUM_NAME_AP = _Anonymous_74.PDF_ENUM_NAME_AP;
-    enum PDF_ENUM_NAME_AS = _Anonymous_74.PDF_ENUM_NAME_AS;
-    enum PDF_ENUM_NAME_ASCII85Decode = _Anonymous_74.PDF_ENUM_NAME_ASCII85Decode;
-    enum PDF_ENUM_NAME_ASCIIHexDecode = _Anonymous_74.PDF_ENUM_NAME_ASCIIHexDecode;
-    enum PDF_ENUM_NAME_AcroForm = _Anonymous_74.PDF_ENUM_NAME_AcroForm;
-    enum PDF_ENUM_NAME_Action = _Anonymous_74.PDF_ENUM_NAME_Action;
-    enum PDF_ENUM_NAME_ActualText = _Anonymous_74.PDF_ENUM_NAME_ActualText;
-    enum PDF_ENUM_NAME_Adobe_PPKLite = _Anonymous_74.PDF_ENUM_NAME_Adobe_PPKLite;
-    enum PDF_ENUM_NAME_All = _Anonymous_74.PDF_ENUM_NAME_All;
-    enum PDF_ENUM_NAME_AllOff = _Anonymous_74.PDF_ENUM_NAME_AllOff;
-    enum PDF_ENUM_NAME_AllOn = _Anonymous_74.PDF_ENUM_NAME_AllOn;
-    enum PDF_ENUM_NAME_Alpha = _Anonymous_74.PDF_ENUM_NAME_Alpha;
-    enum PDF_ENUM_NAME_Alt = _Anonymous_74.PDF_ENUM_NAME_Alt;
-    enum PDF_ENUM_NAME_Alternate = _Anonymous_74.PDF_ENUM_NAME_Alternate;
-    enum PDF_ENUM_NAME_Annot = _Anonymous_74.PDF_ENUM_NAME_Annot;
-    enum PDF_ENUM_NAME_Annots = _Anonymous_74.PDF_ENUM_NAME_Annots;
-    enum PDF_ENUM_NAME_AnyOff = _Anonymous_74.PDF_ENUM_NAME_AnyOff;
-    enum PDF_ENUM_NAME_App = _Anonymous_74.PDF_ENUM_NAME_App;
-    enum PDF_ENUM_NAME_Approved = _Anonymous_74.PDF_ENUM_NAME_Approved;
-    enum PDF_ENUM_NAME_ArtBox = _Anonymous_74.PDF_ENUM_NAME_ArtBox;
-    enum PDF_ENUM_NAME_AsIs = _Anonymous_74.PDF_ENUM_NAME_AsIs;
-    enum PDF_ENUM_NAME_Ascent = _Anonymous_74.PDF_ENUM_NAME_Ascent;
-    enum PDF_ENUM_NAME_AuthEvent = _Anonymous_74.PDF_ENUM_NAME_AuthEvent;
-    enum PDF_ENUM_NAME_Author = _Anonymous_74.PDF_ENUM_NAME_Author;
-    enum PDF_ENUM_NAME_B = _Anonymous_74.PDF_ENUM_NAME_B;
-    enum PDF_ENUM_NAME_BBox = _Anonymous_74.PDF_ENUM_NAME_BBox;
-    enum PDF_ENUM_NAME_BC = _Anonymous_74.PDF_ENUM_NAME_BC;
-    enum PDF_ENUM_NAME_BE = _Anonymous_74.PDF_ENUM_NAME_BE;
-    enum PDF_ENUM_NAME_BG = _Anonymous_74.PDF_ENUM_NAME_BG;
-    enum PDF_ENUM_NAME_BM = _Anonymous_74.PDF_ENUM_NAME_BM;
-    enum PDF_ENUM_NAME_BPC = _Anonymous_74.PDF_ENUM_NAME_BPC;
-    enum PDF_ENUM_NAME_BS = _Anonymous_74.PDF_ENUM_NAME_BS;
-    enum PDF_ENUM_NAME_Background = _Anonymous_74.PDF_ENUM_NAME_Background;
-    enum PDF_ENUM_NAME_BaseEncoding = _Anonymous_74.PDF_ENUM_NAME_BaseEncoding;
-    enum PDF_ENUM_NAME_BaseFont = _Anonymous_74.PDF_ENUM_NAME_BaseFont;
-    enum PDF_ENUM_NAME_BaseState = _Anonymous_74.PDF_ENUM_NAME_BaseState;
-    enum PDF_ENUM_NAME_BitsPerComponent = _Anonymous_74.PDF_ENUM_NAME_BitsPerComponent;
-    enum PDF_ENUM_NAME_BitsPerCoordinate = _Anonymous_74.PDF_ENUM_NAME_BitsPerCoordinate;
-    enum PDF_ENUM_NAME_BitsPerFlag = _Anonymous_74.PDF_ENUM_NAME_BitsPerFlag;
-    enum PDF_ENUM_NAME_BitsPerSample = _Anonymous_74.PDF_ENUM_NAME_BitsPerSample;
-    enum PDF_ENUM_NAME_BlackIs1 = _Anonymous_74.PDF_ENUM_NAME_BlackIs1;
-    enum PDF_ENUM_NAME_BlackPoint = _Anonymous_74.PDF_ENUM_NAME_BlackPoint;
-    enum PDF_ENUM_NAME_BleedBox = _Anonymous_74.PDF_ENUM_NAME_BleedBox;
-    enum PDF_ENUM_NAME_Blinds = _Anonymous_74.PDF_ENUM_NAME_Blinds;
-    enum PDF_ENUM_NAME_Border = _Anonymous_74.PDF_ENUM_NAME_Border;
-    enum PDF_ENUM_NAME_Bounds = _Anonymous_74.PDF_ENUM_NAME_Bounds;
-    enum PDF_ENUM_NAME_Box = _Anonymous_74.PDF_ENUM_NAME_Box;
-    enum PDF_ENUM_NAME_Bt = _Anonymous_74.PDF_ENUM_NAME_Bt;
-    enum PDF_ENUM_NAME_Btn = _Anonymous_74.PDF_ENUM_NAME_Btn;
-    enum PDF_ENUM_NAME_Butt = _Anonymous_74.PDF_ENUM_NAME_Butt;
-    enum PDF_ENUM_NAME_ByteRange = _Anonymous_74.PDF_ENUM_NAME_ByteRange;
-    enum PDF_ENUM_NAME_C = _Anonymous_74.PDF_ENUM_NAME_C;
-    enum PDF_ENUM_NAME_C0 = _Anonymous_74.PDF_ENUM_NAME_C0;
-    enum PDF_ENUM_NAME_C1 = _Anonymous_74.PDF_ENUM_NAME_C1;
-    enum PDF_ENUM_NAME_CA = _Anonymous_74.PDF_ENUM_NAME_CA;
-    enum PDF_ENUM_NAME_CCF = _Anonymous_74.PDF_ENUM_NAME_CCF;
-    enum PDF_ENUM_NAME_CCITTFaxDecode = _Anonymous_74.PDF_ENUM_NAME_CCITTFaxDecode;
-    enum PDF_ENUM_NAME_CF = _Anonymous_74.PDF_ENUM_NAME_CF;
-    enum PDF_ENUM_NAME_CFM = _Anonymous_74.PDF_ENUM_NAME_CFM;
-    enum PDF_ENUM_NAME_CI = _Anonymous_74.PDF_ENUM_NAME_CI;
-    enum PDF_ENUM_NAME_CIDFontType0 = _Anonymous_74.PDF_ENUM_NAME_CIDFontType0;
-    enum PDF_ENUM_NAME_CIDFontType0C = _Anonymous_74.PDF_ENUM_NAME_CIDFontType0C;
-    enum PDF_ENUM_NAME_CIDFontType2 = _Anonymous_74.PDF_ENUM_NAME_CIDFontType2;
-    enum PDF_ENUM_NAME_CIDSystemInfo = _Anonymous_74.PDF_ENUM_NAME_CIDSystemInfo;
-    enum PDF_ENUM_NAME_CIDToGIDMap = _Anonymous_74.PDF_ENUM_NAME_CIDToGIDMap;
-    enum PDF_ENUM_NAME_CMYK = _Anonymous_74.PDF_ENUM_NAME_CMYK;
-    enum PDF_ENUM_NAME_CS = _Anonymous_74.PDF_ENUM_NAME_CS;
-    enum PDF_ENUM_NAME_CalCMYK = _Anonymous_74.PDF_ENUM_NAME_CalCMYK;
-    enum PDF_ENUM_NAME_CalGray = _Anonymous_74.PDF_ENUM_NAME_CalGray;
-    enum PDF_ENUM_NAME_CalRGB = _Anonymous_74.PDF_ENUM_NAME_CalRGB;
-    enum PDF_ENUM_NAME_CapHeight = _Anonymous_74.PDF_ENUM_NAME_CapHeight;
-    enum PDF_ENUM_NAME_Caret = _Anonymous_74.PDF_ENUM_NAME_Caret;
-    enum PDF_ENUM_NAME_Catalog = _Anonymous_74.PDF_ENUM_NAME_Catalog;
-    enum PDF_ENUM_NAME_Cert = _Anonymous_74.PDF_ENUM_NAME_Cert;
-    enum PDF_ENUM_NAME_Ch = _Anonymous_74.PDF_ENUM_NAME_Ch;
-    enum PDF_ENUM_NAME_Changes = _Anonymous_74.PDF_ENUM_NAME_Changes;
-    enum PDF_ENUM_NAME_CharProcs = _Anonymous_74.PDF_ENUM_NAME_CharProcs;
-    enum PDF_ENUM_NAME_CheckSum = _Anonymous_74.PDF_ENUM_NAME_CheckSum;
-    enum PDF_ENUM_NAME_Circle = _Anonymous_74.PDF_ENUM_NAME_Circle;
-    enum PDF_ENUM_NAME_ClosedArrow = _Anonymous_74.PDF_ENUM_NAME_ClosedArrow;
-    enum PDF_ENUM_NAME_Collection = _Anonymous_74.PDF_ENUM_NAME_Collection;
-    enum PDF_ENUM_NAME_ColorSpace = _Anonymous_74.PDF_ENUM_NAME_ColorSpace;
-    enum PDF_ENUM_NAME_ColorTransform = _Anonymous_74.PDF_ENUM_NAME_ColorTransform;
-    enum PDF_ENUM_NAME_Colorants = _Anonymous_74.PDF_ENUM_NAME_Colorants;
-    enum PDF_ENUM_NAME_Colors = _Anonymous_74.PDF_ENUM_NAME_Colors;
-    enum PDF_ENUM_NAME_Columns = _Anonymous_74.PDF_ENUM_NAME_Columns;
-    enum PDF_ENUM_NAME_Confidential = _Anonymous_74.PDF_ENUM_NAME_Confidential;
-    enum PDF_ENUM_NAME_Configs = _Anonymous_74.PDF_ENUM_NAME_Configs;
-    enum PDF_ENUM_NAME_ContactInfo = _Anonymous_74.PDF_ENUM_NAME_ContactInfo;
-    enum PDF_ENUM_NAME_Contents = _Anonymous_74.PDF_ENUM_NAME_Contents;
-    enum PDF_ENUM_NAME_Coords = _Anonymous_74.PDF_ENUM_NAME_Coords;
-    enum PDF_ENUM_NAME_Count = _Anonymous_74.PDF_ENUM_NAME_Count;
-    enum PDF_ENUM_NAME_Cover = _Anonymous_74.PDF_ENUM_NAME_Cover;
-    enum PDF_ENUM_NAME_CreationDate = _Anonymous_74.PDF_ENUM_NAME_CreationDate;
-    enum PDF_ENUM_NAME_Creator = _Anonymous_74.PDF_ENUM_NAME_Creator;
-    enum PDF_ENUM_NAME_CropBox = _Anonymous_74.PDF_ENUM_NAME_CropBox;
-    enum PDF_ENUM_NAME_Crypt = _Anonymous_74.PDF_ENUM_NAME_Crypt;
-    enum PDF_ENUM_NAME_D = _Anonymous_74.PDF_ENUM_NAME_D;
-    enum PDF_ENUM_NAME_DA = _Anonymous_74.PDF_ENUM_NAME_DA;
-    enum PDF_ENUM_NAME_DC = _Anonymous_74.PDF_ENUM_NAME_DC;
-    enum PDF_ENUM_NAME_DCT = _Anonymous_74.PDF_ENUM_NAME_DCT;
-    enum PDF_ENUM_NAME_DCTDecode = _Anonymous_74.PDF_ENUM_NAME_DCTDecode;
-    enum PDF_ENUM_NAME_DL = _Anonymous_74.PDF_ENUM_NAME_DL;
-    enum PDF_ENUM_NAME_DOS = _Anonymous_74.PDF_ENUM_NAME_DOS;
-    enum PDF_ENUM_NAME_DP = _Anonymous_74.PDF_ENUM_NAME_DP;
-    enum PDF_ENUM_NAME_DR = _Anonymous_74.PDF_ENUM_NAME_DR;
-    enum PDF_ENUM_NAME_DS = _Anonymous_74.PDF_ENUM_NAME_DS;
-    enum PDF_ENUM_NAME_DV = _Anonymous_74.PDF_ENUM_NAME_DV;
-    enum PDF_ENUM_NAME_DW = _Anonymous_74.PDF_ENUM_NAME_DW;
-    enum PDF_ENUM_NAME_DW2 = _Anonymous_74.PDF_ENUM_NAME_DW2;
-    enum PDF_ENUM_NAME_DamagedRowsBeforeError = _Anonymous_74.PDF_ENUM_NAME_DamagedRowsBeforeError;
-    enum PDF_ENUM_NAME_Data = _Anonymous_74.PDF_ENUM_NAME_Data;
-    enum PDF_ENUM_NAME_Date = _Anonymous_74.PDF_ENUM_NAME_Date;
-    enum PDF_ENUM_NAME_Decode = _Anonymous_74.PDF_ENUM_NAME_Decode;
-    enum PDF_ENUM_NAME_DecodeParms = _Anonymous_74.PDF_ENUM_NAME_DecodeParms;
-    enum PDF_ENUM_NAME_Default = _Anonymous_74.PDF_ENUM_NAME_Default;
-    enum PDF_ENUM_NAME_DefaultCMYK = _Anonymous_74.PDF_ENUM_NAME_DefaultCMYK;
-    enum PDF_ENUM_NAME_DefaultGray = _Anonymous_74.PDF_ENUM_NAME_DefaultGray;
-    enum PDF_ENUM_NAME_DefaultRGB = _Anonymous_74.PDF_ENUM_NAME_DefaultRGB;
-    enum PDF_ENUM_NAME_Departmental = _Anonymous_74.PDF_ENUM_NAME_Departmental;
-    enum PDF_ENUM_NAME_Desc = _Anonymous_74.PDF_ENUM_NAME_Desc;
-    enum PDF_ENUM_NAME_DescendantFonts = _Anonymous_74.PDF_ENUM_NAME_DescendantFonts;
-    enum PDF_ENUM_NAME_Descent = _Anonymous_74.PDF_ENUM_NAME_Descent;
-    enum PDF_ENUM_NAME_Design = _Anonymous_74.PDF_ENUM_NAME_Design;
-    enum PDF_ENUM_NAME_Dest = _Anonymous_74.PDF_ENUM_NAME_Dest;
-    enum PDF_ENUM_NAME_DestOutputProfile = _Anonymous_74.PDF_ENUM_NAME_DestOutputProfile;
-    enum PDF_ENUM_NAME_Dests = _Anonymous_74.PDF_ENUM_NAME_Dests;
-    enum PDF_ENUM_NAME_DeviceCMYK = _Anonymous_74.PDF_ENUM_NAME_DeviceCMYK;
-    enum PDF_ENUM_NAME_DeviceGray = _Anonymous_74.PDF_ENUM_NAME_DeviceGray;
-    enum PDF_ENUM_NAME_DeviceN = _Anonymous_74.PDF_ENUM_NAME_DeviceN;
-    enum PDF_ENUM_NAME_DeviceRGB = _Anonymous_74.PDF_ENUM_NAME_DeviceRGB;
-    enum PDF_ENUM_NAME_Di = _Anonymous_74.PDF_ENUM_NAME_Di;
-    enum PDF_ENUM_NAME_Diamond = _Anonymous_74.PDF_ENUM_NAME_Diamond;
-    enum PDF_ENUM_NAME_Differences = _Anonymous_74.PDF_ENUM_NAME_Differences;
-    enum PDF_ENUM_NAME_DigestLocation = _Anonymous_74.PDF_ENUM_NAME_DigestLocation;
-    enum PDF_ENUM_NAME_DigestMethod = _Anonymous_74.PDF_ENUM_NAME_DigestMethod;
-    enum PDF_ENUM_NAME_DigestValue = _Anonymous_74.PDF_ENUM_NAME_DigestValue;
-    enum PDF_ENUM_NAME_Dissolve = _Anonymous_74.PDF_ENUM_NAME_Dissolve;
-    enum PDF_ENUM_NAME_Dm = _Anonymous_74.PDF_ENUM_NAME_Dm;
-    enum PDF_ENUM_NAME_DocMDP = _Anonymous_74.PDF_ENUM_NAME_DocMDP;
-    enum PDF_ENUM_NAME_Document = _Anonymous_74.PDF_ENUM_NAME_Document;
-    enum PDF_ENUM_NAME_Domain = _Anonymous_74.PDF_ENUM_NAME_Domain;
-    enum PDF_ENUM_NAME_Draft = _Anonymous_74.PDF_ENUM_NAME_Draft;
-    enum PDF_ENUM_NAME_Dur = _Anonymous_74.PDF_ENUM_NAME_Dur;
-    enum PDF_ENUM_NAME_E = _Anonymous_74.PDF_ENUM_NAME_E;
-    enum PDF_ENUM_NAME_EF = _Anonymous_74.PDF_ENUM_NAME_EF;
-    enum PDF_ENUM_NAME_EarlyChange = _Anonymous_74.PDF_ENUM_NAME_EarlyChange;
-    enum PDF_ENUM_NAME_EmbeddedFile = _Anonymous_74.PDF_ENUM_NAME_EmbeddedFile;
-    enum PDF_ENUM_NAME_EmbeddedFiles = _Anonymous_74.PDF_ENUM_NAME_EmbeddedFiles;
-    enum PDF_ENUM_NAME_Encode = _Anonymous_74.PDF_ENUM_NAME_Encode;
-    enum PDF_ENUM_NAME_EncodedByteAlign = _Anonymous_74.PDF_ENUM_NAME_EncodedByteAlign;
-    enum PDF_ENUM_NAME_Encoding = _Anonymous_74.PDF_ENUM_NAME_Encoding;
-    enum PDF_ENUM_NAME_Encrypt = _Anonymous_74.PDF_ENUM_NAME_Encrypt;
-    enum PDF_ENUM_NAME_EncryptMetadata = _Anonymous_74.PDF_ENUM_NAME_EncryptMetadata;
-    enum PDF_ENUM_NAME_EndOfBlock = _Anonymous_74.PDF_ENUM_NAME_EndOfBlock;
-    enum PDF_ENUM_NAME_EndOfLine = _Anonymous_74.PDF_ENUM_NAME_EndOfLine;
-    enum PDF_ENUM_NAME_Exclude = _Anonymous_74.PDF_ENUM_NAME_Exclude;
-    enum PDF_ENUM_NAME_Experimental = _Anonymous_74.PDF_ENUM_NAME_Experimental;
-    enum PDF_ENUM_NAME_Expired = _Anonymous_74.PDF_ENUM_NAME_Expired;
-    enum PDF_ENUM_NAME_ExtGState = _Anonymous_74.PDF_ENUM_NAME_ExtGState;
-    enum PDF_ENUM_NAME_Extend = _Anonymous_74.PDF_ENUM_NAME_Extend;
-    enum PDF_ENUM_NAME_F = _Anonymous_74.PDF_ENUM_NAME_F;
-    enum PDF_ENUM_NAME_FL = _Anonymous_74.PDF_ENUM_NAME_FL;
-    enum PDF_ENUM_NAME_FRM = _Anonymous_74.PDF_ENUM_NAME_FRM;
-    enum PDF_ENUM_NAME_FS = _Anonymous_74.PDF_ENUM_NAME_FS;
-    enum PDF_ENUM_NAME_FT = _Anonymous_74.PDF_ENUM_NAME_FT;
-    enum PDF_ENUM_NAME_Fade = _Anonymous_74.PDF_ENUM_NAME_Fade;
-    enum PDF_ENUM_NAME_Ff = _Anonymous_74.PDF_ENUM_NAME_Ff;
-    enum PDF_ENUM_NAME_FieldMDP = _Anonymous_74.PDF_ENUM_NAME_FieldMDP;
-    enum PDF_ENUM_NAME_Fields = _Anonymous_74.PDF_ENUM_NAME_Fields;
-    enum PDF_ENUM_NAME_FileAttachment = _Anonymous_74.PDF_ENUM_NAME_FileAttachment;
-    enum PDF_ENUM_NAME_FileSize = _Anonymous_74.PDF_ENUM_NAME_FileSize;
-    enum PDF_ENUM_NAME_Filespec = _Anonymous_74.PDF_ENUM_NAME_Filespec;
-    enum PDF_ENUM_NAME_Filter = _Anonymous_74.PDF_ENUM_NAME_Filter;
-    enum PDF_ENUM_NAME_Final = _Anonymous_74.PDF_ENUM_NAME_Final;
-    enum PDF_ENUM_NAME_Fingerprint = _Anonymous_74.PDF_ENUM_NAME_Fingerprint;
-    enum PDF_ENUM_NAME_First = _Anonymous_74.PDF_ENUM_NAME_First;
-    enum PDF_ENUM_NAME_FirstChar = _Anonymous_74.PDF_ENUM_NAME_FirstChar;
-    enum PDF_ENUM_NAME_FirstPage = _Anonymous_74.PDF_ENUM_NAME_FirstPage;
-    enum PDF_ENUM_NAME_Fit = _Anonymous_74.PDF_ENUM_NAME_Fit;
-    enum PDF_ENUM_NAME_FitB = _Anonymous_74.PDF_ENUM_NAME_FitB;
-    enum PDF_ENUM_NAME_FitBH = _Anonymous_74.PDF_ENUM_NAME_FitBH;
-    enum PDF_ENUM_NAME_FitBV = _Anonymous_74.PDF_ENUM_NAME_FitBV;
-    enum PDF_ENUM_NAME_FitH = _Anonymous_74.PDF_ENUM_NAME_FitH;
-    enum PDF_ENUM_NAME_FitR = _Anonymous_74.PDF_ENUM_NAME_FitR;
-    enum PDF_ENUM_NAME_FitV = _Anonymous_74.PDF_ENUM_NAME_FitV;
-    enum PDF_ENUM_NAME_Fl = _Anonymous_74.PDF_ENUM_NAME_Fl;
-    enum PDF_ENUM_NAME_Flags = _Anonymous_74.PDF_ENUM_NAME_Flags;
-    enum PDF_ENUM_NAME_FlateDecode = _Anonymous_74.PDF_ENUM_NAME_FlateDecode;
-    enum PDF_ENUM_NAME_Fly = _Anonymous_74.PDF_ENUM_NAME_Fly;
-    enum PDF_ENUM_NAME_Font = _Anonymous_74.PDF_ENUM_NAME_Font;
-    enum PDF_ENUM_NAME_FontBBox = _Anonymous_74.PDF_ENUM_NAME_FontBBox;
-    enum PDF_ENUM_NAME_FontDescriptor = _Anonymous_74.PDF_ENUM_NAME_FontDescriptor;
-    enum PDF_ENUM_NAME_FontFile = _Anonymous_74.PDF_ENUM_NAME_FontFile;
-    enum PDF_ENUM_NAME_FontFile2 = _Anonymous_74.PDF_ENUM_NAME_FontFile2;
-    enum PDF_ENUM_NAME_FontFile3 = _Anonymous_74.PDF_ENUM_NAME_FontFile3;
-    enum PDF_ENUM_NAME_FontMatrix = _Anonymous_74.PDF_ENUM_NAME_FontMatrix;
-    enum PDF_ENUM_NAME_FontName = _Anonymous_74.PDF_ENUM_NAME_FontName;
-    enum PDF_ENUM_NAME_ForComment = _Anonymous_74.PDF_ENUM_NAME_ForComment;
-    enum PDF_ENUM_NAME_ForPublicRelease = _Anonymous_74.PDF_ENUM_NAME_ForPublicRelease;
-    enum PDF_ENUM_NAME_Form = _Anonymous_74.PDF_ENUM_NAME_Form;
-    enum PDF_ENUM_NAME_FormEx = _Anonymous_74.PDF_ENUM_NAME_FormEx;
-    enum PDF_ENUM_NAME_FormType = _Anonymous_74.PDF_ENUM_NAME_FormType;
-    enum PDF_ENUM_NAME_FreeText = _Anonymous_74.PDF_ENUM_NAME_FreeText;
-    enum PDF_ENUM_NAME_Function = _Anonymous_74.PDF_ENUM_NAME_Function;
-    enum PDF_ENUM_NAME_FunctionType = _Anonymous_74.PDF_ENUM_NAME_FunctionType;
-    enum PDF_ENUM_NAME_Functions = _Anonymous_74.PDF_ENUM_NAME_Functions;
-    enum PDF_ENUM_NAME_G = _Anonymous_74.PDF_ENUM_NAME_G;
-    enum PDF_ENUM_NAME_GTS_PDFX = _Anonymous_74.PDF_ENUM_NAME_GTS_PDFX;
-    enum PDF_ENUM_NAME_Gamma = _Anonymous_74.PDF_ENUM_NAME_Gamma;
-    enum PDF_ENUM_NAME_Glitter = _Anonymous_74.PDF_ENUM_NAME_Glitter;
-    enum PDF_ENUM_NAME_GoTo = _Anonymous_74.PDF_ENUM_NAME_GoTo;
-    enum PDF_ENUM_NAME_GoToR = _Anonymous_74.PDF_ENUM_NAME_GoToR;
-    enum PDF_ENUM_NAME_Group = _Anonymous_74.PDF_ENUM_NAME_Group;
-    enum PDF_ENUM_NAME_H = _Anonymous_74.PDF_ENUM_NAME_H;
-    enum PDF_ENUM_NAME_Height = _Anonymous_74.PDF_ENUM_NAME_Height;
-    enum PDF_ENUM_NAME_Helv = _Anonymous_74.PDF_ENUM_NAME_Helv;
-    enum PDF_ENUM_NAME_Highlight = _Anonymous_74.PDF_ENUM_NAME_Highlight;
-    enum PDF_ENUM_NAME_HistoryPos = _Anonymous_74.PDF_ENUM_NAME_HistoryPos;
-    enum PDF_ENUM_NAME_I = _Anonymous_74.PDF_ENUM_NAME_I;
-    enum PDF_ENUM_NAME_IC = _Anonymous_74.PDF_ENUM_NAME_IC;
-    enum PDF_ENUM_NAME_ICCBased = _Anonymous_74.PDF_ENUM_NAME_ICCBased;
-    enum PDF_ENUM_NAME_ID = _Anonymous_74.PDF_ENUM_NAME_ID;
-    enum PDF_ENUM_NAME_IM = _Anonymous_74.PDF_ENUM_NAME_IM;
-    enum PDF_ENUM_NAME_IRT = _Anonymous_74.PDF_ENUM_NAME_IRT;
-    enum PDF_ENUM_NAME_Identity = _Anonymous_74.PDF_ENUM_NAME_Identity;
-    enum PDF_ENUM_NAME_Identity_H = _Anonymous_74.PDF_ENUM_NAME_Identity_H;
-    enum PDF_ENUM_NAME_Identity_V = _Anonymous_74.PDF_ENUM_NAME_Identity_V;
-    enum PDF_ENUM_NAME_Image = _Anonymous_74.PDF_ENUM_NAME_Image;
-    enum PDF_ENUM_NAME_ImageMask = _Anonymous_74.PDF_ENUM_NAME_ImageMask;
-    enum PDF_ENUM_NAME_Include = _Anonymous_74.PDF_ENUM_NAME_Include;
-    enum PDF_ENUM_NAME_Index = _Anonymous_74.PDF_ENUM_NAME_Index;
-    enum PDF_ENUM_NAME_Indexed = _Anonymous_74.PDF_ENUM_NAME_Indexed;
-    enum PDF_ENUM_NAME_Info = _Anonymous_74.PDF_ENUM_NAME_Info;
-    enum PDF_ENUM_NAME_Ink = _Anonymous_74.PDF_ENUM_NAME_Ink;
-    enum PDF_ENUM_NAME_InkList = _Anonymous_74.PDF_ENUM_NAME_InkList;
-    enum PDF_ENUM_NAME_Intent = _Anonymous_74.PDF_ENUM_NAME_Intent;
-    enum PDF_ENUM_NAME_Interpolate = _Anonymous_74.PDF_ENUM_NAME_Interpolate;
-    enum PDF_ENUM_NAME_IsMap = _Anonymous_74.PDF_ENUM_NAME_IsMap;
-    enum PDF_ENUM_NAME_ItalicAngle = _Anonymous_74.PDF_ENUM_NAME_ItalicAngle;
-    enum PDF_ENUM_NAME_JBIG2Decode = _Anonymous_74.PDF_ENUM_NAME_JBIG2Decode;
-    enum PDF_ENUM_NAME_JBIG2Globals = _Anonymous_74.PDF_ENUM_NAME_JBIG2Globals;
-    enum PDF_ENUM_NAME_JPXDecode = _Anonymous_74.PDF_ENUM_NAME_JPXDecode;
-    enum PDF_ENUM_NAME_JS = _Anonymous_74.PDF_ENUM_NAME_JS;
-    enum PDF_ENUM_NAME_JavaScript = _Anonymous_74.PDF_ENUM_NAME_JavaScript;
-    enum PDF_ENUM_NAME_K = _Anonymous_74.PDF_ENUM_NAME_K;
-    enum PDF_ENUM_NAME_Keywords = _Anonymous_74.PDF_ENUM_NAME_Keywords;
-    enum PDF_ENUM_NAME_Kids = _Anonymous_74.PDF_ENUM_NAME_Kids;
-    enum PDF_ENUM_NAME_L = _Anonymous_74.PDF_ENUM_NAME_L;
-    enum PDF_ENUM_NAME_LC = _Anonymous_74.PDF_ENUM_NAME_LC;
-    enum PDF_ENUM_NAME_LE = _Anonymous_74.PDF_ENUM_NAME_LE;
-    enum PDF_ENUM_NAME_LJ = _Anonymous_74.PDF_ENUM_NAME_LJ;
-    enum PDF_ENUM_NAME_LW = _Anonymous_74.PDF_ENUM_NAME_LW;
-    enum PDF_ENUM_NAME_LZ = _Anonymous_74.PDF_ENUM_NAME_LZ;
-    enum PDF_ENUM_NAME_LZW = _Anonymous_74.PDF_ENUM_NAME_LZW;
-    enum PDF_ENUM_NAME_LZWDecode = _Anonymous_74.PDF_ENUM_NAME_LZWDecode;
-    enum PDF_ENUM_NAME_Lab = _Anonymous_74.PDF_ENUM_NAME_Lab;
-    enum PDF_ENUM_NAME_Lang = _Anonymous_74.PDF_ENUM_NAME_Lang;
-    enum PDF_ENUM_NAME_Last = _Anonymous_74.PDF_ENUM_NAME_Last;
-    enum PDF_ENUM_NAME_LastChar = _Anonymous_74.PDF_ENUM_NAME_LastChar;
-    enum PDF_ENUM_NAME_LastPage = _Anonymous_74.PDF_ENUM_NAME_LastPage;
-    enum PDF_ENUM_NAME_Launch = _Anonymous_74.PDF_ENUM_NAME_Launch;
-    enum PDF_ENUM_NAME_Length = _Anonymous_74.PDF_ENUM_NAME_Length;
-    enum PDF_ENUM_NAME_Length1 = _Anonymous_74.PDF_ENUM_NAME_Length1;
-    enum PDF_ENUM_NAME_Length2 = _Anonymous_74.PDF_ENUM_NAME_Length2;
-    enum PDF_ENUM_NAME_Length3 = _Anonymous_74.PDF_ENUM_NAME_Length3;
-    enum PDF_ENUM_NAME_Limits = _Anonymous_74.PDF_ENUM_NAME_Limits;
-    enum PDF_ENUM_NAME_Line = _Anonymous_74.PDF_ENUM_NAME_Line;
-    enum PDF_ENUM_NAME_Linearized = _Anonymous_74.PDF_ENUM_NAME_Linearized;
-    enum PDF_ENUM_NAME_Link = _Anonymous_74.PDF_ENUM_NAME_Link;
-    enum PDF_ENUM_NAME_Location = _Anonymous_74.PDF_ENUM_NAME_Location;
-    enum PDF_ENUM_NAME_Lock = _Anonymous_74.PDF_ENUM_NAME_Lock;
-    enum PDF_ENUM_NAME_Locked = _Anonymous_74.PDF_ENUM_NAME_Locked;
-    enum PDF_ENUM_NAME_Luminosity = _Anonymous_74.PDF_ENUM_NAME_Luminosity;
-    enum PDF_ENUM_NAME_M = _Anonymous_74.PDF_ENUM_NAME_M;
-    enum PDF_ENUM_NAME_MCID = _Anonymous_74.PDF_ENUM_NAME_MCID;
-    enum PDF_ENUM_NAME_MK = _Anonymous_74.PDF_ENUM_NAME_MK;
-    enum PDF_ENUM_NAME_ML = _Anonymous_74.PDF_ENUM_NAME_ML;
-    enum PDF_ENUM_NAME_MMType1 = _Anonymous_74.PDF_ENUM_NAME_MMType1;
-    enum PDF_ENUM_NAME_Mac = _Anonymous_74.PDF_ENUM_NAME_Mac;
-    enum PDF_ENUM_NAME_Mask = _Anonymous_74.PDF_ENUM_NAME_Mask;
-    enum PDF_ENUM_NAME_Matrix = _Anonymous_74.PDF_ENUM_NAME_Matrix;
-    enum PDF_ENUM_NAME_Matte = _Anonymous_74.PDF_ENUM_NAME_Matte;
-    enum PDF_ENUM_NAME_MaxLen = _Anonymous_74.PDF_ENUM_NAME_MaxLen;
-    enum PDF_ENUM_NAME_MediaBox = _Anonymous_74.PDF_ENUM_NAME_MediaBox;
-    enum PDF_ENUM_NAME_Metadata = _Anonymous_74.PDF_ENUM_NAME_Metadata;
-    enum PDF_ENUM_NAME_MissingWidth = _Anonymous_74.PDF_ENUM_NAME_MissingWidth;
-    enum PDF_ENUM_NAME_ModDate = _Anonymous_74.PDF_ENUM_NAME_ModDate;
-    enum PDF_ENUM_NAME_Movie = _Anonymous_74.PDF_ENUM_NAME_Movie;
-    enum PDF_ENUM_NAME_Msg = _Anonymous_74.PDF_ENUM_NAME_Msg;
-    enum PDF_ENUM_NAME_Multiply = _Anonymous_74.PDF_ENUM_NAME_Multiply;
-    enum PDF_ENUM_NAME_N = _Anonymous_74.PDF_ENUM_NAME_N;
-    enum PDF_ENUM_NAME_Name = _Anonymous_74.PDF_ENUM_NAME_Name;
-    enum PDF_ENUM_NAME_Named = _Anonymous_74.PDF_ENUM_NAME_Named;
-    enum PDF_ENUM_NAME_Names = _Anonymous_74.PDF_ENUM_NAME_Names;
-    enum PDF_ENUM_NAME_NewWindow = _Anonymous_74.PDF_ENUM_NAME_NewWindow;
-    enum PDF_ENUM_NAME_Next = _Anonymous_74.PDF_ENUM_NAME_Next;
-    enum PDF_ENUM_NAME_NextPage = _Anonymous_74.PDF_ENUM_NAME_NextPage;
-    enum PDF_ENUM_NAME_NonEFontNoWarn = _Anonymous_74.PDF_ENUM_NAME_NonEFontNoWarn;
-    enum PDF_ENUM_NAME_None = _Anonymous_74.PDF_ENUM_NAME_None;
-    enum PDF_ENUM_NAME_Normal = _Anonymous_74.PDF_ENUM_NAME_Normal;
-    enum PDF_ENUM_NAME_NotApproved = _Anonymous_74.PDF_ENUM_NAME_NotApproved;
-    enum PDF_ENUM_NAME_NotForPublicRelease = _Anonymous_74.PDF_ENUM_NAME_NotForPublicRelease;
-    enum PDF_ENUM_NAME_NumSections = _Anonymous_74.PDF_ENUM_NAME_NumSections;
-    enum PDF_ENUM_NAME_Nums = _Anonymous_74.PDF_ENUM_NAME_Nums;
-    enum PDF_ENUM_NAME_O = _Anonymous_74.PDF_ENUM_NAME_O;
-    enum PDF_ENUM_NAME_OC = _Anonymous_74.PDF_ENUM_NAME_OC;
-    enum PDF_ENUM_NAME_OCG = _Anonymous_74.PDF_ENUM_NAME_OCG;
-    enum PDF_ENUM_NAME_OCGs = _Anonymous_74.PDF_ENUM_NAME_OCGs;
-    enum PDF_ENUM_NAME_OCMD = _Anonymous_74.PDF_ENUM_NAME_OCMD;
-    enum PDF_ENUM_NAME_OCProperties = _Anonymous_74.PDF_ENUM_NAME_OCProperties;
-    enum PDF_ENUM_NAME_OE = _Anonymous_74.PDF_ENUM_NAME_OE;
-    enum PDF_ENUM_NAME_OFF = _Anonymous_74.PDF_ENUM_NAME_OFF;
-    enum PDF_ENUM_NAME_ON = _Anonymous_74.PDF_ENUM_NAME_ON;
-    enum PDF_ENUM_NAME_OP = _Anonymous_74.PDF_ENUM_NAME_OP;
-    enum PDF_ENUM_NAME_OPM = _Anonymous_74.PDF_ENUM_NAME_OPM;
-    enum PDF_ENUM_NAME_OS = _Anonymous_74.PDF_ENUM_NAME_OS;
-    enum PDF_ENUM_NAME_ObjStm = _Anonymous_74.PDF_ENUM_NAME_ObjStm;
-    enum PDF_ENUM_NAME_Of = _Anonymous_74.PDF_ENUM_NAME_Of;
-    enum PDF_ENUM_NAME_Off = _Anonymous_74.PDF_ENUM_NAME_Off;
-    enum PDF_ENUM_NAME_Open = _Anonymous_74.PDF_ENUM_NAME_Open;
-    enum PDF_ENUM_NAME_OpenArrow = _Anonymous_74.PDF_ENUM_NAME_OpenArrow;
-    enum PDF_ENUM_NAME_OpenType = _Anonymous_74.PDF_ENUM_NAME_OpenType;
-    enum PDF_ENUM_NAME_Opt = _Anonymous_74.PDF_ENUM_NAME_Opt;
-    enum PDF_ENUM_NAME_Order = _Anonymous_74.PDF_ENUM_NAME_Order;
-    enum PDF_ENUM_NAME_Ordering = _Anonymous_74.PDF_ENUM_NAME_Ordering;
-    enum PDF_ENUM_NAME_Outlines = _Anonymous_74.PDF_ENUM_NAME_Outlines;
-    enum PDF_ENUM_NAME_OutputCondition = _Anonymous_74.PDF_ENUM_NAME_OutputCondition;
-    enum PDF_ENUM_NAME_OutputConditionIdentifier = _Anonymous_74.PDF_ENUM_NAME_OutputConditionIdentifier;
-    enum PDF_ENUM_NAME_OutputIntent = _Anonymous_74.PDF_ENUM_NAME_OutputIntent;
-    enum PDF_ENUM_NAME_OutputIntents = _Anonymous_74.PDF_ENUM_NAME_OutputIntents;
-    enum PDF_ENUM_NAME_P = _Anonymous_74.PDF_ENUM_NAME_P;
-    enum PDF_ENUM_NAME_PDF = _Anonymous_74.PDF_ENUM_NAME_PDF;
-    enum PDF_ENUM_NAME_PS = _Anonymous_74.PDF_ENUM_NAME_PS;
-    enum PDF_ENUM_NAME_Page = _Anonymous_74.PDF_ENUM_NAME_Page;
-    enum PDF_ENUM_NAME_PageMode = _Anonymous_74.PDF_ENUM_NAME_PageMode;
-    enum PDF_ENUM_NAME_Pages = _Anonymous_74.PDF_ENUM_NAME_Pages;
-    enum PDF_ENUM_NAME_PaintType = _Anonymous_74.PDF_ENUM_NAME_PaintType;
-    enum PDF_ENUM_NAME_Params = _Anonymous_74.PDF_ENUM_NAME_Params;
-    enum PDF_ENUM_NAME_Parent = _Anonymous_74.PDF_ENUM_NAME_Parent;
-    enum PDF_ENUM_NAME_Pattern = _Anonymous_74.PDF_ENUM_NAME_Pattern;
-    enum PDF_ENUM_NAME_PatternType = _Anonymous_74.PDF_ENUM_NAME_PatternType;
-    enum PDF_ENUM_NAME_Perms = _Anonymous_74.PDF_ENUM_NAME_Perms;
-    enum PDF_ENUM_NAME_PolyLine = _Anonymous_74.PDF_ENUM_NAME_PolyLine;
-    enum PDF_ENUM_NAME_Polygon = _Anonymous_74.PDF_ENUM_NAME_Polygon;
-    enum PDF_ENUM_NAME_Popup = _Anonymous_74.PDF_ENUM_NAME_Popup;
-    enum PDF_ENUM_NAME_PreRelease = _Anonymous_74.PDF_ENUM_NAME_PreRelease;
-    enum PDF_ENUM_NAME_Predictor = _Anonymous_74.PDF_ENUM_NAME_Predictor;
-    enum PDF_ENUM_NAME_Prev = _Anonymous_74.PDF_ENUM_NAME_Prev;
-    enum PDF_ENUM_NAME_PrevPage = _Anonymous_74.PDF_ENUM_NAME_PrevPage;
-    enum PDF_ENUM_NAME_Preview = _Anonymous_74.PDF_ENUM_NAME_Preview;
-    enum PDF_ENUM_NAME_Print = _Anonymous_74.PDF_ENUM_NAME_Print;
-    enum PDF_ENUM_NAME_PrinterMark = _Anonymous_74.PDF_ENUM_NAME_PrinterMark;
-    enum PDF_ENUM_NAME_ProcSet = _Anonymous_74.PDF_ENUM_NAME_ProcSet;
-    enum PDF_ENUM_NAME_Producer = _Anonymous_74.PDF_ENUM_NAME_Producer;
-    enum PDF_ENUM_NAME_Properties = _Anonymous_74.PDF_ENUM_NAME_Properties;
-    enum PDF_ENUM_NAME_Prop_AuthTime = _Anonymous_74.PDF_ENUM_NAME_Prop_AuthTime;
-    enum PDF_ENUM_NAME_Prop_AuthType = _Anonymous_74.PDF_ENUM_NAME_Prop_AuthType;
-    enum PDF_ENUM_NAME_Prop_Build = _Anonymous_74.PDF_ENUM_NAME_Prop_Build;
-    enum PDF_ENUM_NAME_PubSec = _Anonymous_74.PDF_ENUM_NAME_PubSec;
-    enum PDF_ENUM_NAME_Push = _Anonymous_74.PDF_ENUM_NAME_Push;
-    enum PDF_ENUM_NAME_Q = _Anonymous_74.PDF_ENUM_NAME_Q;
-    enum PDF_ENUM_NAME_QuadPoints = _Anonymous_74.PDF_ENUM_NAME_QuadPoints;
-    enum PDF_ENUM_NAME_R = _Anonymous_74.PDF_ENUM_NAME_R;
-    enum PDF_ENUM_NAME_RBGroups = _Anonymous_74.PDF_ENUM_NAME_RBGroups;
-    enum PDF_ENUM_NAME_RC = _Anonymous_74.PDF_ENUM_NAME_RC;
-    enum PDF_ENUM_NAME_RClosedArrow = _Anonymous_74.PDF_ENUM_NAME_RClosedArrow;
-    enum PDF_ENUM_NAME_REx = _Anonymous_74.PDF_ENUM_NAME_REx;
-    enum PDF_ENUM_NAME_RGB = _Anonymous_74.PDF_ENUM_NAME_RGB;
-    enum PDF_ENUM_NAME_RI = _Anonymous_74.PDF_ENUM_NAME_RI;
-    enum PDF_ENUM_NAME_RL = _Anonymous_74.PDF_ENUM_NAME_RL;
-    enum PDF_ENUM_NAME_ROpenArrow = _Anonymous_74.PDF_ENUM_NAME_ROpenArrow;
-    enum PDF_ENUM_NAME_Range = _Anonymous_74.PDF_ENUM_NAME_Range;
-    enum PDF_ENUM_NAME_Reason = _Anonymous_74.PDF_ENUM_NAME_Reason;
-    enum PDF_ENUM_NAME_Rect = _Anonymous_74.PDF_ENUM_NAME_Rect;
-    enum PDF_ENUM_NAME_Redact = _Anonymous_74.PDF_ENUM_NAME_Redact;
-    enum PDF_ENUM_NAME_Ref = _Anonymous_74.PDF_ENUM_NAME_Ref;
-    enum PDF_ENUM_NAME_Reference = _Anonymous_74.PDF_ENUM_NAME_Reference;
-    enum PDF_ENUM_NAME_Registry = _Anonymous_74.PDF_ENUM_NAME_Registry;
-    enum PDF_ENUM_NAME_ResetForm = _Anonymous_74.PDF_ENUM_NAME_ResetForm;
-    enum PDF_ENUM_NAME_Resources = _Anonymous_74.PDF_ENUM_NAME_Resources;
-    enum PDF_ENUM_NAME_Root = _Anonymous_74.PDF_ENUM_NAME_Root;
-    enum PDF_ENUM_NAME_Rotate = _Anonymous_74.PDF_ENUM_NAME_Rotate;
-    enum PDF_ENUM_NAME_Rows = _Anonymous_74.PDF_ENUM_NAME_Rows;
-    enum PDF_ENUM_NAME_RunLengthDecode = _Anonymous_74.PDF_ENUM_NAME_RunLengthDecode;
-    enum PDF_ENUM_NAME_S = _Anonymous_74.PDF_ENUM_NAME_S;
-    enum PDF_ENUM_NAME_SMask = _Anonymous_74.PDF_ENUM_NAME_SMask;
-    enum PDF_ENUM_NAME_SMaskInData = _Anonymous_74.PDF_ENUM_NAME_SMaskInData;
-    enum PDF_ENUM_NAME_Schema = _Anonymous_74.PDF_ENUM_NAME_Schema;
-    enum PDF_ENUM_NAME_Screen = _Anonymous_74.PDF_ENUM_NAME_Screen;
-    enum PDF_ENUM_NAME_Separation = _Anonymous_74.PDF_ENUM_NAME_Separation;
-    enum PDF_ENUM_NAME_Shading = _Anonymous_74.PDF_ENUM_NAME_Shading;
-    enum PDF_ENUM_NAME_ShadingType = _Anonymous_74.PDF_ENUM_NAME_ShadingType;
-    enum PDF_ENUM_NAME_Si = _Anonymous_74.PDF_ENUM_NAME_Si;
-    enum PDF_ENUM_NAME_Sig = _Anonymous_74.PDF_ENUM_NAME_Sig;
-    enum PDF_ENUM_NAME_SigFlags = _Anonymous_74.PDF_ENUM_NAME_SigFlags;
-    enum PDF_ENUM_NAME_SigQ = _Anonymous_74.PDF_ENUM_NAME_SigQ;
-    enum PDF_ENUM_NAME_SigRef = _Anonymous_74.PDF_ENUM_NAME_SigRef;
-    enum PDF_ENUM_NAME_Size = _Anonymous_74.PDF_ENUM_NAME_Size;
-    enum PDF_ENUM_NAME_Slash = _Anonymous_74.PDF_ENUM_NAME_Slash;
-    enum PDF_ENUM_NAME_Sold = _Anonymous_74.PDF_ENUM_NAME_Sold;
-    enum PDF_ENUM_NAME_Sound = _Anonymous_74.PDF_ENUM_NAME_Sound;
-    enum PDF_ENUM_NAME_Split = _Anonymous_74.PDF_ENUM_NAME_Split;
-    enum PDF_ENUM_NAME_Square = _Anonymous_74.PDF_ENUM_NAME_Square;
-    enum PDF_ENUM_NAME_Squiggly = _Anonymous_74.PDF_ENUM_NAME_Squiggly;
-    enum PDF_ENUM_NAME_Stamp = _Anonymous_74.PDF_ENUM_NAME_Stamp;
-    enum PDF_ENUM_NAME_Standard = _Anonymous_74.PDF_ENUM_NAME_Standard;
-    enum PDF_ENUM_NAME_StdCF = _Anonymous_74.PDF_ENUM_NAME_StdCF;
-    enum PDF_ENUM_NAME_StemV = _Anonymous_74.PDF_ENUM_NAME_StemV;
-    enum PDF_ENUM_NAME_StmF = _Anonymous_74.PDF_ENUM_NAME_StmF;
-    enum PDF_ENUM_NAME_StrF = _Anonymous_74.PDF_ENUM_NAME_StrF;
-    enum PDF_ENUM_NAME_StrikeOut = _Anonymous_74.PDF_ENUM_NAME_StrikeOut;
-    enum PDF_ENUM_NAME_StructParent = _Anonymous_74.PDF_ENUM_NAME_StructParent;
-    enum PDF_ENUM_NAME_StructParents = _Anonymous_74.PDF_ENUM_NAME_StructParents;
-    enum PDF_ENUM_NAME_SubFilter = _Anonymous_74.PDF_ENUM_NAME_SubFilter;
-    enum PDF_ENUM_NAME_Subject = _Anonymous_74.PDF_ENUM_NAME_Subject;
-    enum PDF_ENUM_NAME_Subtype = _Anonymous_74.PDF_ENUM_NAME_Subtype;
-    enum PDF_ENUM_NAME_Subtype2 = _Anonymous_74.PDF_ENUM_NAME_Subtype2;
-    enum PDF_ENUM_NAME_Supplement = _Anonymous_74.PDF_ENUM_NAME_Supplement;
-    enum PDF_ENUM_NAME_Symb = _Anonymous_74.PDF_ENUM_NAME_Symb;
-    enum PDF_ENUM_NAME_T = _Anonymous_74.PDF_ENUM_NAME_T;
-    enum PDF_ENUM_NAME_TI = _Anonymous_74.PDF_ENUM_NAME_TI;
-    enum PDF_ENUM_NAME_TR = _Anonymous_74.PDF_ENUM_NAME_TR;
-    enum PDF_ENUM_NAME_TR2 = _Anonymous_74.PDF_ENUM_NAME_TR2;
-    enum PDF_ENUM_NAME_TU = _Anonymous_74.PDF_ENUM_NAME_TU;
-    enum PDF_ENUM_NAME_Text = _Anonymous_74.PDF_ENUM_NAME_Text;
-    enum PDF_ENUM_NAME_TilingType = _Anonymous_74.PDF_ENUM_NAME_TilingType;
-    enum PDF_ENUM_NAME_Times = _Anonymous_74.PDF_ENUM_NAME_Times;
-    enum PDF_ENUM_NAME_Title = _Anonymous_74.PDF_ENUM_NAME_Title;
-    enum PDF_ENUM_NAME_ToUnicode = _Anonymous_74.PDF_ENUM_NAME_ToUnicode;
-    enum PDF_ENUM_NAME_TopSecret = _Anonymous_74.PDF_ENUM_NAME_TopSecret;
-    enum PDF_ENUM_NAME_Trans = _Anonymous_74.PDF_ENUM_NAME_Trans;
-    enum PDF_ENUM_NAME_TransformMethod = _Anonymous_74.PDF_ENUM_NAME_TransformMethod;
-    enum PDF_ENUM_NAME_TransformParams = _Anonymous_74.PDF_ENUM_NAME_TransformParams;
-    enum PDF_ENUM_NAME_Transparency = _Anonymous_74.PDF_ENUM_NAME_Transparency;
-    enum PDF_ENUM_NAME_TrapNet = _Anonymous_74.PDF_ENUM_NAME_TrapNet;
-    enum PDF_ENUM_NAME_TrimBox = _Anonymous_74.PDF_ENUM_NAME_TrimBox;
-    enum PDF_ENUM_NAME_TrueType = _Anonymous_74.PDF_ENUM_NAME_TrueType;
-    enum PDF_ENUM_NAME_TrustedMode = _Anonymous_74.PDF_ENUM_NAME_TrustedMode;
-    enum PDF_ENUM_NAME_Tx = _Anonymous_74.PDF_ENUM_NAME_Tx;
-    enum PDF_ENUM_NAME_Type = _Anonymous_74.PDF_ENUM_NAME_Type;
-    enum PDF_ENUM_NAME_Type0 = _Anonymous_74.PDF_ENUM_NAME_Type0;
-    enum PDF_ENUM_NAME_Type1 = _Anonymous_74.PDF_ENUM_NAME_Type1;
-    enum PDF_ENUM_NAME_Type1C = _Anonymous_74.PDF_ENUM_NAME_Type1C;
-    enum PDF_ENUM_NAME_Type3 = _Anonymous_74.PDF_ENUM_NAME_Type3;
-    enum PDF_ENUM_NAME_U = _Anonymous_74.PDF_ENUM_NAME_U;
-    enum PDF_ENUM_NAME_UE = _Anonymous_74.PDF_ENUM_NAME_UE;
-    enum PDF_ENUM_NAME_UF = _Anonymous_74.PDF_ENUM_NAME_UF;
-    enum PDF_ENUM_NAME_URI = _Anonymous_74.PDF_ENUM_NAME_URI;
-    enum PDF_ENUM_NAME_URL = _Anonymous_74.PDF_ENUM_NAME_URL;
-    enum PDF_ENUM_NAME_Unchanged = _Anonymous_74.PDF_ENUM_NAME_Unchanged;
-    enum PDF_ENUM_NAME_Uncover = _Anonymous_74.PDF_ENUM_NAME_Uncover;
-    enum PDF_ENUM_NAME_Underline = _Anonymous_74.PDF_ENUM_NAME_Underline;
-    enum PDF_ENUM_NAME_Unix = _Anonymous_74.PDF_ENUM_NAME_Unix;
-    enum PDF_ENUM_NAME_Usage = _Anonymous_74.PDF_ENUM_NAME_Usage;
-    enum PDF_ENUM_NAME_UseBlackPtComp = _Anonymous_74.PDF_ENUM_NAME_UseBlackPtComp;
-    enum PDF_ENUM_NAME_UseCMap = _Anonymous_74.PDF_ENUM_NAME_UseCMap;
-    enum PDF_ENUM_NAME_UseOutlines = _Anonymous_74.PDF_ENUM_NAME_UseOutlines;
-    enum PDF_ENUM_NAME_UserUnit = _Anonymous_74.PDF_ENUM_NAME_UserUnit;
-    enum PDF_ENUM_NAME_V = _Anonymous_74.PDF_ENUM_NAME_V;
-    enum PDF_ENUM_NAME_V2 = _Anonymous_74.PDF_ENUM_NAME_V2;
-    enum PDF_ENUM_NAME_VE = _Anonymous_74.PDF_ENUM_NAME_VE;
-    enum PDF_ENUM_NAME_Version = _Anonymous_74.PDF_ENUM_NAME_Version;
-    enum PDF_ENUM_NAME_Vertices = _Anonymous_74.PDF_ENUM_NAME_Vertices;
-    enum PDF_ENUM_NAME_VerticesPerRow = _Anonymous_74.PDF_ENUM_NAME_VerticesPerRow;
-    enum PDF_ENUM_NAME_View = _Anonymous_74.PDF_ENUM_NAME_View;
-    enum PDF_ENUM_NAME_W = _Anonymous_74.PDF_ENUM_NAME_W;
-    enum PDF_ENUM_NAME_W2 = _Anonymous_74.PDF_ENUM_NAME_W2;
-    enum PDF_ENUM_NAME_WMode = _Anonymous_74.PDF_ENUM_NAME_WMode;
-    enum PDF_ENUM_NAME_Watermark = _Anonymous_74.PDF_ENUM_NAME_Watermark;
-    enum PDF_ENUM_NAME_WhitePoint = _Anonymous_74.PDF_ENUM_NAME_WhitePoint;
-    enum PDF_ENUM_NAME_Widget = _Anonymous_74.PDF_ENUM_NAME_Widget;
-    enum PDF_ENUM_NAME_Width = _Anonymous_74.PDF_ENUM_NAME_Width;
-    enum PDF_ENUM_NAME_Widths = _Anonymous_74.PDF_ENUM_NAME_Widths;
-    enum PDF_ENUM_NAME_WinAnsiEncoding = _Anonymous_74.PDF_ENUM_NAME_WinAnsiEncoding;
-    enum PDF_ENUM_NAME_Wipe = _Anonymous_74.PDF_ENUM_NAME_Wipe;
-    enum PDF_ENUM_NAME_XFA = _Anonymous_74.PDF_ENUM_NAME_XFA;
-    enum PDF_ENUM_NAME_XHeight = _Anonymous_74.PDF_ENUM_NAME_XHeight;
-    enum PDF_ENUM_NAME_XML = _Anonymous_74.PDF_ENUM_NAME_XML;
-    enum PDF_ENUM_NAME_XObject = _Anonymous_74.PDF_ENUM_NAME_XObject;
-    enum PDF_ENUM_NAME_XRef = _Anonymous_74.PDF_ENUM_NAME_XRef;
-    enum PDF_ENUM_NAME_XRefStm = _Anonymous_74.PDF_ENUM_NAME_XRefStm;
-    enum PDF_ENUM_NAME_XStep = _Anonymous_74.PDF_ENUM_NAME_XStep;
-    enum PDF_ENUM_NAME_XYZ = _Anonymous_74.PDF_ENUM_NAME_XYZ;
-    enum PDF_ENUM_NAME_YStep = _Anonymous_74.PDF_ENUM_NAME_YStep;
-    enum PDF_ENUM_NAME_Yes = _Anonymous_74.PDF_ENUM_NAME_Yes;
-    enum PDF_ENUM_NAME_ZaDb = _Anonymous_74.PDF_ENUM_NAME_ZaDb;
-    enum PDF_ENUM_NAME_adbe_pkcs7_detached = _Anonymous_74.PDF_ENUM_NAME_adbe_pkcs7_detached;
-    enum PDF_ENUM_NAME_ca = _Anonymous_74.PDF_ENUM_NAME_ca;
-    enum PDF_ENUM_NAME_n0 = _Anonymous_74.PDF_ENUM_NAME_n0;
-    enum PDF_ENUM_NAME_n1 = _Anonymous_74.PDF_ENUM_NAME_n1;
-    enum PDF_ENUM_NAME_n2 = _Anonymous_74.PDF_ENUM_NAME_n2;
-    enum PDF_ENUM_NAME_op = _Anonymous_74.PDF_ENUM_NAME_op;
-    enum PDF_ENUM_LIMIT = _Anonymous_74.PDF_ENUM_LIMIT;
+    enum PDF_ENUM_NULL = _Anonymous_63.PDF_ENUM_NULL;
+    enum PDF_ENUM_TRUE = _Anonymous_63.PDF_ENUM_TRUE;
+    enum PDF_ENUM_FALSE = _Anonymous_63.PDF_ENUM_FALSE;
+    enum PDF_ENUM_NAME_1_2 = _Anonymous_63.PDF_ENUM_NAME_1_2;
+    enum PDF_ENUM_NAME_3D = _Anonymous_63.PDF_ENUM_NAME_3D;
+    enum PDF_ENUM_NAME_A = _Anonymous_63.PDF_ENUM_NAME_A;
+    enum PDF_ENUM_NAME_A85 = _Anonymous_63.PDF_ENUM_NAME_A85;
+    enum PDF_ENUM_NAME_AA = _Anonymous_63.PDF_ENUM_NAME_AA;
+    enum PDF_ENUM_NAME_AC = _Anonymous_63.PDF_ENUM_NAME_AC;
+    enum PDF_ENUM_NAME_AESV2 = _Anonymous_63.PDF_ENUM_NAME_AESV2;
+    enum PDF_ENUM_NAME_AESV3 = _Anonymous_63.PDF_ENUM_NAME_AESV3;
+    enum PDF_ENUM_NAME_AHx = _Anonymous_63.PDF_ENUM_NAME_AHx;
+    enum PDF_ENUM_NAME_AP = _Anonymous_63.PDF_ENUM_NAME_AP;
+    enum PDF_ENUM_NAME_AS = _Anonymous_63.PDF_ENUM_NAME_AS;
+    enum PDF_ENUM_NAME_ASCII85Decode = _Anonymous_63.PDF_ENUM_NAME_ASCII85Decode;
+    enum PDF_ENUM_NAME_ASCIIHexDecode = _Anonymous_63.PDF_ENUM_NAME_ASCIIHexDecode;
+    enum PDF_ENUM_NAME_AcroForm = _Anonymous_63.PDF_ENUM_NAME_AcroForm;
+    enum PDF_ENUM_NAME_Action = _Anonymous_63.PDF_ENUM_NAME_Action;
+    enum PDF_ENUM_NAME_ActualText = _Anonymous_63.PDF_ENUM_NAME_ActualText;
+    enum PDF_ENUM_NAME_Adobe_PPKLite = _Anonymous_63.PDF_ENUM_NAME_Adobe_PPKLite;
+    enum PDF_ENUM_NAME_All = _Anonymous_63.PDF_ENUM_NAME_All;
+    enum PDF_ENUM_NAME_AllOff = _Anonymous_63.PDF_ENUM_NAME_AllOff;
+    enum PDF_ENUM_NAME_AllOn = _Anonymous_63.PDF_ENUM_NAME_AllOn;
+    enum PDF_ENUM_NAME_Alpha = _Anonymous_63.PDF_ENUM_NAME_Alpha;
+    enum PDF_ENUM_NAME_Alt = _Anonymous_63.PDF_ENUM_NAME_Alt;
+    enum PDF_ENUM_NAME_Alternate = _Anonymous_63.PDF_ENUM_NAME_Alternate;
+    enum PDF_ENUM_NAME_Annot = _Anonymous_63.PDF_ENUM_NAME_Annot;
+    enum PDF_ENUM_NAME_Annots = _Anonymous_63.PDF_ENUM_NAME_Annots;
+    enum PDF_ENUM_NAME_AnyOff = _Anonymous_63.PDF_ENUM_NAME_AnyOff;
+    enum PDF_ENUM_NAME_App = _Anonymous_63.PDF_ENUM_NAME_App;
+    enum PDF_ENUM_NAME_Approved = _Anonymous_63.PDF_ENUM_NAME_Approved;
+    enum PDF_ENUM_NAME_ArtBox = _Anonymous_63.PDF_ENUM_NAME_ArtBox;
+    enum PDF_ENUM_NAME_AsIs = _Anonymous_63.PDF_ENUM_NAME_AsIs;
+    enum PDF_ENUM_NAME_Ascent = _Anonymous_63.PDF_ENUM_NAME_Ascent;
+    enum PDF_ENUM_NAME_AuthEvent = _Anonymous_63.PDF_ENUM_NAME_AuthEvent;
+    enum PDF_ENUM_NAME_Author = _Anonymous_63.PDF_ENUM_NAME_Author;
+    enum PDF_ENUM_NAME_B = _Anonymous_63.PDF_ENUM_NAME_B;
+    enum PDF_ENUM_NAME_BBox = _Anonymous_63.PDF_ENUM_NAME_BBox;
+    enum PDF_ENUM_NAME_BC = _Anonymous_63.PDF_ENUM_NAME_BC;
+    enum PDF_ENUM_NAME_BE = _Anonymous_63.PDF_ENUM_NAME_BE;
+    enum PDF_ENUM_NAME_BG = _Anonymous_63.PDF_ENUM_NAME_BG;
+    enum PDF_ENUM_NAME_BM = _Anonymous_63.PDF_ENUM_NAME_BM;
+    enum PDF_ENUM_NAME_BPC = _Anonymous_63.PDF_ENUM_NAME_BPC;
+    enum PDF_ENUM_NAME_BS = _Anonymous_63.PDF_ENUM_NAME_BS;
+    enum PDF_ENUM_NAME_Background = _Anonymous_63.PDF_ENUM_NAME_Background;
+    enum PDF_ENUM_NAME_BaseEncoding = _Anonymous_63.PDF_ENUM_NAME_BaseEncoding;
+    enum PDF_ENUM_NAME_BaseFont = _Anonymous_63.PDF_ENUM_NAME_BaseFont;
+    enum PDF_ENUM_NAME_BaseState = _Anonymous_63.PDF_ENUM_NAME_BaseState;
+    enum PDF_ENUM_NAME_BitsPerComponent = _Anonymous_63.PDF_ENUM_NAME_BitsPerComponent;
+    enum PDF_ENUM_NAME_BitsPerCoordinate = _Anonymous_63.PDF_ENUM_NAME_BitsPerCoordinate;
+    enum PDF_ENUM_NAME_BitsPerFlag = _Anonymous_63.PDF_ENUM_NAME_BitsPerFlag;
+    enum PDF_ENUM_NAME_BitsPerSample = _Anonymous_63.PDF_ENUM_NAME_BitsPerSample;
+    enum PDF_ENUM_NAME_BlackIs1 = _Anonymous_63.PDF_ENUM_NAME_BlackIs1;
+    enum PDF_ENUM_NAME_BlackPoint = _Anonymous_63.PDF_ENUM_NAME_BlackPoint;
+    enum PDF_ENUM_NAME_BleedBox = _Anonymous_63.PDF_ENUM_NAME_BleedBox;
+    enum PDF_ENUM_NAME_Blinds = _Anonymous_63.PDF_ENUM_NAME_Blinds;
+    enum PDF_ENUM_NAME_Border = _Anonymous_63.PDF_ENUM_NAME_Border;
+    enum PDF_ENUM_NAME_Bounds = _Anonymous_63.PDF_ENUM_NAME_Bounds;
+    enum PDF_ENUM_NAME_Box = _Anonymous_63.PDF_ENUM_NAME_Box;
+    enum PDF_ENUM_NAME_Bt = _Anonymous_63.PDF_ENUM_NAME_Bt;
+    enum PDF_ENUM_NAME_Btn = _Anonymous_63.PDF_ENUM_NAME_Btn;
+    enum PDF_ENUM_NAME_Butt = _Anonymous_63.PDF_ENUM_NAME_Butt;
+    enum PDF_ENUM_NAME_ByteRange = _Anonymous_63.PDF_ENUM_NAME_ByteRange;
+    enum PDF_ENUM_NAME_C = _Anonymous_63.PDF_ENUM_NAME_C;
+    enum PDF_ENUM_NAME_C0 = _Anonymous_63.PDF_ENUM_NAME_C0;
+    enum PDF_ENUM_NAME_C1 = _Anonymous_63.PDF_ENUM_NAME_C1;
+    enum PDF_ENUM_NAME_CA = _Anonymous_63.PDF_ENUM_NAME_CA;
+    enum PDF_ENUM_NAME_CCF = _Anonymous_63.PDF_ENUM_NAME_CCF;
+    enum PDF_ENUM_NAME_CCITTFaxDecode = _Anonymous_63.PDF_ENUM_NAME_CCITTFaxDecode;
+    enum PDF_ENUM_NAME_CF = _Anonymous_63.PDF_ENUM_NAME_CF;
+    enum PDF_ENUM_NAME_CFM = _Anonymous_63.PDF_ENUM_NAME_CFM;
+    enum PDF_ENUM_NAME_CI = _Anonymous_63.PDF_ENUM_NAME_CI;
+    enum PDF_ENUM_NAME_CIDFontType0 = _Anonymous_63.PDF_ENUM_NAME_CIDFontType0;
+    enum PDF_ENUM_NAME_CIDFontType0C = _Anonymous_63.PDF_ENUM_NAME_CIDFontType0C;
+    enum PDF_ENUM_NAME_CIDFontType2 = _Anonymous_63.PDF_ENUM_NAME_CIDFontType2;
+    enum PDF_ENUM_NAME_CIDSystemInfo = _Anonymous_63.PDF_ENUM_NAME_CIDSystemInfo;
+    enum PDF_ENUM_NAME_CIDToGIDMap = _Anonymous_63.PDF_ENUM_NAME_CIDToGIDMap;
+    enum PDF_ENUM_NAME_CMYK = _Anonymous_63.PDF_ENUM_NAME_CMYK;
+    enum PDF_ENUM_NAME_CS = _Anonymous_63.PDF_ENUM_NAME_CS;
+    enum PDF_ENUM_NAME_CalCMYK = _Anonymous_63.PDF_ENUM_NAME_CalCMYK;
+    enum PDF_ENUM_NAME_CalGray = _Anonymous_63.PDF_ENUM_NAME_CalGray;
+    enum PDF_ENUM_NAME_CalRGB = _Anonymous_63.PDF_ENUM_NAME_CalRGB;
+    enum PDF_ENUM_NAME_CapHeight = _Anonymous_63.PDF_ENUM_NAME_CapHeight;
+    enum PDF_ENUM_NAME_Caret = _Anonymous_63.PDF_ENUM_NAME_Caret;
+    enum PDF_ENUM_NAME_Catalog = _Anonymous_63.PDF_ENUM_NAME_Catalog;
+    enum PDF_ENUM_NAME_Cert = _Anonymous_63.PDF_ENUM_NAME_Cert;
+    enum PDF_ENUM_NAME_Ch = _Anonymous_63.PDF_ENUM_NAME_Ch;
+    enum PDF_ENUM_NAME_Changes = _Anonymous_63.PDF_ENUM_NAME_Changes;
+    enum PDF_ENUM_NAME_CharProcs = _Anonymous_63.PDF_ENUM_NAME_CharProcs;
+    enum PDF_ENUM_NAME_CheckSum = _Anonymous_63.PDF_ENUM_NAME_CheckSum;
+    enum PDF_ENUM_NAME_Circle = _Anonymous_63.PDF_ENUM_NAME_Circle;
+    enum PDF_ENUM_NAME_ClosedArrow = _Anonymous_63.PDF_ENUM_NAME_ClosedArrow;
+    enum PDF_ENUM_NAME_Collection = _Anonymous_63.PDF_ENUM_NAME_Collection;
+    enum PDF_ENUM_NAME_ColorSpace = _Anonymous_63.PDF_ENUM_NAME_ColorSpace;
+    enum PDF_ENUM_NAME_ColorTransform = _Anonymous_63.PDF_ENUM_NAME_ColorTransform;
+    enum PDF_ENUM_NAME_Colorants = _Anonymous_63.PDF_ENUM_NAME_Colorants;
+    enum PDF_ENUM_NAME_Colors = _Anonymous_63.PDF_ENUM_NAME_Colors;
+    enum PDF_ENUM_NAME_Columns = _Anonymous_63.PDF_ENUM_NAME_Columns;
+    enum PDF_ENUM_NAME_Confidential = _Anonymous_63.PDF_ENUM_NAME_Confidential;
+    enum PDF_ENUM_NAME_Configs = _Anonymous_63.PDF_ENUM_NAME_Configs;
+    enum PDF_ENUM_NAME_ContactInfo = _Anonymous_63.PDF_ENUM_NAME_ContactInfo;
+    enum PDF_ENUM_NAME_Contents = _Anonymous_63.PDF_ENUM_NAME_Contents;
+    enum PDF_ENUM_NAME_Coords = _Anonymous_63.PDF_ENUM_NAME_Coords;
+    enum PDF_ENUM_NAME_Count = _Anonymous_63.PDF_ENUM_NAME_Count;
+    enum PDF_ENUM_NAME_Cover = _Anonymous_63.PDF_ENUM_NAME_Cover;
+    enum PDF_ENUM_NAME_CreationDate = _Anonymous_63.PDF_ENUM_NAME_CreationDate;
+    enum PDF_ENUM_NAME_Creator = _Anonymous_63.PDF_ENUM_NAME_Creator;
+    enum PDF_ENUM_NAME_CropBox = _Anonymous_63.PDF_ENUM_NAME_CropBox;
+    enum PDF_ENUM_NAME_Crypt = _Anonymous_63.PDF_ENUM_NAME_Crypt;
+    enum PDF_ENUM_NAME_D = _Anonymous_63.PDF_ENUM_NAME_D;
+    enum PDF_ENUM_NAME_DA = _Anonymous_63.PDF_ENUM_NAME_DA;
+    enum PDF_ENUM_NAME_DC = _Anonymous_63.PDF_ENUM_NAME_DC;
+    enum PDF_ENUM_NAME_DCT = _Anonymous_63.PDF_ENUM_NAME_DCT;
+    enum PDF_ENUM_NAME_DCTDecode = _Anonymous_63.PDF_ENUM_NAME_DCTDecode;
+    enum PDF_ENUM_NAME_DL = _Anonymous_63.PDF_ENUM_NAME_DL;
+    enum PDF_ENUM_NAME_DOS = _Anonymous_63.PDF_ENUM_NAME_DOS;
+    enum PDF_ENUM_NAME_DP = _Anonymous_63.PDF_ENUM_NAME_DP;
+    enum PDF_ENUM_NAME_DR = _Anonymous_63.PDF_ENUM_NAME_DR;
+    enum PDF_ENUM_NAME_DS = _Anonymous_63.PDF_ENUM_NAME_DS;
+    enum PDF_ENUM_NAME_DV = _Anonymous_63.PDF_ENUM_NAME_DV;
+    enum PDF_ENUM_NAME_DW = _Anonymous_63.PDF_ENUM_NAME_DW;
+    enum PDF_ENUM_NAME_DW2 = _Anonymous_63.PDF_ENUM_NAME_DW2;
+    enum PDF_ENUM_NAME_DamagedRowsBeforeError = _Anonymous_63.PDF_ENUM_NAME_DamagedRowsBeforeError;
+    enum PDF_ENUM_NAME_Data = _Anonymous_63.PDF_ENUM_NAME_Data;
+    enum PDF_ENUM_NAME_Date = _Anonymous_63.PDF_ENUM_NAME_Date;
+    enum PDF_ENUM_NAME_Decode = _Anonymous_63.PDF_ENUM_NAME_Decode;
+    enum PDF_ENUM_NAME_DecodeParms = _Anonymous_63.PDF_ENUM_NAME_DecodeParms;
+    enum PDF_ENUM_NAME_Default = _Anonymous_63.PDF_ENUM_NAME_Default;
+    enum PDF_ENUM_NAME_DefaultCMYK = _Anonymous_63.PDF_ENUM_NAME_DefaultCMYK;
+    enum PDF_ENUM_NAME_DefaultGray = _Anonymous_63.PDF_ENUM_NAME_DefaultGray;
+    enum PDF_ENUM_NAME_DefaultRGB = _Anonymous_63.PDF_ENUM_NAME_DefaultRGB;
+    enum PDF_ENUM_NAME_Departmental = _Anonymous_63.PDF_ENUM_NAME_Departmental;
+    enum PDF_ENUM_NAME_Desc = _Anonymous_63.PDF_ENUM_NAME_Desc;
+    enum PDF_ENUM_NAME_DescendantFonts = _Anonymous_63.PDF_ENUM_NAME_DescendantFonts;
+    enum PDF_ENUM_NAME_Descent = _Anonymous_63.PDF_ENUM_NAME_Descent;
+    enum PDF_ENUM_NAME_Design = _Anonymous_63.PDF_ENUM_NAME_Design;
+    enum PDF_ENUM_NAME_Dest = _Anonymous_63.PDF_ENUM_NAME_Dest;
+    enum PDF_ENUM_NAME_DestOutputProfile = _Anonymous_63.PDF_ENUM_NAME_DestOutputProfile;
+    enum PDF_ENUM_NAME_Dests = _Anonymous_63.PDF_ENUM_NAME_Dests;
+    enum PDF_ENUM_NAME_DeviceCMYK = _Anonymous_63.PDF_ENUM_NAME_DeviceCMYK;
+    enum PDF_ENUM_NAME_DeviceGray = _Anonymous_63.PDF_ENUM_NAME_DeviceGray;
+    enum PDF_ENUM_NAME_DeviceN = _Anonymous_63.PDF_ENUM_NAME_DeviceN;
+    enum PDF_ENUM_NAME_DeviceRGB = _Anonymous_63.PDF_ENUM_NAME_DeviceRGB;
+    enum PDF_ENUM_NAME_Di = _Anonymous_63.PDF_ENUM_NAME_Di;
+    enum PDF_ENUM_NAME_Diamond = _Anonymous_63.PDF_ENUM_NAME_Diamond;
+    enum PDF_ENUM_NAME_Differences = _Anonymous_63.PDF_ENUM_NAME_Differences;
+    enum PDF_ENUM_NAME_DigestLocation = _Anonymous_63.PDF_ENUM_NAME_DigestLocation;
+    enum PDF_ENUM_NAME_DigestMethod = _Anonymous_63.PDF_ENUM_NAME_DigestMethod;
+    enum PDF_ENUM_NAME_DigestValue = _Anonymous_63.PDF_ENUM_NAME_DigestValue;
+    enum PDF_ENUM_NAME_Dissolve = _Anonymous_63.PDF_ENUM_NAME_Dissolve;
+    enum PDF_ENUM_NAME_Dm = _Anonymous_63.PDF_ENUM_NAME_Dm;
+    enum PDF_ENUM_NAME_DocMDP = _Anonymous_63.PDF_ENUM_NAME_DocMDP;
+    enum PDF_ENUM_NAME_Document = _Anonymous_63.PDF_ENUM_NAME_Document;
+    enum PDF_ENUM_NAME_Domain = _Anonymous_63.PDF_ENUM_NAME_Domain;
+    enum PDF_ENUM_NAME_Draft = _Anonymous_63.PDF_ENUM_NAME_Draft;
+    enum PDF_ENUM_NAME_Dur = _Anonymous_63.PDF_ENUM_NAME_Dur;
+    enum PDF_ENUM_NAME_E = _Anonymous_63.PDF_ENUM_NAME_E;
+    enum PDF_ENUM_NAME_EF = _Anonymous_63.PDF_ENUM_NAME_EF;
+    enum PDF_ENUM_NAME_EarlyChange = _Anonymous_63.PDF_ENUM_NAME_EarlyChange;
+    enum PDF_ENUM_NAME_EmbeddedFile = _Anonymous_63.PDF_ENUM_NAME_EmbeddedFile;
+    enum PDF_ENUM_NAME_EmbeddedFiles = _Anonymous_63.PDF_ENUM_NAME_EmbeddedFiles;
+    enum PDF_ENUM_NAME_Encode = _Anonymous_63.PDF_ENUM_NAME_Encode;
+    enum PDF_ENUM_NAME_EncodedByteAlign = _Anonymous_63.PDF_ENUM_NAME_EncodedByteAlign;
+    enum PDF_ENUM_NAME_Encoding = _Anonymous_63.PDF_ENUM_NAME_Encoding;
+    enum PDF_ENUM_NAME_Encrypt = _Anonymous_63.PDF_ENUM_NAME_Encrypt;
+    enum PDF_ENUM_NAME_EncryptMetadata = _Anonymous_63.PDF_ENUM_NAME_EncryptMetadata;
+    enum PDF_ENUM_NAME_EndOfBlock = _Anonymous_63.PDF_ENUM_NAME_EndOfBlock;
+    enum PDF_ENUM_NAME_EndOfLine = _Anonymous_63.PDF_ENUM_NAME_EndOfLine;
+    enum PDF_ENUM_NAME_Exclude = _Anonymous_63.PDF_ENUM_NAME_Exclude;
+    enum PDF_ENUM_NAME_Experimental = _Anonymous_63.PDF_ENUM_NAME_Experimental;
+    enum PDF_ENUM_NAME_Expired = _Anonymous_63.PDF_ENUM_NAME_Expired;
+    enum PDF_ENUM_NAME_ExtGState = _Anonymous_63.PDF_ENUM_NAME_ExtGState;
+    enum PDF_ENUM_NAME_Extend = _Anonymous_63.PDF_ENUM_NAME_Extend;
+    enum PDF_ENUM_NAME_F = _Anonymous_63.PDF_ENUM_NAME_F;
+    enum PDF_ENUM_NAME_FL = _Anonymous_63.PDF_ENUM_NAME_FL;
+    enum PDF_ENUM_NAME_FRM = _Anonymous_63.PDF_ENUM_NAME_FRM;
+    enum PDF_ENUM_NAME_FS = _Anonymous_63.PDF_ENUM_NAME_FS;
+    enum PDF_ENUM_NAME_FT = _Anonymous_63.PDF_ENUM_NAME_FT;
+    enum PDF_ENUM_NAME_Fade = _Anonymous_63.PDF_ENUM_NAME_Fade;
+    enum PDF_ENUM_NAME_Ff = _Anonymous_63.PDF_ENUM_NAME_Ff;
+    enum PDF_ENUM_NAME_FieldMDP = _Anonymous_63.PDF_ENUM_NAME_FieldMDP;
+    enum PDF_ENUM_NAME_Fields = _Anonymous_63.PDF_ENUM_NAME_Fields;
+    enum PDF_ENUM_NAME_FileAttachment = _Anonymous_63.PDF_ENUM_NAME_FileAttachment;
+    enum PDF_ENUM_NAME_FileSize = _Anonymous_63.PDF_ENUM_NAME_FileSize;
+    enum PDF_ENUM_NAME_Filespec = _Anonymous_63.PDF_ENUM_NAME_Filespec;
+    enum PDF_ENUM_NAME_Filter = _Anonymous_63.PDF_ENUM_NAME_Filter;
+    enum PDF_ENUM_NAME_Final = _Anonymous_63.PDF_ENUM_NAME_Final;
+    enum PDF_ENUM_NAME_Fingerprint = _Anonymous_63.PDF_ENUM_NAME_Fingerprint;
+    enum PDF_ENUM_NAME_First = _Anonymous_63.PDF_ENUM_NAME_First;
+    enum PDF_ENUM_NAME_FirstChar = _Anonymous_63.PDF_ENUM_NAME_FirstChar;
+    enum PDF_ENUM_NAME_FirstPage = _Anonymous_63.PDF_ENUM_NAME_FirstPage;
+    enum PDF_ENUM_NAME_Fit = _Anonymous_63.PDF_ENUM_NAME_Fit;
+    enum PDF_ENUM_NAME_FitB = _Anonymous_63.PDF_ENUM_NAME_FitB;
+    enum PDF_ENUM_NAME_FitBH = _Anonymous_63.PDF_ENUM_NAME_FitBH;
+    enum PDF_ENUM_NAME_FitBV = _Anonymous_63.PDF_ENUM_NAME_FitBV;
+    enum PDF_ENUM_NAME_FitH = _Anonymous_63.PDF_ENUM_NAME_FitH;
+    enum PDF_ENUM_NAME_FitR = _Anonymous_63.PDF_ENUM_NAME_FitR;
+    enum PDF_ENUM_NAME_FitV = _Anonymous_63.PDF_ENUM_NAME_FitV;
+    enum PDF_ENUM_NAME_Fl = _Anonymous_63.PDF_ENUM_NAME_Fl;
+    enum PDF_ENUM_NAME_Flags = _Anonymous_63.PDF_ENUM_NAME_Flags;
+    enum PDF_ENUM_NAME_FlateDecode = _Anonymous_63.PDF_ENUM_NAME_FlateDecode;
+    enum PDF_ENUM_NAME_Fly = _Anonymous_63.PDF_ENUM_NAME_Fly;
+    enum PDF_ENUM_NAME_Font = _Anonymous_63.PDF_ENUM_NAME_Font;
+    enum PDF_ENUM_NAME_FontBBox = _Anonymous_63.PDF_ENUM_NAME_FontBBox;
+    enum PDF_ENUM_NAME_FontDescriptor = _Anonymous_63.PDF_ENUM_NAME_FontDescriptor;
+    enum PDF_ENUM_NAME_FontFile = _Anonymous_63.PDF_ENUM_NAME_FontFile;
+    enum PDF_ENUM_NAME_FontFile2 = _Anonymous_63.PDF_ENUM_NAME_FontFile2;
+    enum PDF_ENUM_NAME_FontFile3 = _Anonymous_63.PDF_ENUM_NAME_FontFile3;
+    enum PDF_ENUM_NAME_FontMatrix = _Anonymous_63.PDF_ENUM_NAME_FontMatrix;
+    enum PDF_ENUM_NAME_FontName = _Anonymous_63.PDF_ENUM_NAME_FontName;
+    enum PDF_ENUM_NAME_ForComment = _Anonymous_63.PDF_ENUM_NAME_ForComment;
+    enum PDF_ENUM_NAME_ForPublicRelease = _Anonymous_63.PDF_ENUM_NAME_ForPublicRelease;
+    enum PDF_ENUM_NAME_Form = _Anonymous_63.PDF_ENUM_NAME_Form;
+    enum PDF_ENUM_NAME_FormEx = _Anonymous_63.PDF_ENUM_NAME_FormEx;
+    enum PDF_ENUM_NAME_FormType = _Anonymous_63.PDF_ENUM_NAME_FormType;
+    enum PDF_ENUM_NAME_FreeText = _Anonymous_63.PDF_ENUM_NAME_FreeText;
+    enum PDF_ENUM_NAME_Function = _Anonymous_63.PDF_ENUM_NAME_Function;
+    enum PDF_ENUM_NAME_FunctionType = _Anonymous_63.PDF_ENUM_NAME_FunctionType;
+    enum PDF_ENUM_NAME_Functions = _Anonymous_63.PDF_ENUM_NAME_Functions;
+    enum PDF_ENUM_NAME_G = _Anonymous_63.PDF_ENUM_NAME_G;
+    enum PDF_ENUM_NAME_GTS_PDFX = _Anonymous_63.PDF_ENUM_NAME_GTS_PDFX;
+    enum PDF_ENUM_NAME_Gamma = _Anonymous_63.PDF_ENUM_NAME_Gamma;
+    enum PDF_ENUM_NAME_Glitter = _Anonymous_63.PDF_ENUM_NAME_Glitter;
+    enum PDF_ENUM_NAME_GoTo = _Anonymous_63.PDF_ENUM_NAME_GoTo;
+    enum PDF_ENUM_NAME_GoToR = _Anonymous_63.PDF_ENUM_NAME_GoToR;
+    enum PDF_ENUM_NAME_Group = _Anonymous_63.PDF_ENUM_NAME_Group;
+    enum PDF_ENUM_NAME_H = _Anonymous_63.PDF_ENUM_NAME_H;
+    enum PDF_ENUM_NAME_Height = _Anonymous_63.PDF_ENUM_NAME_Height;
+    enum PDF_ENUM_NAME_Helv = _Anonymous_63.PDF_ENUM_NAME_Helv;
+    enum PDF_ENUM_NAME_Highlight = _Anonymous_63.PDF_ENUM_NAME_Highlight;
+    enum PDF_ENUM_NAME_HistoryPos = _Anonymous_63.PDF_ENUM_NAME_HistoryPos;
+    enum PDF_ENUM_NAME_I = _Anonymous_63.PDF_ENUM_NAME_I;
+    enum PDF_ENUM_NAME_IC = _Anonymous_63.PDF_ENUM_NAME_IC;
+    enum PDF_ENUM_NAME_ICCBased = _Anonymous_63.PDF_ENUM_NAME_ICCBased;
+    enum PDF_ENUM_NAME_ID = _Anonymous_63.PDF_ENUM_NAME_ID;
+    enum PDF_ENUM_NAME_IM = _Anonymous_63.PDF_ENUM_NAME_IM;
+    enum PDF_ENUM_NAME_IRT = _Anonymous_63.PDF_ENUM_NAME_IRT;
+    enum PDF_ENUM_NAME_Identity = _Anonymous_63.PDF_ENUM_NAME_Identity;
+    enum PDF_ENUM_NAME_Identity_H = _Anonymous_63.PDF_ENUM_NAME_Identity_H;
+    enum PDF_ENUM_NAME_Identity_V = _Anonymous_63.PDF_ENUM_NAME_Identity_V;
+    enum PDF_ENUM_NAME_Image = _Anonymous_63.PDF_ENUM_NAME_Image;
+    enum PDF_ENUM_NAME_ImageMask = _Anonymous_63.PDF_ENUM_NAME_ImageMask;
+    enum PDF_ENUM_NAME_Include = _Anonymous_63.PDF_ENUM_NAME_Include;
+    enum PDF_ENUM_NAME_Index = _Anonymous_63.PDF_ENUM_NAME_Index;
+    enum PDF_ENUM_NAME_Indexed = _Anonymous_63.PDF_ENUM_NAME_Indexed;
+    enum PDF_ENUM_NAME_Info = _Anonymous_63.PDF_ENUM_NAME_Info;
+    enum PDF_ENUM_NAME_Ink = _Anonymous_63.PDF_ENUM_NAME_Ink;
+    enum PDF_ENUM_NAME_InkList = _Anonymous_63.PDF_ENUM_NAME_InkList;
+    enum PDF_ENUM_NAME_Intent = _Anonymous_63.PDF_ENUM_NAME_Intent;
+    enum PDF_ENUM_NAME_Interpolate = _Anonymous_63.PDF_ENUM_NAME_Interpolate;
+    enum PDF_ENUM_NAME_IsMap = _Anonymous_63.PDF_ENUM_NAME_IsMap;
+    enum PDF_ENUM_NAME_ItalicAngle = _Anonymous_63.PDF_ENUM_NAME_ItalicAngle;
+    enum PDF_ENUM_NAME_JBIG2Decode = _Anonymous_63.PDF_ENUM_NAME_JBIG2Decode;
+    enum PDF_ENUM_NAME_JBIG2Globals = _Anonymous_63.PDF_ENUM_NAME_JBIG2Globals;
+    enum PDF_ENUM_NAME_JPXDecode = _Anonymous_63.PDF_ENUM_NAME_JPXDecode;
+    enum PDF_ENUM_NAME_JS = _Anonymous_63.PDF_ENUM_NAME_JS;
+    enum PDF_ENUM_NAME_JavaScript = _Anonymous_63.PDF_ENUM_NAME_JavaScript;
+    enum PDF_ENUM_NAME_K = _Anonymous_63.PDF_ENUM_NAME_K;
+    enum PDF_ENUM_NAME_Keywords = _Anonymous_63.PDF_ENUM_NAME_Keywords;
+    enum PDF_ENUM_NAME_Kids = _Anonymous_63.PDF_ENUM_NAME_Kids;
+    enum PDF_ENUM_NAME_L = _Anonymous_63.PDF_ENUM_NAME_L;
+    enum PDF_ENUM_NAME_LC = _Anonymous_63.PDF_ENUM_NAME_LC;
+    enum PDF_ENUM_NAME_LE = _Anonymous_63.PDF_ENUM_NAME_LE;
+    enum PDF_ENUM_NAME_LJ = _Anonymous_63.PDF_ENUM_NAME_LJ;
+    enum PDF_ENUM_NAME_LW = _Anonymous_63.PDF_ENUM_NAME_LW;
+    enum PDF_ENUM_NAME_LZ = _Anonymous_63.PDF_ENUM_NAME_LZ;
+    enum PDF_ENUM_NAME_LZW = _Anonymous_63.PDF_ENUM_NAME_LZW;
+    enum PDF_ENUM_NAME_LZWDecode = _Anonymous_63.PDF_ENUM_NAME_LZWDecode;
+    enum PDF_ENUM_NAME_Lab = _Anonymous_63.PDF_ENUM_NAME_Lab;
+    enum PDF_ENUM_NAME_Lang = _Anonymous_63.PDF_ENUM_NAME_Lang;
+    enum PDF_ENUM_NAME_Last = _Anonymous_63.PDF_ENUM_NAME_Last;
+    enum PDF_ENUM_NAME_LastChar = _Anonymous_63.PDF_ENUM_NAME_LastChar;
+    enum PDF_ENUM_NAME_LastPage = _Anonymous_63.PDF_ENUM_NAME_LastPage;
+    enum PDF_ENUM_NAME_Launch = _Anonymous_63.PDF_ENUM_NAME_Launch;
+    enum PDF_ENUM_NAME_Length = _Anonymous_63.PDF_ENUM_NAME_Length;
+    enum PDF_ENUM_NAME_Length1 = _Anonymous_63.PDF_ENUM_NAME_Length1;
+    enum PDF_ENUM_NAME_Length2 = _Anonymous_63.PDF_ENUM_NAME_Length2;
+    enum PDF_ENUM_NAME_Length3 = _Anonymous_63.PDF_ENUM_NAME_Length3;
+    enum PDF_ENUM_NAME_Limits = _Anonymous_63.PDF_ENUM_NAME_Limits;
+    enum PDF_ENUM_NAME_Line = _Anonymous_63.PDF_ENUM_NAME_Line;
+    enum PDF_ENUM_NAME_Linearized = _Anonymous_63.PDF_ENUM_NAME_Linearized;
+    enum PDF_ENUM_NAME_Link = _Anonymous_63.PDF_ENUM_NAME_Link;
+    enum PDF_ENUM_NAME_Location = _Anonymous_63.PDF_ENUM_NAME_Location;
+    enum PDF_ENUM_NAME_Lock = _Anonymous_63.PDF_ENUM_NAME_Lock;
+    enum PDF_ENUM_NAME_Locked = _Anonymous_63.PDF_ENUM_NAME_Locked;
+    enum PDF_ENUM_NAME_Luminosity = _Anonymous_63.PDF_ENUM_NAME_Luminosity;
+    enum PDF_ENUM_NAME_M = _Anonymous_63.PDF_ENUM_NAME_M;
+    enum PDF_ENUM_NAME_MCID = _Anonymous_63.PDF_ENUM_NAME_MCID;
+    enum PDF_ENUM_NAME_MK = _Anonymous_63.PDF_ENUM_NAME_MK;
+    enum PDF_ENUM_NAME_ML = _Anonymous_63.PDF_ENUM_NAME_ML;
+    enum PDF_ENUM_NAME_MMType1 = _Anonymous_63.PDF_ENUM_NAME_MMType1;
+    enum PDF_ENUM_NAME_Mac = _Anonymous_63.PDF_ENUM_NAME_Mac;
+    enum PDF_ENUM_NAME_Mask = _Anonymous_63.PDF_ENUM_NAME_Mask;
+    enum PDF_ENUM_NAME_Matrix = _Anonymous_63.PDF_ENUM_NAME_Matrix;
+    enum PDF_ENUM_NAME_Matte = _Anonymous_63.PDF_ENUM_NAME_Matte;
+    enum PDF_ENUM_NAME_MaxLen = _Anonymous_63.PDF_ENUM_NAME_MaxLen;
+    enum PDF_ENUM_NAME_MediaBox = _Anonymous_63.PDF_ENUM_NAME_MediaBox;
+    enum PDF_ENUM_NAME_Metadata = _Anonymous_63.PDF_ENUM_NAME_Metadata;
+    enum PDF_ENUM_NAME_MissingWidth = _Anonymous_63.PDF_ENUM_NAME_MissingWidth;
+    enum PDF_ENUM_NAME_ModDate = _Anonymous_63.PDF_ENUM_NAME_ModDate;
+    enum PDF_ENUM_NAME_Movie = _Anonymous_63.PDF_ENUM_NAME_Movie;
+    enum PDF_ENUM_NAME_Msg = _Anonymous_63.PDF_ENUM_NAME_Msg;
+    enum PDF_ENUM_NAME_Multiply = _Anonymous_63.PDF_ENUM_NAME_Multiply;
+    enum PDF_ENUM_NAME_N = _Anonymous_63.PDF_ENUM_NAME_N;
+    enum PDF_ENUM_NAME_Name = _Anonymous_63.PDF_ENUM_NAME_Name;
+    enum PDF_ENUM_NAME_Named = _Anonymous_63.PDF_ENUM_NAME_Named;
+    enum PDF_ENUM_NAME_Names = _Anonymous_63.PDF_ENUM_NAME_Names;
+    enum PDF_ENUM_NAME_NewWindow = _Anonymous_63.PDF_ENUM_NAME_NewWindow;
+    enum PDF_ENUM_NAME_Next = _Anonymous_63.PDF_ENUM_NAME_Next;
+    enum PDF_ENUM_NAME_NextPage = _Anonymous_63.PDF_ENUM_NAME_NextPage;
+    enum PDF_ENUM_NAME_NonEFontNoWarn = _Anonymous_63.PDF_ENUM_NAME_NonEFontNoWarn;
+    enum PDF_ENUM_NAME_None = _Anonymous_63.PDF_ENUM_NAME_None;
+    enum PDF_ENUM_NAME_Normal = _Anonymous_63.PDF_ENUM_NAME_Normal;
+    enum PDF_ENUM_NAME_NotApproved = _Anonymous_63.PDF_ENUM_NAME_NotApproved;
+    enum PDF_ENUM_NAME_NotForPublicRelease = _Anonymous_63.PDF_ENUM_NAME_NotForPublicRelease;
+    enum PDF_ENUM_NAME_NumSections = _Anonymous_63.PDF_ENUM_NAME_NumSections;
+    enum PDF_ENUM_NAME_Nums = _Anonymous_63.PDF_ENUM_NAME_Nums;
+    enum PDF_ENUM_NAME_O = _Anonymous_63.PDF_ENUM_NAME_O;
+    enum PDF_ENUM_NAME_OC = _Anonymous_63.PDF_ENUM_NAME_OC;
+    enum PDF_ENUM_NAME_OCG = _Anonymous_63.PDF_ENUM_NAME_OCG;
+    enum PDF_ENUM_NAME_OCGs = _Anonymous_63.PDF_ENUM_NAME_OCGs;
+    enum PDF_ENUM_NAME_OCMD = _Anonymous_63.PDF_ENUM_NAME_OCMD;
+    enum PDF_ENUM_NAME_OCProperties = _Anonymous_63.PDF_ENUM_NAME_OCProperties;
+    enum PDF_ENUM_NAME_OE = _Anonymous_63.PDF_ENUM_NAME_OE;
+    enum PDF_ENUM_NAME_OFF = _Anonymous_63.PDF_ENUM_NAME_OFF;
+    enum PDF_ENUM_NAME_ON = _Anonymous_63.PDF_ENUM_NAME_ON;
+    enum PDF_ENUM_NAME_OP = _Anonymous_63.PDF_ENUM_NAME_OP;
+    enum PDF_ENUM_NAME_OPM = _Anonymous_63.PDF_ENUM_NAME_OPM;
+    enum PDF_ENUM_NAME_OS = _Anonymous_63.PDF_ENUM_NAME_OS;
+    enum PDF_ENUM_NAME_ObjStm = _Anonymous_63.PDF_ENUM_NAME_ObjStm;
+    enum PDF_ENUM_NAME_Of = _Anonymous_63.PDF_ENUM_NAME_Of;
+    enum PDF_ENUM_NAME_Off = _Anonymous_63.PDF_ENUM_NAME_Off;
+    enum PDF_ENUM_NAME_Open = _Anonymous_63.PDF_ENUM_NAME_Open;
+    enum PDF_ENUM_NAME_OpenArrow = _Anonymous_63.PDF_ENUM_NAME_OpenArrow;
+    enum PDF_ENUM_NAME_OpenType = _Anonymous_63.PDF_ENUM_NAME_OpenType;
+    enum PDF_ENUM_NAME_Opt = _Anonymous_63.PDF_ENUM_NAME_Opt;
+    enum PDF_ENUM_NAME_Order = _Anonymous_63.PDF_ENUM_NAME_Order;
+    enum PDF_ENUM_NAME_Ordering = _Anonymous_63.PDF_ENUM_NAME_Ordering;
+    enum PDF_ENUM_NAME_Outlines = _Anonymous_63.PDF_ENUM_NAME_Outlines;
+    enum PDF_ENUM_NAME_OutputCondition = _Anonymous_63.PDF_ENUM_NAME_OutputCondition;
+    enum PDF_ENUM_NAME_OutputConditionIdentifier = _Anonymous_63.PDF_ENUM_NAME_OutputConditionIdentifier;
+    enum PDF_ENUM_NAME_OutputIntent = _Anonymous_63.PDF_ENUM_NAME_OutputIntent;
+    enum PDF_ENUM_NAME_OutputIntents = _Anonymous_63.PDF_ENUM_NAME_OutputIntents;
+    enum PDF_ENUM_NAME_P = _Anonymous_63.PDF_ENUM_NAME_P;
+    enum PDF_ENUM_NAME_PDF = _Anonymous_63.PDF_ENUM_NAME_PDF;
+    enum PDF_ENUM_NAME_PS = _Anonymous_63.PDF_ENUM_NAME_PS;
+    enum PDF_ENUM_NAME_Page = _Anonymous_63.PDF_ENUM_NAME_Page;
+    enum PDF_ENUM_NAME_PageMode = _Anonymous_63.PDF_ENUM_NAME_PageMode;
+    enum PDF_ENUM_NAME_Pages = _Anonymous_63.PDF_ENUM_NAME_Pages;
+    enum PDF_ENUM_NAME_PaintType = _Anonymous_63.PDF_ENUM_NAME_PaintType;
+    enum PDF_ENUM_NAME_Params = _Anonymous_63.PDF_ENUM_NAME_Params;
+    enum PDF_ENUM_NAME_Parent = _Anonymous_63.PDF_ENUM_NAME_Parent;
+    enum PDF_ENUM_NAME_Pattern = _Anonymous_63.PDF_ENUM_NAME_Pattern;
+    enum PDF_ENUM_NAME_PatternType = _Anonymous_63.PDF_ENUM_NAME_PatternType;
+    enum PDF_ENUM_NAME_Perms = _Anonymous_63.PDF_ENUM_NAME_Perms;
+    enum PDF_ENUM_NAME_PolyLine = _Anonymous_63.PDF_ENUM_NAME_PolyLine;
+    enum PDF_ENUM_NAME_Polygon = _Anonymous_63.PDF_ENUM_NAME_Polygon;
+    enum PDF_ENUM_NAME_Popup = _Anonymous_63.PDF_ENUM_NAME_Popup;
+    enum PDF_ENUM_NAME_PreRelease = _Anonymous_63.PDF_ENUM_NAME_PreRelease;
+    enum PDF_ENUM_NAME_Predictor = _Anonymous_63.PDF_ENUM_NAME_Predictor;
+    enum PDF_ENUM_NAME_Prev = _Anonymous_63.PDF_ENUM_NAME_Prev;
+    enum PDF_ENUM_NAME_PrevPage = _Anonymous_63.PDF_ENUM_NAME_PrevPage;
+    enum PDF_ENUM_NAME_Preview = _Anonymous_63.PDF_ENUM_NAME_Preview;
+    enum PDF_ENUM_NAME_Print = _Anonymous_63.PDF_ENUM_NAME_Print;
+    enum PDF_ENUM_NAME_PrinterMark = _Anonymous_63.PDF_ENUM_NAME_PrinterMark;
+    enum PDF_ENUM_NAME_ProcSet = _Anonymous_63.PDF_ENUM_NAME_ProcSet;
+    enum PDF_ENUM_NAME_Producer = _Anonymous_63.PDF_ENUM_NAME_Producer;
+    enum PDF_ENUM_NAME_Properties = _Anonymous_63.PDF_ENUM_NAME_Properties;
+    enum PDF_ENUM_NAME_Prop_AuthTime = _Anonymous_63.PDF_ENUM_NAME_Prop_AuthTime;
+    enum PDF_ENUM_NAME_Prop_AuthType = _Anonymous_63.PDF_ENUM_NAME_Prop_AuthType;
+    enum PDF_ENUM_NAME_Prop_Build = _Anonymous_63.PDF_ENUM_NAME_Prop_Build;
+    enum PDF_ENUM_NAME_PubSec = _Anonymous_63.PDF_ENUM_NAME_PubSec;
+    enum PDF_ENUM_NAME_Push = _Anonymous_63.PDF_ENUM_NAME_Push;
+    enum PDF_ENUM_NAME_Q = _Anonymous_63.PDF_ENUM_NAME_Q;
+    enum PDF_ENUM_NAME_QuadPoints = _Anonymous_63.PDF_ENUM_NAME_QuadPoints;
+    enum PDF_ENUM_NAME_R = _Anonymous_63.PDF_ENUM_NAME_R;
+    enum PDF_ENUM_NAME_RBGroups = _Anonymous_63.PDF_ENUM_NAME_RBGroups;
+    enum PDF_ENUM_NAME_RC = _Anonymous_63.PDF_ENUM_NAME_RC;
+    enum PDF_ENUM_NAME_RClosedArrow = _Anonymous_63.PDF_ENUM_NAME_RClosedArrow;
+    enum PDF_ENUM_NAME_REx = _Anonymous_63.PDF_ENUM_NAME_REx;
+    enum PDF_ENUM_NAME_RGB = _Anonymous_63.PDF_ENUM_NAME_RGB;
+    enum PDF_ENUM_NAME_RI = _Anonymous_63.PDF_ENUM_NAME_RI;
+    enum PDF_ENUM_NAME_RL = _Anonymous_63.PDF_ENUM_NAME_RL;
+    enum PDF_ENUM_NAME_ROpenArrow = _Anonymous_63.PDF_ENUM_NAME_ROpenArrow;
+    enum PDF_ENUM_NAME_Range = _Anonymous_63.PDF_ENUM_NAME_Range;
+    enum PDF_ENUM_NAME_Reason = _Anonymous_63.PDF_ENUM_NAME_Reason;
+    enum PDF_ENUM_NAME_Rect = _Anonymous_63.PDF_ENUM_NAME_Rect;
+    enum PDF_ENUM_NAME_Redact = _Anonymous_63.PDF_ENUM_NAME_Redact;
+    enum PDF_ENUM_NAME_Ref = _Anonymous_63.PDF_ENUM_NAME_Ref;
+    enum PDF_ENUM_NAME_Reference = _Anonymous_63.PDF_ENUM_NAME_Reference;
+    enum PDF_ENUM_NAME_Registry = _Anonymous_63.PDF_ENUM_NAME_Registry;
+    enum PDF_ENUM_NAME_ResetForm = _Anonymous_63.PDF_ENUM_NAME_ResetForm;
+    enum PDF_ENUM_NAME_Resources = _Anonymous_63.PDF_ENUM_NAME_Resources;
+    enum PDF_ENUM_NAME_Root = _Anonymous_63.PDF_ENUM_NAME_Root;
+    enum PDF_ENUM_NAME_Rotate = _Anonymous_63.PDF_ENUM_NAME_Rotate;
+    enum PDF_ENUM_NAME_Rows = _Anonymous_63.PDF_ENUM_NAME_Rows;
+    enum PDF_ENUM_NAME_RunLengthDecode = _Anonymous_63.PDF_ENUM_NAME_RunLengthDecode;
+    enum PDF_ENUM_NAME_S = _Anonymous_63.PDF_ENUM_NAME_S;
+    enum PDF_ENUM_NAME_SMask = _Anonymous_63.PDF_ENUM_NAME_SMask;
+    enum PDF_ENUM_NAME_SMaskInData = _Anonymous_63.PDF_ENUM_NAME_SMaskInData;
+    enum PDF_ENUM_NAME_Schema = _Anonymous_63.PDF_ENUM_NAME_Schema;
+    enum PDF_ENUM_NAME_Screen = _Anonymous_63.PDF_ENUM_NAME_Screen;
+    enum PDF_ENUM_NAME_Separation = _Anonymous_63.PDF_ENUM_NAME_Separation;
+    enum PDF_ENUM_NAME_Shading = _Anonymous_63.PDF_ENUM_NAME_Shading;
+    enum PDF_ENUM_NAME_ShadingType = _Anonymous_63.PDF_ENUM_NAME_ShadingType;
+    enum PDF_ENUM_NAME_Si = _Anonymous_63.PDF_ENUM_NAME_Si;
+    enum PDF_ENUM_NAME_Sig = _Anonymous_63.PDF_ENUM_NAME_Sig;
+    enum PDF_ENUM_NAME_SigFlags = _Anonymous_63.PDF_ENUM_NAME_SigFlags;
+    enum PDF_ENUM_NAME_SigQ = _Anonymous_63.PDF_ENUM_NAME_SigQ;
+    enum PDF_ENUM_NAME_SigRef = _Anonymous_63.PDF_ENUM_NAME_SigRef;
+    enum PDF_ENUM_NAME_Size = _Anonymous_63.PDF_ENUM_NAME_Size;
+    enum PDF_ENUM_NAME_Slash = _Anonymous_63.PDF_ENUM_NAME_Slash;
+    enum PDF_ENUM_NAME_Sold = _Anonymous_63.PDF_ENUM_NAME_Sold;
+    enum PDF_ENUM_NAME_Sound = _Anonymous_63.PDF_ENUM_NAME_Sound;
+    enum PDF_ENUM_NAME_Split = _Anonymous_63.PDF_ENUM_NAME_Split;
+    enum PDF_ENUM_NAME_Square = _Anonymous_63.PDF_ENUM_NAME_Square;
+    enum PDF_ENUM_NAME_Squiggly = _Anonymous_63.PDF_ENUM_NAME_Squiggly;
+    enum PDF_ENUM_NAME_Stamp = _Anonymous_63.PDF_ENUM_NAME_Stamp;
+    enum PDF_ENUM_NAME_Standard = _Anonymous_63.PDF_ENUM_NAME_Standard;
+    enum PDF_ENUM_NAME_StdCF = _Anonymous_63.PDF_ENUM_NAME_StdCF;
+    enum PDF_ENUM_NAME_StemV = _Anonymous_63.PDF_ENUM_NAME_StemV;
+    enum PDF_ENUM_NAME_StmF = _Anonymous_63.PDF_ENUM_NAME_StmF;
+    enum PDF_ENUM_NAME_StrF = _Anonymous_63.PDF_ENUM_NAME_StrF;
+    enum PDF_ENUM_NAME_StrikeOut = _Anonymous_63.PDF_ENUM_NAME_StrikeOut;
+    enum PDF_ENUM_NAME_StructParent = _Anonymous_63.PDF_ENUM_NAME_StructParent;
+    enum PDF_ENUM_NAME_StructParents = _Anonymous_63.PDF_ENUM_NAME_StructParents;
+    enum PDF_ENUM_NAME_SubFilter = _Anonymous_63.PDF_ENUM_NAME_SubFilter;
+    enum PDF_ENUM_NAME_Subject = _Anonymous_63.PDF_ENUM_NAME_Subject;
+    enum PDF_ENUM_NAME_Subtype = _Anonymous_63.PDF_ENUM_NAME_Subtype;
+    enum PDF_ENUM_NAME_Subtype2 = _Anonymous_63.PDF_ENUM_NAME_Subtype2;
+    enum PDF_ENUM_NAME_Supplement = _Anonymous_63.PDF_ENUM_NAME_Supplement;
+    enum PDF_ENUM_NAME_Symb = _Anonymous_63.PDF_ENUM_NAME_Symb;
+    enum PDF_ENUM_NAME_T = _Anonymous_63.PDF_ENUM_NAME_T;
+    enum PDF_ENUM_NAME_TI = _Anonymous_63.PDF_ENUM_NAME_TI;
+    enum PDF_ENUM_NAME_TR = _Anonymous_63.PDF_ENUM_NAME_TR;
+    enum PDF_ENUM_NAME_TR2 = _Anonymous_63.PDF_ENUM_NAME_TR2;
+    enum PDF_ENUM_NAME_TU = _Anonymous_63.PDF_ENUM_NAME_TU;
+    enum PDF_ENUM_NAME_Text = _Anonymous_63.PDF_ENUM_NAME_Text;
+    enum PDF_ENUM_NAME_TilingType = _Anonymous_63.PDF_ENUM_NAME_TilingType;
+    enum PDF_ENUM_NAME_Times = _Anonymous_63.PDF_ENUM_NAME_Times;
+    enum PDF_ENUM_NAME_Title = _Anonymous_63.PDF_ENUM_NAME_Title;
+    enum PDF_ENUM_NAME_ToUnicode = _Anonymous_63.PDF_ENUM_NAME_ToUnicode;
+    enum PDF_ENUM_NAME_TopSecret = _Anonymous_63.PDF_ENUM_NAME_TopSecret;
+    enum PDF_ENUM_NAME_Trans = _Anonymous_63.PDF_ENUM_NAME_Trans;
+    enum PDF_ENUM_NAME_TransformMethod = _Anonymous_63.PDF_ENUM_NAME_TransformMethod;
+    enum PDF_ENUM_NAME_TransformParams = _Anonymous_63.PDF_ENUM_NAME_TransformParams;
+    enum PDF_ENUM_NAME_Transparency = _Anonymous_63.PDF_ENUM_NAME_Transparency;
+    enum PDF_ENUM_NAME_TrapNet = _Anonymous_63.PDF_ENUM_NAME_TrapNet;
+    enum PDF_ENUM_NAME_TrimBox = _Anonymous_63.PDF_ENUM_NAME_TrimBox;
+    enum PDF_ENUM_NAME_TrueType = _Anonymous_63.PDF_ENUM_NAME_TrueType;
+    enum PDF_ENUM_NAME_TrustedMode = _Anonymous_63.PDF_ENUM_NAME_TrustedMode;
+    enum PDF_ENUM_NAME_Tx = _Anonymous_63.PDF_ENUM_NAME_Tx;
+    enum PDF_ENUM_NAME_Type = _Anonymous_63.PDF_ENUM_NAME_Type;
+    enum PDF_ENUM_NAME_Type0 = _Anonymous_63.PDF_ENUM_NAME_Type0;
+    enum PDF_ENUM_NAME_Type1 = _Anonymous_63.PDF_ENUM_NAME_Type1;
+    enum PDF_ENUM_NAME_Type1C = _Anonymous_63.PDF_ENUM_NAME_Type1C;
+    enum PDF_ENUM_NAME_Type3 = _Anonymous_63.PDF_ENUM_NAME_Type3;
+    enum PDF_ENUM_NAME_U = _Anonymous_63.PDF_ENUM_NAME_U;
+    enum PDF_ENUM_NAME_UE = _Anonymous_63.PDF_ENUM_NAME_UE;
+    enum PDF_ENUM_NAME_UF = _Anonymous_63.PDF_ENUM_NAME_UF;
+    enum PDF_ENUM_NAME_URI = _Anonymous_63.PDF_ENUM_NAME_URI;
+    enum PDF_ENUM_NAME_URL = _Anonymous_63.PDF_ENUM_NAME_URL;
+    enum PDF_ENUM_NAME_Unchanged = _Anonymous_63.PDF_ENUM_NAME_Unchanged;
+    enum PDF_ENUM_NAME_Uncover = _Anonymous_63.PDF_ENUM_NAME_Uncover;
+    enum PDF_ENUM_NAME_Underline = _Anonymous_63.PDF_ENUM_NAME_Underline;
+    enum PDF_ENUM_NAME_Unix = _Anonymous_63.PDF_ENUM_NAME_Unix;
+    enum PDF_ENUM_NAME_Usage = _Anonymous_63.PDF_ENUM_NAME_Usage;
+    enum PDF_ENUM_NAME_UseBlackPtComp = _Anonymous_63.PDF_ENUM_NAME_UseBlackPtComp;
+    enum PDF_ENUM_NAME_UseCMap = _Anonymous_63.PDF_ENUM_NAME_UseCMap;
+    enum PDF_ENUM_NAME_UseOutlines = _Anonymous_63.PDF_ENUM_NAME_UseOutlines;
+    enum PDF_ENUM_NAME_UserUnit = _Anonymous_63.PDF_ENUM_NAME_UserUnit;
+    enum PDF_ENUM_NAME_V = _Anonymous_63.PDF_ENUM_NAME_V;
+    enum PDF_ENUM_NAME_V2 = _Anonymous_63.PDF_ENUM_NAME_V2;
+    enum PDF_ENUM_NAME_VE = _Anonymous_63.PDF_ENUM_NAME_VE;
+    enum PDF_ENUM_NAME_Version = _Anonymous_63.PDF_ENUM_NAME_Version;
+    enum PDF_ENUM_NAME_Vertices = _Anonymous_63.PDF_ENUM_NAME_Vertices;
+    enum PDF_ENUM_NAME_VerticesPerRow = _Anonymous_63.PDF_ENUM_NAME_VerticesPerRow;
+    enum PDF_ENUM_NAME_View = _Anonymous_63.PDF_ENUM_NAME_View;
+    enum PDF_ENUM_NAME_W = _Anonymous_63.PDF_ENUM_NAME_W;
+    enum PDF_ENUM_NAME_W2 = _Anonymous_63.PDF_ENUM_NAME_W2;
+    enum PDF_ENUM_NAME_WMode = _Anonymous_63.PDF_ENUM_NAME_WMode;
+    enum PDF_ENUM_NAME_Watermark = _Anonymous_63.PDF_ENUM_NAME_Watermark;
+    enum PDF_ENUM_NAME_WhitePoint = _Anonymous_63.PDF_ENUM_NAME_WhitePoint;
+    enum PDF_ENUM_NAME_Widget = _Anonymous_63.PDF_ENUM_NAME_Widget;
+    enum PDF_ENUM_NAME_Width = _Anonymous_63.PDF_ENUM_NAME_Width;
+    enum PDF_ENUM_NAME_Widths = _Anonymous_63.PDF_ENUM_NAME_Widths;
+    enum PDF_ENUM_NAME_WinAnsiEncoding = _Anonymous_63.PDF_ENUM_NAME_WinAnsiEncoding;
+    enum PDF_ENUM_NAME_Wipe = _Anonymous_63.PDF_ENUM_NAME_Wipe;
+    enum PDF_ENUM_NAME_XFA = _Anonymous_63.PDF_ENUM_NAME_XFA;
+    enum PDF_ENUM_NAME_XHeight = _Anonymous_63.PDF_ENUM_NAME_XHeight;
+    enum PDF_ENUM_NAME_XML = _Anonymous_63.PDF_ENUM_NAME_XML;
+    enum PDF_ENUM_NAME_XObject = _Anonymous_63.PDF_ENUM_NAME_XObject;
+    enum PDF_ENUM_NAME_XRef = _Anonymous_63.PDF_ENUM_NAME_XRef;
+    enum PDF_ENUM_NAME_XRefStm = _Anonymous_63.PDF_ENUM_NAME_XRefStm;
+    enum PDF_ENUM_NAME_XStep = _Anonymous_63.PDF_ENUM_NAME_XStep;
+    enum PDF_ENUM_NAME_XYZ = _Anonymous_63.PDF_ENUM_NAME_XYZ;
+    enum PDF_ENUM_NAME_YStep = _Anonymous_63.PDF_ENUM_NAME_YStep;
+    enum PDF_ENUM_NAME_Yes = _Anonymous_63.PDF_ENUM_NAME_Yes;
+    enum PDF_ENUM_NAME_ZaDb = _Anonymous_63.PDF_ENUM_NAME_ZaDb;
+    enum PDF_ENUM_NAME_adbe_pkcs7_detached = _Anonymous_63.PDF_ENUM_NAME_adbe_pkcs7_detached;
+    enum PDF_ENUM_NAME_ca = _Anonymous_63.PDF_ENUM_NAME_ca;
+    enum PDF_ENUM_NAME_n0 = _Anonymous_63.PDF_ENUM_NAME_n0;
+    enum PDF_ENUM_NAME_n1 = _Anonymous_63.PDF_ENUM_NAME_n1;
+    enum PDF_ENUM_NAME_n2 = _Anonymous_63.PDF_ENUM_NAME_n2;
+    enum PDF_ENUM_NAME_op = _Anonymous_63.PDF_ENUM_NAME_op;
+    enum PDF_ENUM_LIMIT = _Anonymous_63.PDF_ENUM_LIMIT;
 
-    void pdf_set_str_len(fz_context*, pdf_obj*, c_ulong) @nogc nothrow;
+    alias _Float64 = double;
+
+    void pdf_set_str_len(fz_context*, pdf_obj*, size_t) @nogc nothrow;
 
     void pdf_enable_journal(fz_context*, pdf_document*) @nogc nothrow;
 
@@ -14486,9 +14472,9 @@ extern(C)
 
     void pdf_add_journal_fragment(fz_context*, pdf_document*, int, pdf_obj*, fz_buffer*, int) @nogc nothrow;
 
-    char* pdf_format_date(fz_context*, c_long, char*, c_ulong) @nogc nothrow;
+    char* pdf_format_date(fz_context*, int64_t, char*, size_t) @nogc nothrow;
 
-    c_long pdf_parse_date(fz_context*, const(char)*) @nogc nothrow;
+    int64_t pdf_parse_date(fz_context*, const(char)*) @nogc nothrow;
 
     int pdf_lookup_page_number(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
@@ -14560,7 +14546,7 @@ extern(C)
 
     fz_pixmap* pdf_new_pixmap_from_page_with_separations_and_usage(fz_context*, pdf_page*, fz_matrix, fz_colorspace*, fz_separations*, int, const(char)*) @nogc nothrow;
 
-    enum _Anonymous_75
+    enum _Anonymous_64
     {
 
         PDF_REDACT_IMAGE_NONE = 0,
@@ -14569,9 +14555,9 @@ extern(C)
 
         PDF_REDACT_IMAGE_PIXELS = 2,
     }
-    enum PDF_REDACT_IMAGE_NONE = _Anonymous_75.PDF_REDACT_IMAGE_NONE;
-    enum PDF_REDACT_IMAGE_REMOVE = _Anonymous_75.PDF_REDACT_IMAGE_REMOVE;
-    enum PDF_REDACT_IMAGE_PIXELS = _Anonymous_75.PDF_REDACT_IMAGE_PIXELS;
+    enum PDF_REDACT_IMAGE_NONE = _Anonymous_64.PDF_REDACT_IMAGE_NONE;
+    enum PDF_REDACT_IMAGE_REMOVE = _Anonymous_64.PDF_REDACT_IMAGE_REMOVE;
+    enum PDF_REDACT_IMAGE_PIXELS = _Anonymous_64.PDF_REDACT_IMAGE_PIXELS;
 
     struct pdf_redact_options
     {
@@ -14589,9 +14575,7 @@ extern(C)
 
     fz_default_colorspaces* pdf_update_default_colorspaces(fz_context*, fz_default_colorspaces*, pdf_obj*) @nogc nothrow;
 
-    alias pdf_token = _Anonymous_76;
-
-    enum _Anonymous_76
+    enum pdf_token
     {
 
         PDF_TOK_ERROR = 0,
@@ -14646,38 +14630,38 @@ extern(C)
 
         PDF_NUM_TOKENS = 25,
     }
-    enum PDF_TOK_ERROR = _Anonymous_76.PDF_TOK_ERROR;
-    enum PDF_TOK_EOF = _Anonymous_76.PDF_TOK_EOF;
-    enum PDF_TOK_OPEN_ARRAY = _Anonymous_76.PDF_TOK_OPEN_ARRAY;
-    enum PDF_TOK_CLOSE_ARRAY = _Anonymous_76.PDF_TOK_CLOSE_ARRAY;
-    enum PDF_TOK_OPEN_DICT = _Anonymous_76.PDF_TOK_OPEN_DICT;
-    enum PDF_TOK_CLOSE_DICT = _Anonymous_76.PDF_TOK_CLOSE_DICT;
-    enum PDF_TOK_OPEN_BRACE = _Anonymous_76.PDF_TOK_OPEN_BRACE;
-    enum PDF_TOK_CLOSE_BRACE = _Anonymous_76.PDF_TOK_CLOSE_BRACE;
-    enum PDF_TOK_NAME = _Anonymous_76.PDF_TOK_NAME;
-    enum PDF_TOK_INT = _Anonymous_76.PDF_TOK_INT;
-    enum PDF_TOK_REAL = _Anonymous_76.PDF_TOK_REAL;
-    enum PDF_TOK_STRING = _Anonymous_76.PDF_TOK_STRING;
-    enum PDF_TOK_KEYWORD = _Anonymous_76.PDF_TOK_KEYWORD;
-    enum PDF_TOK_R = _Anonymous_76.PDF_TOK_R;
-    enum PDF_TOK_TRUE = _Anonymous_76.PDF_TOK_TRUE;
-    enum PDF_TOK_FALSE = _Anonymous_76.PDF_TOK_FALSE;
-    enum PDF_TOK_NULL = _Anonymous_76.PDF_TOK_NULL;
-    enum PDF_TOK_OBJ = _Anonymous_76.PDF_TOK_OBJ;
-    enum PDF_TOK_ENDOBJ = _Anonymous_76.PDF_TOK_ENDOBJ;
-    enum PDF_TOK_STREAM = _Anonymous_76.PDF_TOK_STREAM;
-    enum PDF_TOK_ENDSTREAM = _Anonymous_76.PDF_TOK_ENDSTREAM;
-    enum PDF_TOK_XREF = _Anonymous_76.PDF_TOK_XREF;
-    enum PDF_TOK_TRAILER = _Anonymous_76.PDF_TOK_TRAILER;
-    enum PDF_TOK_STARTXREF = _Anonymous_76.PDF_TOK_STARTXREF;
-    enum PDF_TOK_NEWOBJ = _Anonymous_76.PDF_TOK_NEWOBJ;
-    enum PDF_NUM_TOKENS = _Anonymous_76.PDF_NUM_TOKENS;
+    enum PDF_TOK_ERROR = pdf_token.PDF_TOK_ERROR;
+    enum PDF_TOK_EOF = pdf_token.PDF_TOK_EOF;
+    enum PDF_TOK_OPEN_ARRAY = pdf_token.PDF_TOK_OPEN_ARRAY;
+    enum PDF_TOK_CLOSE_ARRAY = pdf_token.PDF_TOK_CLOSE_ARRAY;
+    enum PDF_TOK_OPEN_DICT = pdf_token.PDF_TOK_OPEN_DICT;
+    enum PDF_TOK_CLOSE_DICT = pdf_token.PDF_TOK_CLOSE_DICT;
+    enum PDF_TOK_OPEN_BRACE = pdf_token.PDF_TOK_OPEN_BRACE;
+    enum PDF_TOK_CLOSE_BRACE = pdf_token.PDF_TOK_CLOSE_BRACE;
+    enum PDF_TOK_NAME = pdf_token.PDF_TOK_NAME;
+    enum PDF_TOK_INT = pdf_token.PDF_TOK_INT;
+    enum PDF_TOK_REAL = pdf_token.PDF_TOK_REAL;
+    enum PDF_TOK_STRING = pdf_token.PDF_TOK_STRING;
+    enum PDF_TOK_KEYWORD = pdf_token.PDF_TOK_KEYWORD;
+    enum PDF_TOK_R = pdf_token.PDF_TOK_R;
+    enum PDF_TOK_TRUE = pdf_token.PDF_TOK_TRUE;
+    enum PDF_TOK_FALSE = pdf_token.PDF_TOK_FALSE;
+    enum PDF_TOK_NULL = pdf_token.PDF_TOK_NULL;
+    enum PDF_TOK_OBJ = pdf_token.PDF_TOK_OBJ;
+    enum PDF_TOK_ENDOBJ = pdf_token.PDF_TOK_ENDOBJ;
+    enum PDF_TOK_STREAM = pdf_token.PDF_TOK_STREAM;
+    enum PDF_TOK_ENDSTREAM = pdf_token.PDF_TOK_ENDSTREAM;
+    enum PDF_TOK_XREF = pdf_token.PDF_TOK_XREF;
+    enum PDF_TOK_TRAILER = pdf_token.PDF_TOK_TRAILER;
+    enum PDF_TOK_STARTXREF = pdf_token.PDF_TOK_STARTXREF;
+    enum PDF_TOK_NEWOBJ = pdf_token.PDF_TOK_NEWOBJ;
+    enum PDF_NUM_TOKENS = pdf_token.PDF_NUM_TOKENS;
 
     void pdf_lexbuf_init(fz_context*, pdf_lexbuf*, int) @nogc nothrow;
 
     void pdf_lexbuf_fin(fz_context*, pdf_lexbuf*) @nogc nothrow;
 
-    c_long pdf_lexbuf_grow(fz_context*, pdf_lexbuf*) @nogc nothrow;
+    ptrdiff_t pdf_lexbuf_grow(fz_context*, pdf_lexbuf*) @nogc nothrow;
 
     pdf_token pdf_lex(fz_context*, fz_stream*, pdf_lexbuf*) @nogc nothrow;
 
@@ -14689,23 +14673,25 @@ extern(C)
 
     pdf_obj* pdf_parse_stm_obj(fz_context*, pdf_document*, fz_stream*, pdf_lexbuf*) @nogc nothrow;
 
-    pdf_obj* pdf_parse_ind_obj(fz_context*, pdf_document*, fz_stream*, int*, int*, c_long*, int*) @nogc nothrow;
+    pdf_obj* pdf_parse_ind_obj(fz_context*, pdf_document*, fz_stream*, int*, int*, int64_t*, int*) @nogc nothrow;
 
     pdf_obj* pdf_parse_journal_obj(fz_context*, pdf_document*, fz_stream*, int*, fz_buffer**, int*) @nogc nothrow;
 
     void pdf_append_token(fz_context*, fz_buffer*, int, pdf_lexbuf*) @nogc nothrow;
 
-    void pdf_store_item(fz_context*, pdf_obj*, void*, c_ulong) @nogc nothrow;
+    alias _Float32 = float;
 
-    void* pdf_find_item(fz_context*, void function(fz_context*, fz_storable*), pdf_obj*) @nogc nothrow;
+    void pdf_store_item(fz_context*, pdf_obj*, void*, size_t) @nogc nothrow;
 
-    void pdf_remove_item(fz_context*, void function(fz_context*, fz_storable*), pdf_obj*) @nogc nothrow;
+    void* pdf_find_item(fz_context*, fz_store_drop_fn, pdf_obj*) @nogc nothrow;
+
+    void pdf_remove_item(fz_context*, fz_store_drop_fn, pdf_obj*) @nogc nothrow;
 
     void pdf_empty_store(fz_context*, pdf_document*) @nogc nothrow;
 
     void pdf_purge_locals_from_store(fz_context*, pdf_document*) @nogc nothrow;
 
-    enum _Anonymous_77
+    enum _Anonymous_65
     {
 
         PDF_SIMPLE_FONT_RESOURCE = 1,
@@ -14714,11 +14700,11 @@ extern(C)
 
         PDF_CJK_FONT_RESOURCE = 3,
     }
-    enum PDF_SIMPLE_FONT_RESOURCE = _Anonymous_77.PDF_SIMPLE_FONT_RESOURCE;
-    enum PDF_CID_FONT_RESOURCE = _Anonymous_77.PDF_CID_FONT_RESOURCE;
-    enum PDF_CJK_FONT_RESOURCE = _Anonymous_77.PDF_CJK_FONT_RESOURCE;
+    enum PDF_SIMPLE_FONT_RESOURCE = _Anonymous_65.PDF_SIMPLE_FONT_RESOURCE;
+    enum PDF_CID_FONT_RESOURCE = _Anonymous_65.PDF_CID_FONT_RESOURCE;
+    enum PDF_CJK_FONT_RESOURCE = _Anonymous_65.PDF_CJK_FONT_RESOURCE;
 
-    enum _Anonymous_78
+    enum _Anonymous_66
     {
 
         PDF_SIMPLE_ENCODING_LATIN = 0,
@@ -14727,9 +14713,9 @@ extern(C)
 
         PDF_SIMPLE_ENCODING_CYRILLIC = 2,
     }
-    enum PDF_SIMPLE_ENCODING_LATIN = _Anonymous_78.PDF_SIMPLE_ENCODING_LATIN;
-    enum PDF_SIMPLE_ENCODING_GREEK = _Anonymous_78.PDF_SIMPLE_ENCODING_GREEK;
-    enum PDF_SIMPLE_ENCODING_CYRILLIC = _Anonymous_78.PDF_SIMPLE_ENCODING_CYRILLIC;
+    enum PDF_SIMPLE_ENCODING_LATIN = _Anonymous_66.PDF_SIMPLE_ENCODING_LATIN;
+    enum PDF_SIMPLE_ENCODING_GREEK = _Anonymous_66.PDF_SIMPLE_ENCODING_GREEK;
+    enum PDF_SIMPLE_ENCODING_CYRILLIC = _Anonymous_66.PDF_SIMPLE_ENCODING_CYRILLIC;
 
     struct pdf_font_resource_key
     {
@@ -14758,7 +14744,7 @@ extern(C)
 
     void pdf_drop_function(fz_context*, pdf_function*) @nogc nothrow;
 
-    c_ulong pdf_function_size(fz_context*, pdf_function*) @nogc nothrow;
+    size_t pdf_function_size(fz_context*, pdf_function*) @nogc nothrow;
 
     pdf_function* pdf_load_function(fz_context*, pdf_obj*, int, int) @nogc nothrow;
 
@@ -14857,9 +14843,9 @@ extern(C)
 
         int num;
 
-        c_long ofs;
+        int64_t ofs;
 
-        c_long stm_ofs;
+        int64_t stm_ofs;
 
         fz_buffer* stm_buf;
 
@@ -14908,11 +14894,11 @@ extern(C)
 
     fz_stream* pdf_open_inline_stream(fz_context*, pdf_document*, pdf_obj*, int, fz_stream*, fz_compression_params*) @nogc nothrow;
 
-    fz_compressed_buffer* pdf_load_compressed_stream(fz_context*, pdf_document*, int, c_ulong) @nogc nothrow;
+    fz_compressed_buffer* pdf_load_compressed_stream(fz_context*, pdf_document*, int, size_t) @nogc nothrow;
 
     void pdf_load_compressed_inline_image(fz_context*, pdf_document*, pdf_obj*, int, fz_stream*, int, fz_compressed_image*) @nogc nothrow;
 
-    fz_stream* pdf_open_stream_with_offset(fz_context*, pdf_document*, int, pdf_obj*, c_long) @nogc nothrow;
+    fz_stream* pdf_open_stream_with_offset(fz_context*, pdf_document*, int, pdf_obj*, int64_t) @nogc nothrow;
 
     fz_stream* pdf_open_contents_stream(fz_context*, pdf_document*, pdf_obj*) @nogc nothrow;
 
@@ -14966,7 +14952,7 @@ extern(C)
 
     void pdf_clear_xref_to_mark(fz_context*, pdf_document*) @nogc nothrow;
 
-    int pdf_repair_obj(fz_context*, pdf_document*, pdf_lexbuf*, c_long*, int*, pdf_obj**, pdf_obj**, pdf_obj**, c_long*, pdf_obj**) @nogc nothrow;
+    int pdf_repair_obj(fz_context*, pdf_document*, pdf_lexbuf*, int64_t*, int*, pdf_obj**, pdf_obj**, pdf_obj**, int64_t*, pdf_obj**) @nogc nothrow;
 
     pdf_obj* pdf_progressive_advance(fz_context*, pdf_document*, int) @nogc nothrow;
 
@@ -15011,13 +14997,23 @@ extern(C)
 
     void __assert(const(char)*, const(char)*, int) @nogc nothrow;
 
-    alias _Float64x = real;
+    union __atomic_wide_counter
+    {
 
-    alias _Float32x = double;
+        ulong __value64;
 
-    alias _Float64 = double;
+        static struct _Anonymous_67
+        {
 
-    alias _Float32 = float;
+            uint __low;
+
+            uint __high;
+        }
+
+        _Anonymous_67 __value32;
+    }
+
+    int getloadavg(double*, int) @nogc nothrow;
 
     alias jmp_buf = __jmp_buf_tag[1];
     pragma(mangle, "setjmp")
@@ -15033,23 +15029,27 @@ extern(C)
 
     alias sigjmp_buf = __jmp_buf_tag[1];
 
+    int getsubopt(char**, char**, char**) @nogc nothrow;
+
     void siglongjmp(__jmp_buf_tag*, int) @nogc nothrow;
 
-    alias int_least8_t = byte;
+    int rpmatch(const(char)*) @nogc nothrow;
 
-    alias int_least16_t = short;
+    alias int_least8_t = __int_least8_t;
 
-    alias int_least32_t = int;
+    alias int_least16_t = __int_least16_t;
 
-    alias int_least64_t = c_long;
+    alias int_least32_t = __int_least32_t;
 
-    alias uint_least8_t = ubyte;
+    alias int_least64_t = __int_least64_t;
 
-    alias uint_least16_t = ushort;
+    alias uint_least8_t = __uint_least8_t;
 
-    alias uint_least32_t = uint;
+    alias uint_least16_t = __uint_least16_t;
 
-    alias uint_least64_t = c_ulong;
+    alias uint_least32_t = __uint_least32_t;
+
+    alias uint_least64_t = __uint_least64_t;
 
     alias int_fast8_t = byte;
 
@@ -15071,49 +15071,27 @@ extern(C)
 
     alias uintptr_t = c_ulong;
 
-    alias intmax_t = c_long;
+    alias intmax_t = __intmax_t;
 
-    alias uintmax_t = c_ulong;
+    alias uintmax_t = __uintmax_t;
 
-    union __atomic_wide_counter
-    {
+    size_t wcstombs(char*, const(wchar_t)*, size_t) @nogc nothrow;
 
-        ulong __value64;
+    size_t mbstowcs(wchar_t*, const(char)*, size_t) @nogc nothrow;
 
-        static struct _Anonymous_79
-        {
+    int wctomb(char*, wchar_t) @nogc nothrow;
 
-            uint __low;
+    int mbtowc(wchar_t*, const(char)*, size_t) @nogc nothrow;
 
-            uint __high;
-        }
+    int mblen(const(char)*, size_t) @nogc nothrow;
 
-        _Anonymous_79 __value32;
-    }
+    int qfcvt_r(real, int, int*, int*, char*, size_t) @nogc nothrow;
 
-    int getloadavg(double*, int) @nogc nothrow;
+    int qecvt_r(real, int, int*, int*, char*, size_t) @nogc nothrow;
 
-    int getsubopt(char**, char**, char**) @nogc nothrow;
+    int fcvt_r(double, int, int*, int*, char*, size_t) @nogc nothrow;
 
-    int rpmatch(const(char)*) @nogc nothrow;
-
-    c_ulong wcstombs(char*, const(int)*, c_ulong) @nogc nothrow;
-
-    c_ulong mbstowcs(int*, const(char)*, c_ulong) @nogc nothrow;
-
-    int wctomb(char*, int) @nogc nothrow;
-
-    int mbtowc(int*, const(char)*, c_ulong) @nogc nothrow;
-
-    int mblen(const(char)*, c_ulong) @nogc nothrow;
-
-    int qfcvt_r(real, int, int*, int*, char*, c_ulong) @nogc nothrow;
-
-    int qecvt_r(real, int, int*, int*, char*, c_ulong) @nogc nothrow;
-
-    int fcvt_r(double, int, int*, int*, char*, c_ulong) @nogc nothrow;
-
-    int ecvt_r(double, int, int*, int*, char*, c_ulong) @nogc nothrow;
+    int ecvt_r(double, int, int*, int*, char*, size_t) @nogc nothrow;
 
     char* qgcvt(real, int, char*) @nogc nothrow;
 
@@ -15125,23 +15103,40 @@ extern(C)
 
     char* fcvt(double, int, int*, int*) @nogc nothrow;
 
-    alias off_t = c_long;
-
-    alias ssize_t = c_long;
-
-    alias fpos_t = _G_fpos_t;
-
     char* ecvt(double, int, int*, int*) @nogc nothrow;
 
     lldiv_t lldiv(long, long) @nogc nothrow;
 
-    extern __gshared _IO_FILE* stdin;
-
-    extern __gshared _IO_FILE* stdout;
-
-    extern __gshared _IO_FILE* stderr;
-
     ldiv_t ldiv(c_long, c_long) @nogc nothrow;
+
+    div_t div(int, int) @nogc nothrow;
+
+    long llabs(long) @nogc nothrow;
+
+    c_long labs(c_long) @nogc nothrow;
+
+    int abs(int) @nogc nothrow;
+
+    alias off_t = __off_t;
+
+    alias ssize_t = __ssize_t;
+
+    void qsort(void*, size_t, size_t, __compar_fn_t) @nogc nothrow;
+
+    alias fpos_t = __fpos_t;
+
+    void* bsearch(const(void)*, const(void)*, size_t, size_t, __compar_fn_t) @nogc nothrow;
+    alias __compar_fn_t = int function(const(void)*, const(void)*);
+
+    char* realpath(const(char)*, char*) @nogc nothrow;
+
+    extern __gshared FILE* stdin;
+
+    extern __gshared FILE* stdout;
+
+    extern __gshared FILE* stderr;
+
+    int system(const(char)*) @nogc nothrow;
 
     int remove(const(char)*) @nogc nothrow;
 
@@ -15149,9 +15144,9 @@ extern(C)
 
     int renameat(int, const(char)*, int, const(char)*) @nogc nothrow;
 
-    int fclose(_IO_FILE*) @nogc nothrow;
+    int fclose(FILE*) @nogc nothrow;
 
-    _IO_FILE* tmpfile() @nogc nothrow;
+    FILE* tmpfile() @nogc nothrow;
 
     char* tmpnam(char*) @nogc nothrow;
 
@@ -15159,27 +15154,27 @@ extern(C)
 
     char* tempnam(const(char)*, const(char)*) @nogc nothrow;
 
-    int fflush(_IO_FILE*) @nogc nothrow;
+    int fflush(FILE*) @nogc nothrow;
 
-    int fflush_unlocked(_IO_FILE*) @nogc nothrow;
+    int fflush_unlocked(FILE*) @nogc nothrow;
 
     _IO_FILE* fopen(const(char)*, const(char)*) @nogc nothrow;
 
-    _IO_FILE* freopen(const(char)*, const(char)*, _IO_FILE*) @nogc nothrow;
+    FILE* freopen(const(char)*, const(char)*, FILE*) @nogc nothrow;
 
-    _IO_FILE* fdopen(int, const(char)*) @nogc nothrow;
+    FILE* fdopen(int, const(char)*) @nogc nothrow;
 
-    _IO_FILE* fmemopen(void*, c_ulong, const(char)*) @nogc nothrow;
+    FILE* fmemopen(void*, size_t, const(char)*) @nogc nothrow;
 
-    _IO_FILE* open_memstream(char**, c_ulong*) @nogc nothrow;
+    FILE* open_memstream(char**, size_t*) @nogc nothrow;
 
-    void setbuf(_IO_FILE*, char*) @nogc nothrow;
+    void setbuf(FILE*, char*) @nogc nothrow;
 
-    int setvbuf(_IO_FILE*, char*, int, c_ulong) @nogc nothrow;
+    int setvbuf(FILE*, char*, int, size_t) @nogc nothrow;
 
-    void setbuffer(_IO_FILE*, char*, c_ulong) @nogc nothrow;
+    void setbuffer(FILE*, char*, size_t) @nogc nothrow;
 
-    void setlinebuf(_IO_FILE*) @nogc nothrow;
+    void setlinebuf(FILE*) @nogc nothrow;
 
     int fprintf(_IO_FILE*, const(char)*, ...) @nogc nothrow;
 
@@ -15197,7 +15192,7 @@ extern(C)
 
     int vsnprintf(char*, c_ulong, const(char)*, va_list*) @nogc nothrow;
 
-    int vdprintf(int, const(char)*, va_list*) @nogc nothrow;
+    int vdprintf(int, const(char)*, va_list) @nogc nothrow;
 
     int dprintf(int, const(char)*, ...) @nogc nothrow;
 
@@ -15213,111 +15208,109 @@ extern(C)
 
     int vsscanf(const(char)*, const(char)*, va_list*) @nogc nothrow;
 
-    int fgetc(_IO_FILE*) @nogc nothrow;
+    int fgetc(FILE*) @nogc nothrow;
 
-    int getc(_IO_FILE*) @nogc nothrow;
+    int getc(FILE*) @nogc nothrow;
 
     int getchar() @nogc nothrow;
 
-    int getc_unlocked(_IO_FILE*) @nogc nothrow;
+    int getc_unlocked(FILE*) @nogc nothrow;
 
     int getchar_unlocked() @nogc nothrow;
 
-    int fgetc_unlocked(_IO_FILE*) @nogc nothrow;
+    int fgetc_unlocked(FILE*) @nogc nothrow;
 
-    int fputc(int, _IO_FILE*) @nogc nothrow;
+    int fputc(int, FILE*) @nogc nothrow;
 
-    int putc(int, _IO_FILE*) @nogc nothrow;
+    int putc(int, FILE*) @nogc nothrow;
 
     int putchar(int) @nogc nothrow;
 
-    int fputc_unlocked(int, _IO_FILE*) @nogc nothrow;
+    int fputc_unlocked(int, FILE*) @nogc nothrow;
 
-    int putc_unlocked(int, _IO_FILE*) @nogc nothrow;
+    int putc_unlocked(int, FILE*) @nogc nothrow;
 
     int putchar_unlocked(int) @nogc nothrow;
 
-    int getw(_IO_FILE*) @nogc nothrow;
+    int getw(FILE*) @nogc nothrow;
 
-    int putw(int, _IO_FILE*) @nogc nothrow;
+    int putw(int, FILE*) @nogc nothrow;
 
-    char* fgets(char*, int, _IO_FILE*) @nogc nothrow;
+    char* fgets(char*, int, FILE*) @nogc nothrow;
 
-    c_long __getdelim(char**, c_ulong*, int, _IO_FILE*) @nogc nothrow;
+    __ssize_t __getdelim(char**, size_t*, int, FILE*) @nogc nothrow;
 
-    c_long getdelim(char**, c_ulong*, int, _IO_FILE*) @nogc nothrow;
+    __ssize_t getdelim(char**, size_t*, int, FILE*) @nogc nothrow;
 
-    c_long getline(char**, c_ulong*, _IO_FILE*) @nogc nothrow;
+    __ssize_t getline(char**, size_t*, FILE*) @nogc nothrow;
 
-    int fputs(const(char)*, _IO_FILE*) @nogc nothrow;
+    int fputs(const(char)*, FILE*) @nogc nothrow;
 
     int puts(const(char)*) @nogc nothrow;
 
-    int ungetc(int, _IO_FILE*) @nogc nothrow;
+    int ungetc(int, FILE*) @nogc nothrow;
 
     c_ulong fread(void*, c_ulong, c_ulong, _IO_FILE*) @nogc nothrow;
 
     c_ulong fwrite(const(void)*, c_ulong, c_ulong, _IO_FILE*) @nogc nothrow;
 
-    c_ulong fread_unlocked(void*, c_ulong, c_ulong, _IO_FILE*) @nogc nothrow;
+    size_t fread_unlocked(void*, size_t, size_t, FILE*) @nogc nothrow;
 
-    c_ulong fwrite_unlocked(const(void)*, c_ulong, c_ulong, _IO_FILE*) @nogc nothrow;
+    size_t fwrite_unlocked(const(void)*, size_t, size_t, FILE*) @nogc nothrow;
 
-    int fseek(_IO_FILE*, c_long, int) @nogc nothrow;
+    int fseek(FILE*, c_long, int) @nogc nothrow;
 
-    c_long ftell(_IO_FILE*) @nogc nothrow;
+    c_long ftell(FILE*) @nogc nothrow;
 
-    void rewind(_IO_FILE*) @nogc nothrow;
+    void rewind(FILE*) @nogc nothrow;
 
-    int fseeko(_IO_FILE*, c_long, int) @nogc nothrow;
+    int fseeko(FILE*, __off_t, int) @nogc nothrow;
 
-    c_long ftello(_IO_FILE*) @nogc nothrow;
+    __off_t ftello(FILE*) @nogc nothrow;
 
-    int fgetpos(_IO_FILE*, _G_fpos_t*) @nogc nothrow;
+    int fgetpos(FILE*, fpos_t*) @nogc nothrow;
 
-    int fsetpos(_IO_FILE*, const(_G_fpos_t)*) @nogc nothrow;
+    int fsetpos(FILE*, const(fpos_t)*) @nogc nothrow;
 
-    void clearerr(_IO_FILE*) @nogc nothrow;
+    void clearerr(FILE*) @nogc nothrow;
 
-    int feof(_IO_FILE*) @nogc nothrow;
+    int feof(FILE*) @nogc nothrow;
 
-    int ferror(_IO_FILE*) @nogc nothrow;
+    int ferror(FILE*) @nogc nothrow;
 
-    void clearerr_unlocked(_IO_FILE*) @nogc nothrow;
+    void clearerr_unlocked(FILE*) @nogc nothrow;
 
-    int feof_unlocked(_IO_FILE*) @nogc nothrow;
+    int feof_unlocked(FILE*) @nogc nothrow;
 
-    int ferror_unlocked(_IO_FILE*) @nogc nothrow;
+    int ferror_unlocked(FILE*) @nogc nothrow;
 
     void perror(const(char)*) @nogc nothrow;
 
-    int fileno(_IO_FILE*) @nogc nothrow;
+    int fileno(FILE*) @nogc nothrow;
 
-    int fileno_unlocked(_IO_FILE*) @nogc nothrow;
+    int fileno_unlocked(FILE*) @nogc nothrow;
 
-    int pclose(_IO_FILE*) @nogc nothrow;
+    int pclose(FILE*) @nogc nothrow;
 
-    _IO_FILE* popen(const(char)*, const(char)*) @nogc nothrow;
+    FILE* popen(const(char)*, const(char)*) @nogc nothrow;
 
     char* ctermid(char*) @nogc nothrow;
 
-    void flockfile(_IO_FILE*) @nogc nothrow;
+    void flockfile(FILE*) @nogc nothrow;
 
-    int ftrylockfile(_IO_FILE*) @nogc nothrow;
+    int ftrylockfile(FILE*) @nogc nothrow;
 
-    void funlockfile(_IO_FILE*) @nogc nothrow;
+    void funlockfile(FILE*) @nogc nothrow;
 
-    int __uflow(_IO_FILE*) @nogc nothrow;
+    int __uflow(FILE*) @nogc nothrow;
 
-    int __overflow(_IO_FILE*, int) @nogc nothrow;
+    int __overflow(FILE*, int) @nogc nothrow;
 
-    div_t div(int, int) @nogc nothrow;
+    char* mkdtemp(char*) @nogc nothrow;
 
-    long llabs(long) @nogc nothrow;
+    int mkstemps(char*, int) @nogc nothrow;
 
-    c_long labs(c_long) @nogc nothrow;
-
-    int abs(int) @nogc nothrow;
+    int mkstemp(char*) @nogc nothrow;
 
     struct div_t
     {
@@ -15335,7 +15328,7 @@ extern(C)
         c_long rem;
     }
 
-    void qsort(void*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
+    char* mktemp(char*) @nogc nothrow;
 
     struct lldiv_t
     {
@@ -15345,10 +15338,9 @@ extern(C)
         long rem;
     }
 
-    void* bsearch(const(void)*, const(void)*, c_ulong, c_ulong, int function(const(void)*, const(void)*)) @nogc nothrow;
-    alias __compar_fn_t = int function(const(void)*, const(void)*);
+    int clearenv() @nogc nothrow;
 
-    c_ulong __ctype_get_mb_cur_max() @nogc nothrow;
+    size_t __ctype_get_mb_cur_max() @nogc nothrow;
 
     double atof(const(char)*) @nogc nothrow;
 
@@ -15384,18 +15376,18 @@ extern(C)
 
     void srandom(uint) @nogc nothrow;
 
-    char* initstate(uint, char*, c_ulong) @nogc nothrow;
+    char* initstate(uint, char*, size_t) @nogc nothrow;
 
     char* setstate(char*) @nogc nothrow;
 
     struct random_data
     {
 
-        int* fptr;
+        int32_t* fptr;
 
-        int* rptr;
+        int32_t* rptr;
 
-        int* state;
+        int32_t* state;
 
         int rand_type;
 
@@ -15403,14 +15395,14 @@ extern(C)
 
         int rand_sep;
 
-        int* end_ptr;
+        int32_t* end_ptr;
     }
 
-    int random_r(random_data*, int*) @nogc nothrow;
+    int random_r(random_data*, int32_t*) @nogc nothrow;
 
     int srandom_r(uint, random_data*) @nogc nothrow;
 
-    int initstate_r(uint, char*, c_ulong, random_data*) @nogc nothrow;
+    int initstate_r(uint, char*, size_t, random_data*) @nogc nothrow;
 
     int setstate_r(char*, random_data*) @nogc nothrow;
 
@@ -15470,11 +15462,11 @@ extern(C)
 
     int lcong48_r(ushort*, drand48_data*) @nogc nothrow;
 
-    uint arc4random() @nogc nothrow;
+    __uint32_t arc4random() @nogc nothrow;
 
-    void arc4random_buf(void*, c_ulong) @nogc nothrow;
+    void arc4random_buf(void*, size_t) @nogc nothrow;
 
-    uint arc4random_uniform(uint) @nogc nothrow;
+    __uint32_t arc4random_uniform(__uint32_t) @nogc nothrow;
 
     void* malloc(c_ulong) @nogc nothrow;
 
@@ -15484,11 +15476,11 @@ extern(C)
 
     void free(void*) @nogc nothrow;
 
-    void* reallocarray(void*, c_ulong, c_ulong) @nogc nothrow;
+    void* reallocarray(void*, size_t, size_t) @nogc nothrow;
 
-    void* valloc(c_ulong) @nogc nothrow;
+    void* valloc(size_t) @nogc nothrow;
 
-    int posix_memalign(void**, c_ulong, c_ulong) @nogc nothrow;
+    int posix_memalign(void**, size_t, size_t) @nogc nothrow;
 
     void* aligned_alloc(c_ulong, c_ulong) @nogc nothrow;
 
@@ -15514,20 +15506,6 @@ extern(C)
 
     int unsetenv(const(char)*) @nogc nothrow;
 
-    int clearenv() @nogc nothrow;
-
-    char* mktemp(char*) @nogc nothrow;
-
-    int mkstemp(char*) @nogc nothrow;
-
-    int mkstemps(char*, int) @nogc nothrow;
-
-    char* mkdtemp(char*) @nogc nothrow;
-
-    int system(const(char)*) @nogc nothrow;
-
-    char* realpath(const(char)*, char*) @nogc nothrow;
-
 
 
     static if(!is(typeof(MB_CUR_MAX))) {
@@ -15536,8 +15514,6 @@ extern(C)
             mixin(enumMixinStr_MB_CUR_MAX);
         }
     }
-
-
 
 
 
@@ -15740,6 +15716,8 @@ extern(C)
             mixin(enumMixinStr_EOF);
         }
     }
+
+
 
 
 
@@ -16376,30 +16354,22 @@ extern(C)
             mixin(enumMixinStr_INT8_MIN);
         }
     }
-    static if(!is(typeof(_BITS_BYTESWAP_H))) {
-        private enum enumMixinStr__BITS_BYTESWAP_H = `enum _BITS_BYTESWAP_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_BYTESWAP_H); }))) {
-            mixin(enumMixinStr__BITS_BYTESWAP_H);
-        }
-    }
-
-
-
-
     static if(!is(typeof(_STDINT_H))) {
         private enum enumMixinStr__STDINT_H = `enum _STDINT_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__STDINT_H); }))) {
             mixin(enumMixinStr__STDINT_H);
         }
     }
+
+
+
+
     static if(!is(typeof(_STDC_PREDEF_H))) {
         private enum enumMixinStr__STDC_PREDEF_H = `enum _STDC_PREDEF_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__STDC_PREDEF_H); }))) {
             mixin(enumMixinStr__STDC_PREDEF_H);
         }
     }
-
-
 
 
     enum _dpp_impl_sigsetjmp_mixin = ` auto sigsetjmp(A0, A1)(A0 arg0, A1 arg1) {
@@ -16424,6 +16394,256 @@ extern(C)
         private enum enumMixinStr__SETJMP_H = `enum _SETJMP_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__SETJMP_H); }))) {
             mixin(enumMixinStr__SETJMP_H);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__GLIBC_MINOR__))) {
+        private enum enumMixinStr___GLIBC_MINOR__ = `enum __GLIBC_MINOR__ = 36;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_MINOR__); }))) {
+            mixin(enumMixinStr___GLIBC_MINOR__);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC__))) {
+        private enum enumMixinStr___GLIBC__ = `enum __GLIBC__ = 2;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC__); }))) {
+            mixin(enumMixinStr___GLIBC__);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GNU_LIBRARY__))) {
+        private enum enumMixinStr___GNU_LIBRARY__ = `enum __GNU_LIBRARY__ = 6;`;
+        static if(is(typeof({ mixin(enumMixinStr___GNU_LIBRARY__); }))) {
+            mixin(enumMixinStr___GNU_LIBRARY__);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_DEPRECATED_SCANF))) {
+        private enum enumMixinStr___GLIBC_USE_DEPRECATED_SCANF = `enum __GLIBC_USE_DEPRECATED_SCANF = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF); }))) {
+            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_DEPRECATED_GETS))) {
+        private enum enumMixinStr___GLIBC_USE_DEPRECATED_GETS = `enum __GLIBC_USE_DEPRECATED_GETS = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS); }))) {
+            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_FORTIFY_LEVEL))) {
+        private enum enumMixinStr___USE_FORTIFY_LEVEL = `enum __USE_FORTIFY_LEVEL = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_FORTIFY_LEVEL); }))) {
+            mixin(enumMixinStr___USE_FORTIFY_LEVEL);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_ATFILE))) {
+        private enum enumMixinStr___USE_ATFILE = `enum __USE_ATFILE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_ATFILE); }))) {
+            mixin(enumMixinStr___USE_ATFILE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_MISC))) {
+        private enum enumMixinStr___USE_MISC = `enum __USE_MISC = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_MISC); }))) {
+            mixin(enumMixinStr___USE_MISC);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_ATFILE_SOURCE))) {
+        private enum enumMixinStr__ATFILE_SOURCE = `enum _ATFILE_SOURCE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__ATFILE_SOURCE); }))) {
+            mixin(enumMixinStr__ATFILE_SOURCE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_XOPEN2K8))) {
+        private enum enumMixinStr___USE_XOPEN2K8 = `enum __USE_XOPEN2K8 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_XOPEN2K8); }))) {
+            mixin(enumMixinStr___USE_XOPEN2K8);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_ISOC99))) {
+        private enum enumMixinStr___USE_ISOC99 = `enum __USE_ISOC99 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC99); }))) {
+            mixin(enumMixinStr___USE_ISOC99);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__USE_ISOC95))) {
+        private enum enumMixinStr___USE_ISOC95 = `enum __USE_ISOC95 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC95); }))) {
+            mixin(enumMixinStr___USE_ISOC95);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_XOPEN2K))) {
+        private enum enumMixinStr___USE_XOPEN2K = `enum __USE_XOPEN2K = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_XOPEN2K); }))) {
+            mixin(enumMixinStr___USE_XOPEN2K);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_POSIX199506))) {
+        private enum enumMixinStr___USE_POSIX199506 = `enum __USE_POSIX199506 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX199506); }))) {
+            mixin(enumMixinStr___USE_POSIX199506);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_BYTESWAP_H))) {
+        private enum enumMixinStr__BITS_BYTESWAP_H = `enum _BITS_BYTESWAP_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_BYTESWAP_H); }))) {
+            mixin(enumMixinStr__BITS_BYTESWAP_H);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_POSIX199309))) {
+        private enum enumMixinStr___USE_POSIX199309 = `enum __USE_POSIX199309 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX199309); }))) {
+            mixin(enumMixinStr___USE_POSIX199309);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__USE_POSIX2))) {
+        private enum enumMixinStr___USE_POSIX2 = `enum __USE_POSIX2 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX2); }))) {
+            mixin(enumMixinStr___USE_POSIX2);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__USE_POSIX))) {
+        private enum enumMixinStr___USE_POSIX = `enum __USE_POSIX = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX); }))) {
+            mixin(enumMixinStr___USE_POSIX);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_POSIX_C_SOURCE))) {
+        private enum enumMixinStr__POSIX_C_SOURCE = `enum _POSIX_C_SOURCE = 200809L;`;
+        static if(is(typeof({ mixin(enumMixinStr__POSIX_C_SOURCE); }))) {
+            mixin(enumMixinStr__POSIX_C_SOURCE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_POSIX_SOURCE))) {
+        private enum enumMixinStr__POSIX_SOURCE = `enum _POSIX_SOURCE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__POSIX_SOURCE); }))) {
+            mixin(enumMixinStr__POSIX_SOURCE);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__USE_POSIX_IMPLICITLY))) {
+        private enum enumMixinStr___USE_POSIX_IMPLICITLY = `enum __USE_POSIX_IMPLICITLY = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX_IMPLICITLY); }))) {
+            mixin(enumMixinStr___USE_POSIX_IMPLICITLY);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__USE_ISOC11))) {
+        private enum enumMixinStr___USE_ISOC11 = `enum __USE_ISOC11 = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC11); }))) {
+            mixin(enumMixinStr___USE_ISOC11);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_ISOC2X))) {
+        private enum enumMixinStr___GLIBC_USE_ISOC2X = `enum __GLIBC_USE_ISOC2X = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_ISOC2X); }))) {
+            mixin(enumMixinStr___GLIBC_USE_ISOC2X);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_DEFAULT_SOURCE))) {
+        private enum enumMixinStr__DEFAULT_SOURCE = `enum _DEFAULT_SOURCE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__DEFAULT_SOURCE); }))) {
+            mixin(enumMixinStr__DEFAULT_SOURCE);
         }
     }
 
@@ -16478,32 +16698,6 @@ extern(C)
             mixin(enumMixinStr___FLOAT_WORD_ORDER);
         }
     }
-
-
-
-
-    static if(!is(typeof(__GLIBC_MINOR__))) {
-        private enum enumMixinStr___GLIBC_MINOR__ = `enum __GLIBC_MINOR__ = 36;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_MINOR__); }))) {
-            mixin(enumMixinStr___GLIBC_MINOR__);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC__))) {
-        private enum enumMixinStr___GLIBC__ = `enum __GLIBC__ = 2;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC__); }))) {
-            mixin(enumMixinStr___GLIBC__);
-        }
-    }
-
-
-
-
-
-
     static if(!is(typeof(_BITS_ENDIANNESS_H))) {
         private enum enumMixinStr__BITS_ENDIANNESS_H = `enum _BITS_ENDIANNESS_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__BITS_ENDIANNESS_H); }))) {
@@ -16512,14 +16706,6 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__GNU_LIBRARY__))) {
-        private enum enumMixinStr___GNU_LIBRARY__ = `enum __GNU_LIBRARY__ = 6;`;
-        static if(is(typeof({ mixin(enumMixinStr___GNU_LIBRARY__); }))) {
-            mixin(enumMixinStr___GNU_LIBRARY__);
-        }
-    }
 
 
 
@@ -16536,21 +16722,19 @@ extern(C)
 
 
 
-    static if(!is(typeof(__GLIBC_USE_DEPRECATED_SCANF))) {
-        private enum enumMixinStr___GLIBC_USE_DEPRECATED_SCANF = `enum __GLIBC_USE_DEPRECATED_SCANF = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF); }))) {
-            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_SCANF);
+    static if(!is(typeof(_FEATURES_H))) {
+        private enum enumMixinStr__FEATURES_H = `enum _FEATURES_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__FEATURES_H); }))) {
+            mixin(enumMixinStr__FEATURES_H);
         }
     }
 
 
-
-
-    static if(!is(typeof(__GLIBC_USE_DEPRECATED_GETS))) {
-        private enum enumMixinStr___GLIBC_USE_DEPRECATED_GETS = `enum __GLIBC_USE_DEPRECATED_GETS = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS); }))) {
-            mixin(enumMixinStr___GLIBC_USE_DEPRECATED_GETS);
-        }
+    enum _dpp_impl_le64toh_mixin = ` auto le64toh(A0)(A0 arg0) {
+        return __uint64_identity ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_le64toh_mixin); })) {
+        mixin(_dpp_impl_le64toh_mixin);
     }
 
 
@@ -16674,13 +16858,11 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__USE_FORTIFY_LEVEL))) {
-        private enum enumMixinStr___USE_FORTIFY_LEVEL = `enum __USE_FORTIFY_LEVEL = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_FORTIFY_LEVEL); }))) {
-            mixin(enumMixinStr___USE_FORTIFY_LEVEL);
-        }
+    enum _dpp_impl_be64toh_mixin = ` auto be64toh(A0)(A0 arg0) {
+        return __bswap_64 ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_be64toh_mixin); })) {
+        mixin(_dpp_impl_be64toh_mixin);
     }
 
 
@@ -16694,248 +16876,14 @@ extern(C)
     }
 
 
-
-
-    static if(!is(typeof(__USE_ATFILE))) {
-        private enum enumMixinStr___USE_ATFILE = `enum __USE_ATFILE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_ATFILE); }))) {
-            mixin(enumMixinStr___USE_ATFILE);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_MISC))) {
-        private enum enumMixinStr___USE_MISC = `enum __USE_MISC = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_MISC); }))) {
-            mixin(enumMixinStr___USE_MISC);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_ATFILE_SOURCE))) {
-        private enum enumMixinStr__ATFILE_SOURCE = `enum _ATFILE_SOURCE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__ATFILE_SOURCE); }))) {
-            mixin(enumMixinStr__ATFILE_SOURCE);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(__USE_XOPEN2K8))) {
-        private enum enumMixinStr___USE_XOPEN2K8 = `enum __USE_XOPEN2K8 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_XOPEN2K8); }))) {
-            mixin(enumMixinStr___USE_XOPEN2K8);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_ISOC99))) {
-        private enum enumMixinStr___USE_ISOC99 = `enum __USE_ISOC99 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC99); }))) {
-            mixin(enumMixinStr___USE_ISOC99);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(__USE_ISOC95))) {
-        private enum enumMixinStr___USE_ISOC95 = `enum __USE_ISOC95 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC95); }))) {
-            mixin(enumMixinStr___USE_ISOC95);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_XOPEN2K))) {
-        private enum enumMixinStr___USE_XOPEN2K = `enum __USE_XOPEN2K = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_XOPEN2K); }))) {
-            mixin(enumMixinStr___USE_XOPEN2K);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(__USE_POSIX199506))) {
-        private enum enumMixinStr___USE_POSIX199506 = `enum __USE_POSIX199506 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX199506); }))) {
-            mixin(enumMixinStr___USE_POSIX199506);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_POSIX199309))) {
-        private enum enumMixinStr___USE_POSIX199309 = `enum __USE_POSIX199309 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX199309); }))) {
-            mixin(enumMixinStr___USE_POSIX199309);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_POSIX2))) {
-        private enum enumMixinStr___USE_POSIX2 = `enum __USE_POSIX2 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX2); }))) {
-            mixin(enumMixinStr___USE_POSIX2);
-        }
-    }
-
-
-
-
-
-
-    static if(!is(typeof(__USE_POSIX))) {
-        private enum enumMixinStr___USE_POSIX = `enum __USE_POSIX = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX); }))) {
-            mixin(enumMixinStr___USE_POSIX);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_POSIX_C_SOURCE))) {
-        private enum enumMixinStr__POSIX_C_SOURCE = `enum _POSIX_C_SOURCE = 200809L;`;
-        static if(is(typeof({ mixin(enumMixinStr__POSIX_C_SOURCE); }))) {
-            mixin(enumMixinStr__POSIX_C_SOURCE);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_POSIX_SOURCE))) {
-        private enum enumMixinStr__POSIX_SOURCE = `enum _POSIX_SOURCE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__POSIX_SOURCE); }))) {
-            mixin(enumMixinStr__POSIX_SOURCE);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_POSIX_IMPLICITLY))) {
-        private enum enumMixinStr___USE_POSIX_IMPLICITLY = `enum __USE_POSIX_IMPLICITLY = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_POSIX_IMPLICITLY); }))) {
-            mixin(enumMixinStr___USE_POSIX_IMPLICITLY);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__CFLOAT32))) {
-        private enum enumMixinStr___CFLOAT32 = `enum __CFLOAT32 = _Complex float;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32); }))) {
-            mixin(enumMixinStr___CFLOAT32);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__CFLOAT64))) {
-        private enum enumMixinStr___CFLOAT64 = `enum __CFLOAT64 = _Complex double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64); }))) {
-            mixin(enumMixinStr___CFLOAT64);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__USE_ISOC11))) {
-        private enum enumMixinStr___USE_ISOC11 = `enum __USE_ISOC11 = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___USE_ISOC11); }))) {
-            mixin(enumMixinStr___USE_ISOC11);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_ISOC2X))) {
-        private enum enumMixinStr___GLIBC_USE_ISOC2X = `enum __GLIBC_USE_ISOC2X = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_ISOC2X); }))) {
-            mixin(enumMixinStr___GLIBC_USE_ISOC2X);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__CFLOAT32X))) {
-        private enum enumMixinStr___CFLOAT32X = `enum __CFLOAT32X = _Complex double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32X); }))) {
-            mixin(enumMixinStr___CFLOAT32X);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_DEFAULT_SOURCE))) {
-        private enum enumMixinStr__DEFAULT_SOURCE = `enum _DEFAULT_SOURCE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__DEFAULT_SOURCE); }))) {
-            mixin(enumMixinStr__DEFAULT_SOURCE);
-        }
-    }
-    static if(!is(typeof(__CFLOAT64X))) {
-        private enum enumMixinStr___CFLOAT64X = `enum __CFLOAT64X = _Complex long double;`;
-        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64X); }))) {
-            mixin(enumMixinStr___CFLOAT64X);
-        }
-    }
-    static if(!is(typeof(_FEATURES_H))) {
-        private enum enumMixinStr__FEATURES_H = `enum _FEATURES_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__FEATURES_H); }))) {
-            mixin(enumMixinStr__FEATURES_H);
-        }
-    }
-
-
-    enum _dpp_impl_le64toh_mixin = ` auto le64toh(A0)(A0 arg0) {
-        return __uint64_identity ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_le64toh_mixin); })) {
-        mixin(_dpp_impl_le64toh_mixin);
-    }
-
-
-    enum _dpp_impl_be64toh_mixin = ` auto be64toh(A0)(A0 arg0) {
-        return __bswap_64 ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_be64toh_mixin); })) {
-        mixin(_dpp_impl_be64toh_mixin);
-    }
-
-
     enum _dpp_impl_htole64_mixin = ` auto htole64(A0)(A0 arg0) {
         return __uint64_identity ( arg0 );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_htole64_mixin); })) {
         mixin(_dpp_impl_htole64_mixin);
     }
+
+
     enum _dpp_impl_htobe64_mixin = ` auto htobe64(A0)(A0 arg0) {
         return __bswap_64 ( arg0 );
     }`;
@@ -16952,6 +16900,8 @@ extern(C)
     }
 
 
+
+
     enum _dpp_impl_be32toh_mixin = ` auto be32toh(A0)(A0 arg0) {
         return __bswap_32 ( arg0 );
     }`;
@@ -16966,6 +16916,10 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_htole32_mixin); })) {
         mixin(_dpp_impl_htole32_mixin);
     }
+
+
+
+
     enum _dpp_impl_htobe32_mixin = ` auto htobe32(A0)(A0 arg0) {
         return __bswap_32 ( arg0 );
     }`;
@@ -16982,6 +16936,8 @@ extern(C)
     }
 
 
+
+
     enum _dpp_impl_be16toh_mixin = ` auto be16toh(A0)(A0 arg0) {
         return __bswap_16 ( arg0 );
     }`;
@@ -16996,12 +16952,16 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_htole16_mixin); })) {
         mixin(_dpp_impl_htole16_mixin);
     }
+
+
     enum _dpp_impl_htobe16_mixin = ` auto htobe16(A0)(A0 arg0) {
         return __bswap_16 ( arg0 );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_htobe16_mixin); })) {
         mixin(_dpp_impl_htobe16_mixin);
     }
+
+
 
 
 
@@ -17042,6 +17002,20 @@ extern(C)
             mixin(enumMixinStr_LITTLE_ENDIAN);
         }
     }
+
+
+
+
+    static if(!is(typeof(__CFLOAT32))) {
+        private enum enumMixinStr___CFLOAT32 = `enum __CFLOAT32 = _Complex float;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32); }))) {
+            mixin(enumMixinStr___CFLOAT32);
+        }
+    }
+
+
+
+
     static if(!is(typeof(_ENDIAN_H))) {
         private enum enumMixinStr__ENDIAN_H = `enum _ENDIAN_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ENDIAN_H); }))) {
@@ -17052,12 +17026,20 @@ extern(C)
 
 
 
-
-
     static if(!is(typeof(static_assert))) {
         private enum enumMixinStr_static_assert = `enum static_assert = _Static_assert;`;
         static if(is(typeof({ mixin(enumMixinStr_static_assert); }))) {
             mixin(enumMixinStr_static_assert);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__CFLOAT64))) {
+        private enum enumMixinStr___CFLOAT64 = `enum __CFLOAT64 = _Complex double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64); }))) {
+            mixin(enumMixinStr___CFLOAT64);
         }
     }
 
@@ -17073,10 +17055,20 @@ extern(C)
 
 
     enum _dpp_impl_assert__mixin = ` auto assert_(A0)(A0 arg0) {
-        return ( cast( void ) ( ( arg0 ) ? 1 : 0 ) .sizeof , __extension__ ( { if ( arg0 ) ; else __assert_fail ( "arg0" , "generated/1.21.0/Linux/mupdf.d.tmp" , 17135 , __extension__ __PRETTY_FUNCTION__ ) ; } ) );
+        return ( cast( void ) ( ( arg0 ) ? 1 : 0 ) .sizeof , __extension__ ( { if ( arg0 ) ; else __assert_fail ( "arg0" , "generated/1.21.1/Linux/mupdf.d.tmp" , 17059 , __extension__ __PRETTY_FUNCTION__ ) ; } ) );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_assert__mixin); })) {
         mixin(_dpp_impl_assert__mixin);
+    }
+
+
+
+
+    static if(!is(typeof(__CFLOAT32X))) {
+        private enum enumMixinStr___CFLOAT32X = `enum __CFLOAT32X = _Complex double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT32X); }))) {
+            mixin(enumMixinStr___CFLOAT32X);
+        }
     }
 
 
@@ -17094,16 +17086,6 @@ extern(C)
 
 
 
-    static if(!is(typeof(__HAVE_FLOAT128))) {
-        private enum enumMixinStr___HAVE_FLOAT128 = `enum __HAVE_FLOAT128 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT128); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT128);
-        }
-    }
-
-
-
-
     static if(!is(typeof(_ASSERT_H))) {
         private enum enumMixinStr__ASSERT_H = `enum _ASSERT_H = 1;`;
         static if(is(typeof({ mixin(enumMixinStr__ASSERT_H); }))) {
@@ -17114,30 +17096,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(__HAVE_DISTINCT_FLOAT128))) {
-        private enum enumMixinStr___HAVE_DISTINCT_FLOAT128 = `enum __HAVE_DISTINCT_FLOAT128 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128); }))) {
-            mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__HAVE_FLOAT64X))) {
-        private enum enumMixinStr___HAVE_FLOAT64X = `enum __HAVE_FLOAT64X = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT64X);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__HAVE_FLOAT64X_LONG_DOUBLE))) {
-        private enum enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE = `enum __HAVE_FLOAT64X_LONG_DOUBLE = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE); }))) {
-            mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE);
+    static if(!is(typeof(__CFLOAT64X))) {
+        private enum enumMixinStr___CFLOAT64X = `enum __CFLOAT64X = _Complex long double;`;
+        static if(is(typeof({ mixin(enumMixinStr___CFLOAT64X); }))) {
+            mixin(enumMixinStr___CFLOAT64X);
         }
     }
 
@@ -17184,30 +17146,6 @@ extern(C)
             mixin(enumMixinStr_PDF_TRUE);
         }
     }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_LIB_EXT2))) {
-        private enum enumMixinStr___GLIBC_USE_LIB_EXT2 = `enum __GLIBC_USE_LIB_EXT2 = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_LIB_EXT2); }))) {
-            mixin(enumMixinStr___GLIBC_USE_LIB_EXT2);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT))) {
-        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT = `enum __GLIBC_USE_IEC_60559_BFP_EXT = 0;`;
-        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT); }))) {
-            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT);
-        }
-    }
-
-
-
-
     static if(!is(typeof(PDF_NULL))) {
         private enum enumMixinStr_PDF_NULL = `enum PDF_NULL = ( cast( pdf_obj * ) cast( intptr_t ) PDF_ENUM_NULL );`;
         static if(is(typeof({ mixin(enumMixinStr_PDF_NULL); }))) {
@@ -17242,18 +17180,188 @@ extern(C)
             mixin(enumMixinStr_PDF_MAX_GEN_NUMBER);
         }
     }
-
-
-
-
     static if(!is(typeof(PDF_MAX_OBJECT_NUMBER))) {
         private enum enumMixinStr_PDF_MAX_OBJECT_NUMBER = `enum PDF_MAX_OBJECT_NUMBER = 8388607;`;
         static if(is(typeof({ mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER); }))) {
             mixin(enumMixinStr_PDF_MAX_OBJECT_NUMBER);
         }
     }
+    static if(!is(typeof(PDF_SIGNATURE_DEFAULT_APPEARANCE))) {
+        private enum enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE = `enum PDF_SIGNATURE_DEFAULT_APPEARANCE = ( PDF_SIGNATURE_SHOW_LABELS | PDF_SIGNATURE_SHOW_DN | PDF_SIGNATURE_SHOW_DATE | PDF_SIGNATURE_SHOW_TEXT_NAME | PDF_SIGNATURE_SHOW_GRAPHIC_NAME | PDF_SIGNATURE_SHOW_LOGO );`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE); }))) {
+            mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE);
+        }
+    }
+    static if(!is(typeof(PDF_MRANGE_CAP))) {
+        private enum enumMixinStr_PDF_MRANGE_CAP = `enum PDF_MRANGE_CAP = 8;`;
+        static if(is(typeof({ mixin(enumMixinStr_PDF_MRANGE_CAP); }))) {
+            mixin(enumMixinStr_PDF_MRANGE_CAP);
+        }
+    }
 
 
+
+
+    static if(!is(typeof(__HAVE_FLOAT128))) {
+        private enum enumMixinStr___HAVE_FLOAT128 = `enum __HAVE_FLOAT128 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT128); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT128);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__HAVE_DISTINCT_FLOAT128))) {
+        private enum enumMixinStr___HAVE_DISTINCT_FLOAT128 = `enum __HAVE_DISTINCT_FLOAT128 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128); }))) {
+            mixin(enumMixinStr___HAVE_DISTINCT_FLOAT128);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__HAVE_FLOAT64X))) {
+        private enum enumMixinStr___HAVE_FLOAT64X = `enum __HAVE_FLOAT64X = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT64X);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__HAVE_FLOAT64X_LONG_DOUBLE))) {
+        private enum enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE = `enum __HAVE_FLOAT64X_LONG_DOUBLE = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE); }))) {
+            mixin(enumMixinStr___HAVE_FLOAT64X_LONG_DOUBLE);
+        }
+    }
+    enum _dpp_impl_Memento_squeezing_mixin = ` auto Memento_squeezing()() {
+        return ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_squeezing_mixin); })) {
+        mixin(_dpp_impl_Memento_squeezing_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_sequence_mixin = ` auto Memento_sequence()() {
+        return ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_sequence_mixin); })) {
+        mixin(_dpp_impl_Memento_sequence_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_bt_mixin = ` auto Memento_bt()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_bt_mixin); })) {
+        mixin(_dpp_impl_Memento_bt_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_fin_mixin = ` auto Memento_fin()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_fin_mixin); })) {
+        mixin(_dpp_impl_Memento_fin_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_stopLeaking_mixin = ` auto Memento_stopLeaking()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_stopLeaking_mixin); })) {
+        mixin(_dpp_impl_Memento_stopLeaking_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_startLeaking_mixin = ` auto Memento_startLeaking()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_startLeaking_mixin); })) {
+        mixin(_dpp_impl_Memento_startLeaking_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_tick_mixin = ` auto Memento_tick()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_tick_mixin); })) {
+        mixin(_dpp_impl_Memento_tick_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_LIB_EXT2))) {
+        private enum enumMixinStr___GLIBC_USE_LIB_EXT2 = `enum __GLIBC_USE_LIB_EXT2 = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_LIB_EXT2); }))) {
+            mixin(enumMixinStr___GLIBC_USE_LIB_EXT2);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__GLIBC_USE_IEC_60559_BFP_EXT))) {
+        private enum enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT = `enum __GLIBC_USE_IEC_60559_BFP_EXT = 0;`;
+        static if(is(typeof({ mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT); }))) {
+            mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT);
+        }
+    }
+
+
+    enum _dpp_impl_Memento_setIgnoreNewDelete_mixin = ` auto Memento_setIgnoreNewDelete(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin); })) {
+        mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_setVerbose_mixin = ` auto Memento_setVerbose(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setVerbose_mixin); })) {
+        mixin(_dpp_impl_Memento_setVerbose_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkIntPointerOrNull_mixin = ` auto Memento_checkIntPointerOrNull(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkIntPointerOrNull_mixin); })) {
+        mixin(_dpp_impl_Memento_checkIntPointerOrNull_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkShortPointerOrNull_mixin = ` auto Memento_checkShortPointerOrNull(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkShortPointerOrNull_mixin); })) {
+        mixin(_dpp_impl_Memento_checkShortPointerOrNull_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkBytePointerOrNull_mixin = ` auto Memento_checkBytePointerOrNull(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkBytePointerOrNull_mixin); })) {
+        mixin(_dpp_impl_Memento_checkBytePointerOrNull_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_checkPointerOrNull_mixin = ` auto Memento_checkPointerOrNull(A0)(A0 arg0) {
+        return 0;
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkPointerOrNull_mixin); })) {
+        mixin(_dpp_impl_Memento_checkPointerOrNull_mixin);
+    }
 
 
 
@@ -17264,11 +17372,29 @@ extern(C)
             mixin(enumMixinStr___GLIBC_USE_IEC_60559_BFP_EXT_C2X);
         }
     }
-    static if(!is(typeof(PDF_SIGNATURE_DEFAULT_APPEARANCE))) {
-        private enum enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE = `enum PDF_SIGNATURE_DEFAULT_APPEARANCE = ( PDF_SIGNATURE_SHOW_LABELS | PDF_SIGNATURE_SHOW_DN | PDF_SIGNATURE_SHOW_DATE | PDF_SIGNATURE_SHOW_TEXT_NAME | PDF_SIGNATURE_SHOW_GRAPHIC_NAME | PDF_SIGNATURE_SHOW_LOGO );`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE); }))) {
-            mixin(enumMixinStr_PDF_SIGNATURE_DEFAULT_APPEARANCE);
-        }
+
+
+    enum _dpp_impl_Memento_reference_mixin = ` auto Memento_reference(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_reference_mixin); })) {
+        mixin(_dpp_impl_Memento_reference_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_adjustRef_mixin = ` auto Memento_adjustRef(A0, A1)(A0 arg0, A1 arg1) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_adjustRef_mixin); })) {
+        mixin(_dpp_impl_Memento_adjustRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_dropRef_mixin = ` auto Memento_dropRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropRef_mixin); })) {
+        mixin(_dpp_impl_Memento_dropRef_mixin);
     }
 
 
@@ -17290,11 +17416,53 @@ extern(C)
             mixin(enumMixinStr___GLIBC_USE_IEC_60559_FUNCS_EXT);
         }
     }
-    static if(!is(typeof(PDF_MRANGE_CAP))) {
-        private enum enumMixinStr_PDF_MRANGE_CAP = `enum PDF_MRANGE_CAP = 8;`;
-        static if(is(typeof({ mixin(enumMixinStr_PDF_MRANGE_CAP); }))) {
-            mixin(enumMixinStr_PDF_MRANGE_CAP);
-        }
+
+
+    enum _dpp_impl_Memento_takeRef_mixin = ` auto Memento_takeRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeRef_mixin); })) {
+        mixin(_dpp_impl_Memento_takeRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_dropIntRef_mixin = ` auto Memento_dropIntRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropIntRef_mixin); })) {
+        mixin(_dpp_impl_Memento_dropIntRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_takeIntRef_mixin = ` auto Memento_takeIntRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeIntRef_mixin); })) {
+        mixin(_dpp_impl_Memento_takeIntRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_dropShortRef_mixin = ` auto Memento_dropShortRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropShortRef_mixin); })) {
+        mixin(_dpp_impl_Memento_dropShortRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_takeShortRef_mixin = ` auto Memento_takeShortRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeShortRef_mixin); })) {
+        mixin(_dpp_impl_Memento_takeShortRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_dropByteRef_mixin = ` auto Memento_dropByteRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropByteRef_mixin); })) {
+        mixin(_dpp_impl_Memento_dropByteRef_mixin);
     }
 
 
@@ -17336,6 +17504,34 @@ extern(C)
             mixin(enumMixinStr__BITS_PTHREADTYPES_ARCH_H);
         }
     }
+
+
+    enum _dpp_impl_Memento_takeByteRef_mixin = ` auto Memento_takeByteRef(A0)(A0 arg0) {
+        return ( arg0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeByteRef_mixin); })) {
+        mixin(_dpp_impl_Memento_takeByteRef_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_blockInfo_mixin = ` auto Memento_blockInfo(A0)(A0 arg0) {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_blockInfo_mixin); })) {
+        mixin(_dpp_impl_Memento_blockInfo_mixin);
+    }
+
+
+    enum _dpp_impl_Memento_listBlockInfo_mixin = ` auto Memento_listBlockInfo()() {
+        return do { } while ( 0 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_Memento_listBlockInfo_mixin); })) {
+        mixin(_dpp_impl_Memento_listBlockInfo_mixin);
+    }
+
+
+
+
     static if(!is(typeof(__SIZEOF_PTHREAD_MUTEX_T))) {
         private enum enumMixinStr___SIZEOF_PTHREAD_MUTEX_T = `enum __SIZEOF_PTHREAD_MUTEX_T = 40;`;
         static if(is(typeof({ mixin(enumMixinStr___SIZEOF_PTHREAD_MUTEX_T); }))) {
@@ -17422,222 +17618,10 @@ extern(C)
             mixin(enumMixinStr___SIZEOF_PTHREAD_BARRIERATTR_T);
         }
     }
-    static if(!is(typeof(_BITS_PTHREADTYPES_COMMON_H))) {
-        private enum enumMixinStr__BITS_PTHREADTYPES_COMMON_H = `enum _BITS_PTHREADTYPES_COMMON_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H); }))) {
-            mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H);
-        }
-    }
-
-
-    enum _dpp_impl_Memento_squeezing_mixin = ` auto Memento_squeezing()() {
-        return ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_squeezing_mixin); })) {
-        mixin(_dpp_impl_Memento_squeezing_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_sequence_mixin = ` auto Memento_sequence()() {
-        return ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_sequence_mixin); })) {
-        mixin(_dpp_impl_Memento_sequence_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_bt_mixin = ` auto Memento_bt()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_bt_mixin); })) {
-        mixin(_dpp_impl_Memento_bt_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_fin_mixin = ` auto Memento_fin()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_fin_mixin); })) {
-        mixin(_dpp_impl_Memento_fin_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_stopLeaking_mixin = ` auto Memento_stopLeaking()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_stopLeaking_mixin); })) {
-        mixin(_dpp_impl_Memento_stopLeaking_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_startLeaking_mixin = ` auto Memento_startLeaking()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_startLeaking_mixin); })) {
-        mixin(_dpp_impl_Memento_startLeaking_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_tick_mixin = ` auto Memento_tick()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_tick_mixin); })) {
-        mixin(_dpp_impl_Memento_tick_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_setIgnoreNewDelete_mixin = ` auto Memento_setIgnoreNewDelete(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin); })) {
-        mixin(_dpp_impl_Memento_setIgnoreNewDelete_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_setVerbose_mixin = ` auto Memento_setVerbose(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_setVerbose_mixin); })) {
-        mixin(_dpp_impl_Memento_setVerbose_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_checkIntPointerOrNull_mixin = ` auto Memento_checkIntPointerOrNull(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkIntPointerOrNull_mixin); })) {
-        mixin(_dpp_impl_Memento_checkIntPointerOrNull_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_checkShortPointerOrNull_mixin = ` auto Memento_checkShortPointerOrNull(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkShortPointerOrNull_mixin); })) {
-        mixin(_dpp_impl_Memento_checkShortPointerOrNull_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_checkBytePointerOrNull_mixin = ` auto Memento_checkBytePointerOrNull(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkBytePointerOrNull_mixin); })) {
-        mixin(_dpp_impl_Memento_checkBytePointerOrNull_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_checkPointerOrNull_mixin = ` auto Memento_checkPointerOrNull(A0)(A0 arg0) {
-        return 0;
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_checkPointerOrNull_mixin); })) {
-        mixin(_dpp_impl_Memento_checkPointerOrNull_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_reference_mixin = ` auto Memento_reference(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_reference_mixin); })) {
-        mixin(_dpp_impl_Memento_reference_mixin);
-    }
 
 
 
 
-    static if(!is(typeof(__have_pthread_attr_t))) {
-        private enum enumMixinStr___have_pthread_attr_t = `enum __have_pthread_attr_t = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___have_pthread_attr_t); }))) {
-            mixin(enumMixinStr___have_pthread_attr_t);
-        }
-    }
-
-
-    enum _dpp_impl_Memento_adjustRef_mixin = ` auto Memento_adjustRef(A0, A1)(A0 arg0, A1 arg1) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_adjustRef_mixin); })) {
-        mixin(_dpp_impl_Memento_adjustRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_dropRef_mixin = ` auto Memento_dropRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropRef_mixin); })) {
-        mixin(_dpp_impl_Memento_dropRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_takeRef_mixin = ` auto Memento_takeRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeRef_mixin); })) {
-        mixin(_dpp_impl_Memento_takeRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_dropIntRef_mixin = ` auto Memento_dropIntRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropIntRef_mixin); })) {
-        mixin(_dpp_impl_Memento_dropIntRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_takeIntRef_mixin = ` auto Memento_takeIntRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeIntRef_mixin); })) {
-        mixin(_dpp_impl_Memento_takeIntRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_dropShortRef_mixin = ` auto Memento_dropShortRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropShortRef_mixin); })) {
-        mixin(_dpp_impl_Memento_dropShortRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_takeShortRef_mixin = ` auto Memento_takeShortRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeShortRef_mixin); })) {
-        mixin(_dpp_impl_Memento_takeShortRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_dropByteRef_mixin = ` auto Memento_dropByteRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_dropByteRef_mixin); })) {
-        mixin(_dpp_impl_Memento_dropByteRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_takeByteRef_mixin = ` auto Memento_takeByteRef(A0)(A0 arg0) {
-        return ( arg0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_takeByteRef_mixin); })) {
-        mixin(_dpp_impl_Memento_takeByteRef_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_blockInfo_mixin = ` auto Memento_blockInfo(A0)(A0 arg0) {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_blockInfo_mixin); })) {
-        mixin(_dpp_impl_Memento_blockInfo_mixin);
-    }
-
-
-    enum _dpp_impl_Memento_listBlockInfo_mixin = ` auto Memento_listBlockInfo()() {
-        return do { } while ( 0 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_Memento_listBlockInfo_mixin); })) {
-        mixin(_dpp_impl_Memento_listBlockInfo_mixin);
-    }
 
 
     enum _dpp_impl_Memento_info_mixin = ` auto Memento_info(A0)(A0 arg0) {
@@ -17645,6 +17629,16 @@ extern(C)
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_info_mixin); })) {
         mixin(_dpp_impl_Memento_info_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_PTHREADTYPES_COMMON_H))) {
+        private enum enumMixinStr__BITS_PTHREADTYPES_COMMON_H = `enum _BITS_PTHREADTYPES_COMMON_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H); }))) {
+            mixin(enumMixinStr__BITS_PTHREADTYPES_COMMON_H);
+        }
     }
 
 
@@ -17726,12 +17720,6 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_Memento_getBlockNum_mixin); })) {
         mixin(_dpp_impl_Memento_getBlockNum_mixin);
     }
-    static if(!is(typeof(_BITS_SETJMP_H))) {
-        private enum enumMixinStr__BITS_SETJMP_H = `enum _BITS_SETJMP_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_SETJMP_H); }))) {
-            mixin(enumMixinStr__BITS_SETJMP_H);
-        }
-    }
 
 
     enum _dpp_impl_Memento_breakOnRealloc_mixin = ` auto Memento_breakOnRealloc(A0)(A0 arg0) {
@@ -17768,10 +17756,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(_BITS_STDINT_INTN_H))) {
-        private enum enumMixinStr__BITS_STDINT_INTN_H = `enum _BITS_STDINT_INTN_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_INTN_H); }))) {
-            mixin(enumMixinStr__BITS_STDINT_INTN_H);
+    static if(!is(typeof(__have_pthread_attr_t))) {
+        private enum enumMixinStr___have_pthread_attr_t = `enum __have_pthread_attr_t = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___have_pthread_attr_t); }))) {
+            mixin(enumMixinStr___have_pthread_attr_t);
         }
     }
 
@@ -17814,16 +17802,6 @@ extern(C)
         private enum enumMixinStr_Memento_vasprintf = `enum Memento_vasprintf = vasprintf;`;
         static if(is(typeof({ mixin(enumMixinStr_Memento_vasprintf); }))) {
             mixin(enumMixinStr_Memento_vasprintf);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_BITS_STDINT_UINTN_H))) {
-        private enum enumMixinStr__BITS_STDINT_UINTN_H = `enum _BITS_STDINT_UINTN_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_UINTN_H); }))) {
-            mixin(enumMixinStr__BITS_STDINT_UINTN_H);
         }
     }
 
@@ -17880,50 +17858,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(_BITS_STDIO_LIM_H))) {
-        private enum enumMixinStr__BITS_STDIO_LIM_H = `enum _BITS_STDIO_LIM_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_STDIO_LIM_H); }))) {
-            mixin(enumMixinStr__BITS_STDIO_LIM_H);
-        }
-    }
-
-
-
-
     static if(!is(typeof(Memento_malloc))) {
         private enum enumMixinStr_Memento_malloc = `enum Memento_malloc = MEMENTO_UNDERLYING_MALLOC;`;
         static if(is(typeof({ mixin(enumMixinStr_Memento_malloc); }))) {
             mixin(enumMixinStr_Memento_malloc);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(L_tmpnam))) {
-        private enum enumMixinStr_L_tmpnam = `enum L_tmpnam = 20;`;
-        static if(is(typeof({ mixin(enumMixinStr_L_tmpnam); }))) {
-            mixin(enumMixinStr_L_tmpnam);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(TMP_MAX))) {
-        private enum enumMixinStr_TMP_MAX = `enum TMP_MAX = 238328;`;
-        static if(is(typeof({ mixin(enumMixinStr_TMP_MAX); }))) {
-            mixin(enumMixinStr_TMP_MAX);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(FILENAME_MAX))) {
-        private enum enumMixinStr_FILENAME_MAX = `enum FILENAME_MAX = 4096;`;
-        static if(is(typeof({ mixin(enumMixinStr_FILENAME_MAX); }))) {
-            mixin(enumMixinStr_FILENAME_MAX);
         }
     }
 
@@ -17940,16 +17878,6 @@ extern(C)
 
 
 
-    static if(!is(typeof(L_ctermid))) {
-        private enum enumMixinStr_L_ctermid = `enum L_ctermid = 9;`;
-        static if(is(typeof({ mixin(enumMixinStr_L_ctermid); }))) {
-            mixin(enumMixinStr_L_ctermid);
-        }
-    }
-
-
-
-
     static if(!is(typeof(MEMENTO_FREEFILL))) {
         private enum enumMixinStr_MEMENTO_FREEFILL = `enum MEMENTO_FREEFILL = 0xa9;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_FREEFILL); }))) {
@@ -17960,30 +17888,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(FOPEN_MAX))) {
-        private enum enumMixinStr_FOPEN_MAX = `enum FOPEN_MAX = 16;`;
-        static if(is(typeof({ mixin(enumMixinStr_FOPEN_MAX); }))) {
-            mixin(enumMixinStr_FOPEN_MAX);
-        }
-    }
-
-
-
-
     static if(!is(typeof(MEMENTO_ALLOCFILL))) {
         private enum enumMixinStr_MEMENTO_ALLOCFILL = `enum MEMENTO_ALLOCFILL = 0xa8;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_ALLOCFILL); }))) {
             mixin(enumMixinStr_MEMENTO_ALLOCFILL);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_THREAD_MUTEX_INTERNAL_H))) {
-        private enum enumMixinStr__THREAD_MUTEX_INTERNAL_H = `enum _THREAD_MUTEX_INTERNAL_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H); }))) {
-            mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H);
         }
     }
 
@@ -18020,22 +17928,16 @@ extern(C)
 
 
 
-    static if(!is(typeof(__PTHREAD_MUTEX_HAVE_PREV))) {
-        private enum enumMixinStr___PTHREAD_MUTEX_HAVE_PREV = `enum __PTHREAD_MUTEX_HAVE_PREV = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV); }))) {
-            mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV);
-        }
-    }
-
-
-
-
     static if(!is(typeof(MEMENTO_UNDERLYING_CALLOC))) {
         private enum enumMixinStr_MEMENTO_UNDERLYING_CALLOC = `enum MEMENTO_UNDERLYING_CALLOC = calloc;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC); }))) {
             mixin(enumMixinStr_MEMENTO_UNDERLYING_CALLOC);
         }
     }
+
+
+
+
     static if(!is(typeof(MEMENTO_UNDERLYING_REALLOC))) {
         private enum enumMixinStr_MEMENTO_UNDERLYING_REALLOC = `enum MEMENTO_UNDERLYING_REALLOC = realloc;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_REALLOC); }))) {
@@ -18056,36 +17958,18 @@ extern(C)
 
 
 
-    static if(!is(typeof(__PTHREAD_RWLOCK_ELISION_EXTRA))) {
-        private enum enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA = `enum __PTHREAD_RWLOCK_ELISION_EXTRA = 0 , { 0 , 0 , 0 , 0 , 0 , 0 , 0 };`;
-        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA); }))) {
-            mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA);
-        }
-    }
-
-
-
-
     static if(!is(typeof(MEMENTO_UNDERLYING_MALLOC))) {
         private enum enumMixinStr_MEMENTO_UNDERLYING_MALLOC = `enum MEMENTO_UNDERLYING_MALLOC = malloc;`;
         static if(is(typeof({ mixin(enumMixinStr_MEMENTO_UNDERLYING_MALLOC); }))) {
             mixin(enumMixinStr_MEMENTO_UNDERLYING_MALLOC);
         }
     }
-
-
-
-
-
-
-    static if(!is(typeof(_THREAD_SHARED_TYPES_H))) {
-        private enum enumMixinStr__THREAD_SHARED_TYPES_H = `enum _THREAD_SHARED_TYPES_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__THREAD_SHARED_TYPES_H); }))) {
-            mixin(enumMixinStr__THREAD_SHARED_TYPES_H);
+    static if(!is(typeof(_BITS_SETJMP_H))) {
+        private enum enumMixinStr__BITS_SETJMP_H = `enum _BITS_SETJMP_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_SETJMP_H); }))) {
+            mixin(enumMixinStr__BITS_SETJMP_H);
         }
     }
-
-
 
 
 
@@ -18096,8 +17980,18 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_document_writer_mixin); })) {
         mixin(_dpp_impl_fz_new_derived_document_writer_mixin);
     }
+    static if(!is(typeof(_BITS_STDINT_INTN_H))) {
+        private enum enumMixinStr__BITS_STDINT_INTN_H = `enum _BITS_STDINT_INTN_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_INTN_H); }))) {
+            mixin(enumMixinStr__BITS_STDINT_INTN_H);
+        }
+    }
+
+
+
+
     static if(!is(typeof(FZ_VERSION_PATCH))) {
-        private enum enumMixinStr_FZ_VERSION_PATCH = `enum FZ_VERSION_PATCH = 0;`;
+        private enum enumMixinStr_FZ_VERSION_PATCH = `enum FZ_VERSION_PATCH = 1;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION_PATCH); }))) {
             mixin(enumMixinStr_FZ_VERSION_PATCH);
         }
@@ -18127,9 +18021,21 @@ extern(C)
 
 
     static if(!is(typeof(FZ_VERSION))) {
-        private enum enumMixinStr_FZ_VERSION = `enum FZ_VERSION = "1.21.0";`;
+        private enum enumMixinStr_FZ_VERSION = `enum FZ_VERSION = "1.21.1";`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_VERSION); }))) {
             mixin(enumMixinStr_FZ_VERSION);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(_BITS_STDINT_UINTN_H))) {
+        private enum enumMixinStr__BITS_STDINT_UINTN_H = `enum _BITS_STDINT_UINTN_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_STDINT_UINTN_H); }))) {
+            mixin(enumMixinStr__BITS_STDINT_UINTN_H);
         }
     }
     enum _dpp_impl_TRACK_FN_mixin = ` auto TRACK_FN()() {
@@ -18142,10 +18048,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(__ONCE_FLAG_INIT))) {
-        private enum enumMixinStr___ONCE_FLAG_INIT = `enum __ONCE_FLAG_INIT = { 0 };`;
-        static if(is(typeof({ mixin(enumMixinStr___ONCE_FLAG_INIT); }))) {
-            mixin(enumMixinStr___ONCE_FLAG_INIT);
+    static if(!is(typeof(_BITS_STDIO_LIM_H))) {
+        private enum enumMixinStr__BITS_STDIO_LIM_H = `enum _BITS_STDIO_LIM_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_STDIO_LIM_H); }))) {
+            mixin(enumMixinStr__BITS_STDIO_LIM_H);
         }
     }
 
@@ -18160,10 +18066,30 @@ extern(C)
 
 
 
-    static if(!is(typeof(_BITS_TIME64_H))) {
-        private enum enumMixinStr__BITS_TIME64_H = `enum _BITS_TIME64_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_TIME64_H); }))) {
-            mixin(enumMixinStr__BITS_TIME64_H);
+    static if(!is(typeof(L_tmpnam))) {
+        private enum enumMixinStr_L_tmpnam = `enum L_tmpnam = 20;`;
+        static if(is(typeof({ mixin(enumMixinStr_L_tmpnam); }))) {
+            mixin(enumMixinStr_L_tmpnam);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(TMP_MAX))) {
+        private enum enumMixinStr_TMP_MAX = `enum TMP_MAX = 238328;`;
+        static if(is(typeof({ mixin(enumMixinStr_TMP_MAX); }))) {
+            mixin(enumMixinStr_TMP_MAX);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FILENAME_MAX))) {
+        private enum enumMixinStr_FILENAME_MAX = `enum FILENAME_MAX = 4096;`;
+        static if(is(typeof({ mixin(enumMixinStr_FILENAME_MAX); }))) {
+            mixin(enumMixinStr_FILENAME_MAX);
         }
     }
 
@@ -18172,10 +18098,10 @@ extern(C)
 
 
 
-    static if(!is(typeof(__TIME64_T_TYPE))) {
-        private enum enumMixinStr___TIME64_T_TYPE = `enum __TIME64_T_TYPE = __TIME_T_TYPE;`;
-        static if(is(typeof({ mixin(enumMixinStr___TIME64_T_TYPE); }))) {
-            mixin(enumMixinStr___TIME64_T_TYPE);
+    static if(!is(typeof(L_ctermid))) {
+        private enum enumMixinStr_L_ctermid = `enum L_ctermid = 9;`;
+        static if(is(typeof({ mixin(enumMixinStr_L_ctermid); }))) {
+            mixin(enumMixinStr_L_ctermid);
         }
     }
 
@@ -18188,11 +18114,31 @@ extern(C)
     }
 
 
+
+
+    static if(!is(typeof(FOPEN_MAX))) {
+        private enum enumMixinStr_FOPEN_MAX = `enum FOPEN_MAX = 16;`;
+        static if(is(typeof({ mixin(enumMixinStr_FOPEN_MAX); }))) {
+            mixin(enumMixinStr_FOPEN_MAX);
+        }
+    }
+
+
     enum _dpp_impl_FZ_LANG_TAG2_mixin = ` auto FZ_LANG_TAG2(A0, A1)(A0 arg0, A1 arg1) {
         return ( ( arg0 - 'a' + 1 ) + ( ( arg1 - 'a' + 1 ) * 27 ) );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_FZ_LANG_TAG2_mixin); })) {
         mixin(_dpp_impl_FZ_LANG_TAG2_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(_THREAD_MUTEX_INTERNAL_H))) {
+        private enum enumMixinStr__THREAD_MUTEX_INTERNAL_H = `enum _THREAD_MUTEX_INTERNAL_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H); }))) {
+            mixin(enumMixinStr__THREAD_MUTEX_INTERNAL_H);
+        }
     }
 
 
@@ -18210,30 +18156,20 @@ extern(C)
 
 
 
-    static if(!is(typeof(__TIMESIZE))) {
-        private enum enumMixinStr___TIMESIZE = `enum __TIMESIZE = __WORDSIZE;`;
-        static if(is(typeof({ mixin(enumMixinStr___TIMESIZE); }))) {
-            mixin(enumMixinStr___TIMESIZE);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(_BITS_TYPES_H))) {
-        private enum enumMixinStr__BITS_TYPES_H = `enum _BITS_TYPES_H = 1;`;
-        static if(is(typeof({ mixin(enumMixinStr__BITS_TYPES_H); }))) {
-            mixin(enumMixinStr__BITS_TYPES_H);
-        }
-    }
-
-
-
-
     static if(!is(typeof(FZ_MEMORY_BLOCK_ALIGN_MOD))) {
         private enum enumMixinStr_FZ_MEMORY_BLOCK_ALIGN_MOD = `enum FZ_MEMORY_BLOCK_ALIGN_MOD = ( void * ) .sizeof;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_MEMORY_BLOCK_ALIGN_MOD); }))) {
             mixin(enumMixinStr_FZ_MEMORY_BLOCK_ALIGN_MOD);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(__PTHREAD_MUTEX_HAVE_PREV))) {
+        private enum enumMixinStr___PTHREAD_MUTEX_HAVE_PREV = `enum __PTHREAD_MUTEX_HAVE_PREV = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV); }))) {
+            mixin(enumMixinStr___PTHREAD_MUTEX_HAVE_PREV);
         }
     }
 
@@ -18244,10 +18180,6 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_FZ_PRINTFLIKE_mixin); })) {
         mixin(_dpp_impl_FZ_PRINTFLIKE_mixin);
     }
-
-
-
-
     static if(!is(typeof(FZ_UNUSED))) {
         private enum enumMixinStr_FZ_UNUSED = `enum FZ_UNUSED = __attribute__ ( ( __unused__ ) );`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_UNUSED); }))) {
@@ -18268,10 +18200,32 @@ extern(C)
 
 
 
+    static if(!is(typeof(__PTHREAD_RWLOCK_ELISION_EXTRA))) {
+        private enum enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA = `enum __PTHREAD_RWLOCK_ELISION_EXTRA = 0 , { 0 , 0 , 0 , 0 , 0 , 0 , 0 };`;
+        static if(is(typeof({ mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA); }))) {
+            mixin(enumMixinStr___PTHREAD_RWLOCK_ELISION_EXTRA);
+        }
+    }
+
+
+
+
     static if(!is(typeof(FZ_RESTRICT))) {
         private enum enumMixinStr_FZ_RESTRICT = `enum FZ_RESTRICT = __restrict;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_RESTRICT); }))) {
             mixin(enumMixinStr_FZ_RESTRICT);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(_THREAD_SHARED_TYPES_H))) {
+        private enum enumMixinStr__THREAD_SHARED_TYPES_H = `enum _THREAD_SHARED_TYPES_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__THREAD_SHARED_TYPES_H); }))) {
+            mixin(enumMixinStr__THREAD_SHARED_TYPES_H);
         }
     }
 
@@ -18386,10 +18340,42 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_nelem_mixin); })) {
         mixin(_dpp_impl_nelem_mixin);
     }
+    static if(!is(typeof(__ONCE_FLAG_INIT))) {
+        private enum enumMixinStr___ONCE_FLAG_INIT = `enum __ONCE_FLAG_INIT = { 0 };`;
+        static if(is(typeof({ mixin(enumMixinStr___ONCE_FLAG_INIT); }))) {
+            mixin(enumMixinStr___ONCE_FLAG_INIT);
+        }
+    }
+
+
+
+
     static if(!is(typeof(FZ_REPLACEMENT_CHARACTER))) {
         private enum enumMixinStr_FZ_REPLACEMENT_CHARACTER = `enum FZ_REPLACEMENT_CHARACTER = 0xFFFD;`;
         static if(is(typeof({ mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER); }))) {
             mixin(enumMixinStr_FZ_REPLACEMENT_CHARACTER);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_TIME64_H))) {
+        private enum enumMixinStr__BITS_TIME64_H = `enum _BITS_TIME64_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_TIME64_H); }))) {
+            mixin(enumMixinStr__BITS_TIME64_H);
+        }
+    }
+
+
+
+
+
+
+    static if(!is(typeof(__TIME64_T_TYPE))) {
+        private enum enumMixinStr___TIME64_T_TYPE = `enum __TIME64_T_TYPE = __TIME_T_TYPE;`;
+        static if(is(typeof({ mixin(enumMixinStr___TIME64_T_TYPE); }))) {
+            mixin(enumMixinStr___TIME64_T_TYPE);
         }
     }
     enum _dpp_impl_FZ_LOG_DUMP_STORE_mixin = ` auto FZ_LOG_DUMP_STORE(, REST...)(, REST rest) {
@@ -18397,6 +18383,26 @@ extern(C)
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin); })) {
         mixin(_dpp_impl_FZ_LOG_DUMP_STORE_mixin);
+    }
+
+
+
+
+    static if(!is(typeof(__TIMESIZE))) {
+        private enum enumMixinStr___TIMESIZE = `enum __TIMESIZE = __WORDSIZE;`;
+        static if(is(typeof({ mixin(enumMixinStr___TIMESIZE); }))) {
+            mixin(enumMixinStr___TIMESIZE);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(_BITS_TYPES_H))) {
+        private enum enumMixinStr__BITS_TYPES_H = `enum _BITS_TYPES_H = 1;`;
+        static if(is(typeof({ mixin(enumMixinStr__BITS_TYPES_H); }))) {
+            mixin(enumMixinStr__BITS_TYPES_H);
+        }
     }
 
 
@@ -18422,8 +18428,102 @@ extern(C)
     static if(__traits(compiles, { mixin(_dpp_impl_FZ_INIT_STORABLE_mixin); })) {
         mixin(_dpp_impl_FZ_INIT_STORABLE_mixin);
     }
+    enum _dpp_impl_fz_new_derived_outline_iter_mixin = ` auto fz_new_derived_outline_iter(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
+        return ( cast( arg1 * ) ( fz_new_outline_iterator_of_size ( ctx , ( arg1 ) .sizeof , arg2 ) ) );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_outline_iter_mixin); })) {
+        mixin(_dpp_impl_fz_new_derived_outline_iter_mixin);
+    }
 
 
+
+
+
+
+    enum _dpp_impl_fz_new_derived_link_mixin = ` auto fz_new_derived_link(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
+        return ( cast( arg1 * ) ( fz_new_link_of_size ( arg0 , ( arg1 ) .sizeof , arg2 , arg3 ) ) );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_link_mixin); })) {
+        mixin(_dpp_impl_fz_new_derived_link_mixin);
+    }
+
+
+
+
+    enum _dpp_impl_fz_new_derived_image_mixin = ` auto fz_new_derived_image(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15)(A0 arg0, A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15) {
+        return ( cast( arg12 * ) ( fz_new_image_of_size ( arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 , arg8 , arg9 , arg10 , arg11 , ( arg12 ) .sizeof , arg13 , arg14 , arg15 ) ) );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_image_mixin); })) {
+        mixin(_dpp_impl_fz_new_derived_image_mixin);
+    }
+
+
+
+
+
+
+    static if(!is(typeof(FZ_HASH_TABLE_KEY_LENGTH))) {
+        private enum enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH = `enum FZ_HASH_TABLE_KEY_LENGTH = 48;`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH); }))) {
+            mixin(enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH);
+        }
+    }
+    static if(!is(typeof(FZ_MAX_INF_RECT))) {
+        private enum enumMixinStr_FZ_MAX_INF_RECT = `enum FZ_MAX_INF_RECT = ( cast( int ) 0x7fffff80 );`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_MAX_INF_RECT); }))) {
+            mixin(enumMixinStr_FZ_MAX_INF_RECT);
+        }
+    }
+
+
+
+
+    static if(!is(typeof(FZ_MIN_INF_RECT))) {
+        private enum enumMixinStr_FZ_MIN_INF_RECT = `enum FZ_MIN_INF_RECT = ( cast( int ) 0x80000000 );`;
+        static if(is(typeof({ mixin(enumMixinStr_FZ_MIN_INF_RECT); }))) {
+            mixin(enumMixinStr_FZ_MIN_INF_RECT);
+        }
+    }
+
+
+    enum _dpp_impl_DIV_BY_ZERO_mixin = ` auto DIV_BY_ZERO(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
+        return ( ( ( arg0 ) < 0 ) ^ ( ( arg1 ) < 0 ) ? ( arg2 ) : ( arg3 ) );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_DIV_BY_ZERO_mixin); })) {
+        mixin(_dpp_impl_DIV_BY_ZERO_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_BLEND_mixin = ` auto FZ_BLEND(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
+        return ( ( ( ( arg0 ) - ( arg1 ) ) * ( arg2 ) + ( ( arg1 ) << 8 ) ) >> 8 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_BLEND_mixin); })) {
+        mixin(_dpp_impl_FZ_BLEND_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_COMBINE2_mixin = ` auto FZ_COMBINE2(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
+        return ( ( ( arg0 ) * ( arg1 ) + ( arg2 ) * ( arg3 ) ) >> 8 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_COMBINE2_mixin); })) {
+        mixin(_dpp_impl_FZ_COMBINE2_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_COMBINE_mixin = ` auto FZ_COMBINE(A0, A1)(A0 arg0, A1 arg1) {
+        return ( ( ( arg0 ) * ( arg1 ) ) >> 8 );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_COMBINE_mixin); })) {
+        mixin(_dpp_impl_FZ_COMBINE_mixin);
+    }
+
+
+    enum _dpp_impl_FZ_EXPAND_mixin = ` auto FZ_EXPAND(A0)(A0 arg0) {
+        return ( ( arg0 ) + ( ( arg0 ) >> 7 ) );
+    }`;
+    static if(__traits(compiles, { mixin(_dpp_impl_FZ_EXPAND_mixin); })) {
+        mixin(_dpp_impl_FZ_EXPAND_mixin);
+    }
 
 
 
@@ -18569,102 +18669,6 @@ extern(C)
         static if(is(typeof({ mixin(enumMixinStr___STD_TYPE); }))) {
             mixin(enumMixinStr___STD_TYPE);
         }
-    }
-    enum _dpp_impl_fz_new_derived_outline_iter_mixin = ` auto fz_new_derived_outline_iter(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return ( cast( arg1 * ) ( fz_new_outline_iterator_of_size ( ctx , ( arg1 ) .sizeof , arg2 ) ) );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_outline_iter_mixin); })) {
-        mixin(_dpp_impl_fz_new_derived_outline_iter_mixin);
-    }
-
-
-
-
-
-
-    enum _dpp_impl_fz_new_derived_link_mixin = ` auto fz_new_derived_link(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
-        return ( cast( arg1 * ) ( fz_new_link_of_size ( arg0 , ( arg1 ) .sizeof , arg2 , arg3 ) ) );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_link_mixin); })) {
-        mixin(_dpp_impl_fz_new_derived_link_mixin);
-    }
-
-
-
-
-    enum _dpp_impl_fz_new_derived_image_mixin = ` auto fz_new_derived_image(A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15)(A0 arg0, A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15) {
-        return ( cast( arg12 * ) ( fz_new_image_of_size ( arg0 , arg1 , arg2 , arg3 , arg4 , arg5 , arg6 , arg7 , arg8 , arg9 , arg10 , arg11 , ( arg12 ) .sizeof , arg13 , arg14 , arg15 ) ) );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_fz_new_derived_image_mixin); })) {
-        mixin(_dpp_impl_fz_new_derived_image_mixin);
-    }
-
-
-
-
-
-
-    static if(!is(typeof(FZ_HASH_TABLE_KEY_LENGTH))) {
-        private enum enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH = `enum FZ_HASH_TABLE_KEY_LENGTH = 48;`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH); }))) {
-            mixin(enumMixinStr_FZ_HASH_TABLE_KEY_LENGTH);
-        }
-    }
-    static if(!is(typeof(FZ_MAX_INF_RECT))) {
-        private enum enumMixinStr_FZ_MAX_INF_RECT = `enum FZ_MAX_INF_RECT = ( cast( int ) 0x7fffff80 );`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_MAX_INF_RECT); }))) {
-            mixin(enumMixinStr_FZ_MAX_INF_RECT);
-        }
-    }
-
-
-
-
-    static if(!is(typeof(FZ_MIN_INF_RECT))) {
-        private enum enumMixinStr_FZ_MIN_INF_RECT = `enum FZ_MIN_INF_RECT = ( cast( int ) 0x80000000 );`;
-        static if(is(typeof({ mixin(enumMixinStr_FZ_MIN_INF_RECT); }))) {
-            mixin(enumMixinStr_FZ_MIN_INF_RECT);
-        }
-    }
-
-
-    enum _dpp_impl_DIV_BY_ZERO_mixin = ` auto DIV_BY_ZERO(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
-        return ( ( ( arg0 ) < 0 ) ^ ( ( arg1 ) < 0 ) ? ( arg2 ) : ( arg3 ) );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_DIV_BY_ZERO_mixin); })) {
-        mixin(_dpp_impl_DIV_BY_ZERO_mixin);
-    }
-
-
-    enum _dpp_impl_FZ_BLEND_mixin = ` auto FZ_BLEND(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return ( ( ( ( arg0 ) - ( arg1 ) ) * ( arg2 ) + ( ( arg1 ) << 8 ) ) >> 8 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_BLEND_mixin); })) {
-        mixin(_dpp_impl_FZ_BLEND_mixin);
-    }
-
-
-    enum _dpp_impl_FZ_COMBINE2_mixin = ` auto FZ_COMBINE2(A0, A1, A2, A3)(A0 arg0, A1 arg1, A2 arg2, A3 arg3) {
-        return ( ( ( arg0 ) * ( arg1 ) + ( arg2 ) * ( arg3 ) ) >> 8 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_COMBINE2_mixin); })) {
-        mixin(_dpp_impl_FZ_COMBINE2_mixin);
-    }
-
-
-    enum _dpp_impl_FZ_COMBINE_mixin = ` auto FZ_COMBINE(A0, A1)(A0 arg0, A1 arg1) {
-        return ( ( ( arg0 ) * ( arg1 ) ) >> 8 );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_COMBINE_mixin); })) {
-        mixin(_dpp_impl_FZ_COMBINE_mixin);
-    }
-
-
-    enum _dpp_impl_FZ_EXPAND_mixin = ` auto FZ_EXPAND(A0)(A0 arg0) {
-        return ( ( arg0 ) + ( ( arg0 ) >> 7 ) );
-    }`;
-    static if(__traits(compiles, { mixin(_dpp_impl_FZ_EXPAND_mixin); })) {
-        mixin(_dpp_impl_FZ_EXPAND_mixin);
     }
     static if(!is(typeof(FZ_META_INFO_MODIFICATIONDATE))) {
         private enum enumMixinStr_FZ_META_INFO_MODIFICATIONDATE = `enum FZ_META_INFO_MODIFICATIONDATE = "info:ModDate";`;
@@ -18869,7 +18873,7 @@ extern(C)
 
 
     enum _dpp_impl_fz_new_context_mixin = ` auto fz_new_context(A0, A1, A2)(A0 arg0, A1 arg1, A2 arg2) {
-        return fz_new_context_imp ( arg0 , arg1 , arg2 , "1.21.0" );
+        return fz_new_context_imp ( arg0 , arg1 , arg2 , "1.21.1" );
     }`;
     static if(__traits(compiles, { mixin(_dpp_impl_fz_new_context_mixin); })) {
         mixin(_dpp_impl_fz_new_context_mixin);

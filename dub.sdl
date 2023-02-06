@@ -3,6 +3,7 @@ description "Bindings for MuPDF"
 homepage "https://mupdf.com/"
 license "AGPL-3.0 or proprietary"
 libs "mupdf" "mupdf-third" platform="posix"
+libs "libmupdf" "libthirdparty" platform="windows"
 importPaths "source"
 
 configuration "library" {
